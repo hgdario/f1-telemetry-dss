@@ -1,0 +1,28 @@
+[theme]
+base                = "dark"
+
+# Fondo principal — navy F1 oficial
+backgroundColor     = "#15151E"
+
+# Sidebar y contenedores secundarios
+secondaryBackgroundColor = "#12121A"
+
+# Rojo F1 oficial — botones primarios, sliders, checkboxes, radio activo
+primaryColor        = "#E8002D"
+
+# Texto principal
+textColor           = "#D0D2DC"
+
+# Tipografía — monoespaciada técnica, nativa en todos los OS sin descarga
+font                = "monospace"
+
+[server]
+headless            = true
+runOnSave           = true
+
+[runner]
+magicEnabled        = false
+
+[client]
+showErrorDetails    = false
+toolbarMode         = "minimal"

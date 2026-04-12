@@ -1,0 +1,17 @@
+Módulos Simples:
+- Vuelta por tiempo
+- Datos del vehículo
+- Visualización del circuito estática.
+
+Módulos Medio:
+- Módulo de comparación
+- Módulo de mapa
+- Mapa de calor
+- Comparación de deltas en mapa.
+
+Modulos Complejos:
+- Estimación de fuerzas G transversales y Longitudinales
+- Aceleración lateral y radio de curvatura.
+- Diagrama G-G
+- Coast time
+- Trazada ideal mediante los mejores microsectores de una sesión

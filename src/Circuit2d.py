@@ -29,7 +29,7 @@ def render_interactive_sim(sesion, driver_code, show_corners):
     throttle = np.array(telemetria['Throttle'].values) # 0-100
     brake = np.array(telemetria['Brake'].values)       # 0-100
     drs = np.array(telemetria['DRS'].values)           # 8+ es abierto
-    show_corners = False
+
 
     print(f"Vuelta cargada: {Driver} - {TiempoVuelta}")
 
@@ -63,13 +63,13 @@ def render_interactive_sim(sesion, driver_code, show_corners):
     Intervalo_Real = (TiempoVueltaSeg * 1000) / final_frames
 
     # --- Split Screen ---
-    fig = plt.figure(figsize=(16, 9), facecolor='black')
+    fig = plt.figure(figsize=(16, 9), facecolor="#1C1C27")
 
     #Grid intacto
     gs = gridspec.GridSpec(5, 2, figure=fig, height_ratios=[1,1,1,1,1.5])
 
     #MAPA 2D
-    ax = fig.add_subplot(gs[:5, :], facecolor='black')
+    ax = fig.add_subplot(gs[:5, :], facecolor="#1C1C27")
     ax.axis('off')
 
     #Centering Cam 2D 
@@ -82,7 +82,7 @@ def render_interactive_sim(sesion, driver_code, show_corners):
     ax.set_ylim(mid_y - maxRange * 1.5, mid_y + maxRange * 0.7)
 
     #Coloring Map
-    ax.plot(x, y, color='#222222', linewidth=6, alpha=0.5)
+    ax.plot(x, y, color='#50506A', linewidth=6, alpha=0.5)
 
     distancia_offset = 100
     #Curves numbers
@@ -140,7 +140,7 @@ def render_interactive_sim(sesion, driver_code, show_corners):
     car_trail, = ax.plot([], [], color=coche_color, linewidth=3, zorder=10)
 
     #Throttle Graphic
-    ax_thr = fig.add_subplot(gs[4,0], facecolor = 'black')
+    ax_thr = fig.add_subplot(gs[4,0], facecolor = "#1C1C27")
     ax_thr.set_ylabel('THRO',color= 'lime', fontsize=10,fontweight='bold')
     ax_thr.set_ylim(-5, 105)
 
@@ -153,7 +153,7 @@ def render_interactive_sim(sesion, driver_code, show_corners):
     cursor_thr = ax_thr.axvline(x=0, color='white', linewidth=2, linestyle='-')
 
     #Brake Graphic
-    ax_brk = fig.add_subplot(gs[4,1],facecolor='black')
+    ax_brk = fig.add_subplot(gs[4,1],facecolor="#1C1C27")
     ax_brk.set_ylabel('BRAKE', color='red', fontsize=10, fontweight='bold')
     ax_brk.set_ylim(-5, 105)
 
@@ -213,7 +213,17 @@ def render_interactive_sim(sesion, driver_code, show_corners):
 # --- RENDERIZADO PARA STREAMLIT ---
     ani = animation.FuncAnimation(fig, update, frames=final_frames, interval=Intervalo_Real, blit=False)
     
-    # Creamos el widget JS
-    components.html(ani.to_jshtml(), height=1600, scrolling=True)
+    # 1. Extraemos el HTML crudo de la animación
+    html_animacion = ani.to_jshtml()
+    
+    # 2. Lo envolvemos en el div centrador (Opción 2)
+    html_centrado = f"""
+    <div style="display: flex; justify-content: center; width: 100%;">
+        {html_animacion}
+    </div>
+    """
+    
+    # 3. Lo pasamos a Streamlit con la altura que ya tenías
+    components.html(html_centrado, height=1600, scrolling=True)
     
     plt.close(fig) # Cerramos la figura para liberar memoria
