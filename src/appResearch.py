@@ -4,7 +4,10 @@ Esqueleto principal · Streamlit nativo + config.toml
 """
 
 import streamlit as st
-
+import Circuit2d as c2d
+import requests
+import SpeedHeatMap as sm
+import GearHeatMap as gm
 # ─── CONSTANTES DE NAVEGACIÓN ─────────────────────────────────────────────────
 
 NAV = {
@@ -12,6 +15,8 @@ NAV = {
         "Vuelta por Tiempo",
         "Información de Sesión",
         "Circuito Estático",
+        "Mapa de Velocidad",
+        "Mapa de Marchas",
     ],
     "Comparaciones": [
         "Comparación de Pilotos",
@@ -36,13 +41,21 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Única inyección permitida: eliminar el max-width nativo de Streamlit
-# No hay forma de hacerlo desde config.toml — es la única excepción
-st.markdown(
-    "<style>.block-container{max-width:100%!important;padding:2rem 2.5rem!important;}"
-    "#MainMenu,footer,[data-testid='stHeader']{visibility:hidden;}</style>",
-    unsafe_allow_html=True,
-)
+# Única inyección permitida: eliminar el max-width nativo de Streamlit e importar Titillium Web
+st.markdown("""
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700;900&display=swap');
+    
+    .block-container{max-width:100%!important;padding:2rem 2.5rem!important;}
+    #MainMenu,footer,[data-testid='stHeader']{visibility:hidden;}
+    [data-testid="stMetric"]{border-top:2px solid #E8002D;background:#1E1E2D;padding:12px 16px;}
+    
+    /* Aplicar la fuente también a toda la interfaz general de la app */
+    html, body, [class*="css"] {
+        font-family: 'Titillium Web', sans-serif;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 # ─── ESTADO INICIAL ───────────────────────────────────────────────────────────
 
@@ -214,13 +227,27 @@ elif active == "Información de Sesión":
 
 elif active == "Circuito Estático":
     if not require_session(): st.stop()
-    import Circuit2d as c2d
-    import requests
+
 
     st.header("Circuito Estático")
     st.divider()
     f1s    = st.session_state["f1_session"]
-    driver = st.selectbox("Piloto", f1s.drivers)
+
+    #Diccionario para mapear el id con el nombre
+    driver_names= { d: f1s.get_driver(d).get("FullName", str(d))
+                   for d in f1s.drivers}
+    driver = st.selectbox("Piloto", options= f1s.drivers,format_func=lambda x: driver_names.get(x,x))
+
+    vuelta_limpia = f1s.laps.pick_drivers(driver).pick_accurate()
+    num_fastest = vuelta_limpia.pick_fastest()['LapNumber']
+    lista_vueltas = vuelta_limpia['LapNumber'].tolist()
+    
+    lap_n = st.selectbox(
+        "Vuelta a analizar", 
+        options=lista_vueltas,
+        index=lista_vueltas.index(num_fastest),
+        format_func=lambda x: f"Vuelta {int(x)} ⏱️ (Best Lap)" if x == num_fastest else f"Vuelta {int(x)}"
+    )
 
 # ── Tarjeta del piloto ───────────────────────────────────────────────────
     @st.cache_data(show_spinner=False)
@@ -288,6 +315,8 @@ elif active == "Circuito Estático":
     last_name   = driver_info.get("LastName", driver)
     team        = driver_info.get("TeamName", "—")
 
+    number      = driver_info.get("DriverNumber",driver)
+
     # Llamamos a la API 
     stats = fetch_driver_stats(ergast_id)
 
@@ -309,7 +338,7 @@ elif active == "Circuito Estático":
             )
 
     with col_data:
-        st.markdown(f"### {first_name} {last_name}")
+        st.markdown(f"### {number} {first_name} {last_name}")
         st.caption(team)
         m1, m2, m3, m4 = st.columns(4)
         m1.metric("Victorias",    stats["wins"])
@@ -322,7 +351,52 @@ elif active == "Circuito Estático":
     st.divider()
     
     # Lanzamos el mapa 2D
-    c2d.render_interactive_sim(f1s, driver, corners)
+    c2d.render_interactive_sim(f1s, driver, corners, lap_n)
+
+elif active == "Mapa de Velocidad":
+    if not require_session(): st.stop()
+
+    st.header("Mapa de calor de Velocidad (Km/h)")
+    st.divider()
+    f1s    = st.session_state["f1_session"]
+    driver_names= { d: f1s.get_driver(d).get("FullName", str(d))
+                   for d in f1s.drivers}
+    driver = st.selectbox("Piloto", options= f1s.drivers,format_func=lambda x: driver_names.get(x,x))
+
+    vuelta_limpia = f1s.laps.pick_drivers(driver).pick_accurate()
+    num_fastest = vuelta_limpia.pick_fastest()['LapNumber']
+    lista_vueltas = vuelta_limpia['LapNumber'].tolist()
+    
+    lap_n = st.selectbox(
+        "Vuelta a analizar", 
+        options=lista_vueltas,
+        index=lista_vueltas.index(num_fastest),
+        format_func=lambda x: f"Vuelta {int(x)} ⏱️ (Best Lap)" if x == num_fastest else f"Vuelta {int(x)}"
+    )
+    sm.render_speed_heatmap(f1s, driver,corners,lap_n)
+
+elif active == "Mapa de Marchas":
+    if not require_session(): st.stop()
+
+    st.header("Mapa de calor de marchas (1-8)")
+    st.divider()
+    f1s    = st.session_state["f1_session"]
+    driver_names= { d: f1s.get_driver(d).get("FullName", str(d))
+                   for d in f1s.drivers}
+    driver = st.selectbox("Piloto", options= f1s.drivers,format_func=lambda x: driver_names.get(x,x))
+
+    vuelta_limpia = f1s.laps.pick_drivers(driver).pick_accurate()
+    num_fastest = vuelta_limpia.pick_fastest()['LapNumber']
+    lista_vueltas = vuelta_limpia['LapNumber'].tolist()
+    
+    lap_n = st.selectbox(
+        "Vuelta a analizar", 
+        options=lista_vueltas,
+        index=lista_vueltas.index(num_fastest),
+        format_func=lambda x: f"Vuelta {int(x)} ⏱️ (Best Lap)" if x == num_fastest else f"Vuelta {int(x)}"
+    )
+    gm.render_gear_heatmap(f1s, driver,corners,lap_n)
+
 
 
 # ── COMPARACIONES ─────────────────────────────────────────────────────────────

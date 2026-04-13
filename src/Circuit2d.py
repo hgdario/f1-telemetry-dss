@@ -10,10 +10,11 @@ from matplotlib import animation
 import matplotlib.gridspec as gridspec
 from scipy.signal import savgol_filter
 
-def render_interactive_sim(sesion, driver_code, show_corners):
+def render_interactive_sim(sesion, driver_code, show_corners, lap_number):
     mpl.rcParams['animation.embed_limit'] = 100.0
     
-    Pole = sesion.laps.pick_drivers(driver_code).pick_fastest()
+    vueltas_piloto = sesion.laps.pick_drivers(driver_code)
+    Pole = vueltas_piloto[vueltas_piloto['LapNumber'] == lap_number].iloc[0]
     telemetria = Pole.get_telemetry()
     Driver = Pole['Driver']
     Team = Pole['Team']
@@ -49,7 +50,22 @@ def render_interactive_sim(sesion, driver_code, show_corners):
     
     dist_array = np.array(telemetria['Distance'].values)
     Velocidad = np.array(telemetria['Speed'].values)
+    # --- [NUEVO] Función de offset automático ---
+    mid_x, mid_y = np.mean(x), np.mean(y)
 
+    def exterior_coords(idx, offset_dist):
+        idx_next = min(idx + 5, len(x) - 1)
+        idx_prev = max(idx - 5, 0)
+        dx = x[idx_next] - x[idx_prev]
+        dy = y[idx_next] - y[idx_prev]
+        nx, ny = -dy, dx 
+        mag = np.sqrt(nx**2 + ny**2)
+        if mag != 0:
+            nx /= mag; ny /= mag
+        if np.sqrt((x[idx] + nx * offset_dist - mid_x)**2 + (y[idx] + ny * offset_dist - mid_y)**2) < \
+           np.sqrt((x[idx] - mid_x)**2 + (y[idx] - mid_y)**2):
+            nx, ny = -nx, -ny
+        return x[idx] + nx * offset_dist, y[idx] + ny * offset_dist
     circuit_info = sesion.get_circuit_info()
 
     print(" Pintando el circuito base con la vuelta de referencia...")
@@ -84,86 +100,102 @@ def render_interactive_sim(sesion, driver_code, show_corners):
     #Coloring Map
     ax.plot(x, y, color='#50506A', linewidth=6, alpha=0.5)
 
-    distancia_offset = 100
-    #Curves numbers
+    brake_binary = (brake > 0).astype(int)
+    brake_starts = np.where(np.diff(brake_binary) > 0)[0] 
+    ax.scatter(x[brake_starts], y[brake_starts],
+           marker='v', color='#E8002D', s=40, zorder=15, alpha=0.8)
+    
+    DRS_binary = (drs > 8).astype(int)
+    DRS_starts = np.where(np.diff(DRS_binary) > 0)[0] 
+    ax.scatter(x[DRS_starts], y[DRS_starts],
+           marker='o', color="#00E887", s=40, zorder=15, alpha=0.8)
+    
+    # --- [NUEVO] Línea de Meta ---
+    start_x, start_y = x[0], y[0]
+    dx_m = x[1] - x[0]
+    dy_m = y[1] - y[0]
+    mag_m = np.sqrt(dx_m**2 + dy_m**2)
+    nmx, nmy = -dy_m/mag_m, dx_m/mag_m 
+    
+    meta_w = 200
+    ax.plot([start_x - nmx*meta_w, start_x + nmx*meta_w], 
+            [start_y - nmy*meta_w, start_y + nmy*meta_w], 
+            color='white', linewidth=3, zorder=10)
+
     if show_corners:
+        circuit_info = sesion.get_circuit_info()
         for _, row in circuit_info.corners.iterrows():
-            num_curva = row['Number']
-            dist_curva = row['Distance']
-
-            # Encontramos el índice de la curva
-            idx = (np.abs(dist_array - dist_curva)).argmin()
+            idx = (np.abs(dist_array - row['Distance'])).argmin()
             
-            # Tomamos un rango de puntos para una tangente más suave (evita saltos)
-            idx_next = min(idx + 5, len(x) - 1)
-            idx_prev = max(idx - 5, 0)
+            # Llamada exacta a tu función
+            cx, cy = exterior_coords(idx, 250)
             
-            dx = x[idx_next] - x[idx_prev]
-            dy = y[idx_next] - y[idx_prev]
-            
-            # Vector normal perpendicular: (-dy, dx)
-            nx, ny = -dy, dx
-            
-            # Normalizamos el vector
-            mag = np.sqrt(nx**2 + ny**2)
-            if mag != 0:
-                nx /= mag
-                ny /= mag
-            
-            # LÓGICA DE DIRECCIÓN: 
-            # Si al sumar el offset nos acercamos al centro del mapa, invertimos el vector
-            # Esto asegura que el número siempre salga hacia el EXTERIOR del circuito
-            pos_test_x = x[idx] + nx * distancia_offset
-            pos_test_y = y[idx] + ny * distancia_offset
-            
-            dist_centro_actual = np.sqrt((x[idx] - mid_x)**2 + (y[idx] - mid_y)**2)
-            dist_centro_test = np.sqrt((pos_test_x - mid_x)**2 + (pos_test_y - mid_y)**2)
-            
-            if dist_centro_test < dist_centro_actual:
-                nx, ny = -nx, -ny
-
-            # Posición definitiva
-            cx = x[idx] + nx * distancia_offset
-            cy = y[idx] + ny * distancia_offset
-
-            ax.text(cx, cy, 
-                    str(num_curva), 
-                    color='black', 
-                    fontsize=9, 
-                    weight='bold',
-                    ha='center', va='center',
-                    bbox=dict(boxstyle='circle,pad=0.2', facecolor='white', alpha=0.9, edgecolor='none'))
+            ax.text(cx, cy, str(row['Number']), 
+                    color='#15151E', fontsize=9, weight='black',
+                    ha='center', va='center', zorder=20,
+                    bbox=dict(boxstyle='circle,pad=0.3', 
+                              facecolor='white', 
+                              edgecolor='#E8002D', 
+                              linewidth=1.5))
 
     # Car
     car_marker, = ax.plot([], [], marker='o', color=coche_color, markersize=5, zorder=20)
     # Trail
     car_trail, = ax.plot([], [], color=coche_color, linewidth=3, zorder=10)
 
-    #Throttle Graphic
-    ax_thr = fig.add_subplot(gs[4,0], facecolor = "#1C1C27")
-    ax_thr.set_ylabel('THRO',color= 'lime', fontsize=10,fontweight='bold')
-    ax_thr.set_ylim(-5, 105)
+    # ── THROTTLE — solo ejes X e Y visibles ──────────────────────────────────
+    ax_thr = fig.add_subplot(gs[4, 0], facecolor="#1C1C27")
+    ax_thr.set_ylabel('THRO', color='lime', fontsize=10, fontweight='bold')
+    ax_thr.set_ylim(0, 105)
 
-    for spine in ax_thr.spines.values(): spine.set_visible(False)
-    ax_thr.spines['bottom'].set_color('#333333') 
+
+    for spine in ax_thr.spines.values():
+        spine.set_visible(False)
+    ax_thr.spines['bottom'].set_visible(True)
+    ax_thr.spines['bottom'].set_color('#8888A0')   # eje X más claro
+    ax_thr.spines['left'].set_visible(True)
+    ax_thr.spines['left'].set_color('#8888A0')     # eje Y más claro
     ax_thr.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
 
-    ax_thr.plot(dist_array,throttle,color='lime',linewidth=2)
+    ax_thr.plot(dist_array, throttle, color='lime', linewidth=2)
     ax_thr.fill_between(dist_array, throttle, color='lime', alpha=0.2)
     cursor_thr = ax_thr.axvline(x=0, color='white', linewidth=2, linestyle='-')
 
-    #Brake Graphic
-    ax_brk = fig.add_subplot(gs[4,1],facecolor="#1C1C27")
+    # ── BRAKE — solo ejes X e Y visibles ─────────────────────────────────────
+    ax_brk = fig.add_subplot(gs[4, 1], facecolor="#1C1C27")
     ax_brk.set_ylabel('BRAKE', color='red', fontsize=10, fontweight='bold')
-    ax_brk.set_ylim(-5, 105)
+    ax_brk.set_ylim(0, 105)
 
-    for spine in ax_brk.spines.values(): spine.set_visible(False)
-    ax_brk.tick_params(left=False, bottom=True, labelleft=False, labelbottom=False, colors='gray')
+    for spine in ax_brk.spines.values():
+        spine.set_visible(False)
+    ax_brk.spines['bottom'].set_visible(True)
+    ax_brk.spines['bottom'].set_color('#8888A0')   # eje X más claro
+    ax_brk.spines['left'].set_visible(True)
+    ax_brk.spines['left'].set_color('#8888A0')     # eje Y más claro
+    ax_brk.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
 
     ax_brk.plot(dist_array, brake * 100, color='red', linewidth=2)
     ax_brk.fill_between(dist_array, brake * 100, color='red', alpha=0.4)
     cursor_brk = ax_brk.axvline(x=0, color='white', linewidth=2, linestyle='-')
 
+    # ── Etiquetas de curva en ambas gráficas ──────────────────────────────────
+    for _, row in circuit_info.corners.iterrows():
+        dist_curva = row['Distance']
+        txt = f"T{row['Number']}"
+
+        ax_thr.axvline(x=dist_curva, color='#8888A0', linestyle='--', linewidth=0.8, alpha=0.4)
+        ax_brk.axvline(x=dist_curva, color='#8888A0', linestyle='--', linewidth=0.8, alpha=0.4)
+
+        ax_thr.text(dist_curva, 0, txt, color='#1C1C27', fontsize=7,
+                    ha='center', va='bottom', weight='bold', clip_on=True,
+                    bbox=dict(boxstyle='square,pad=0.25', facecolor='#8888A0',
+                              edgecolor='none', alpha=0.9))
+        ax_brk.text(dist_curva, 0, txt, color='#1C1C27', fontsize=7,
+                    ha='center', va='bottom', weight='bold', clip_on=True,
+                    bbox=dict(boxstyle='square,pad=0.25', facecolor='#8888A0',
+                              edgecolor='none', alpha=0.9))
+
+    # ─────────────────────────────────────────────────────────────────────────
     #HUD
     hud = ax.text(0.05, 0.85, "", transform=ax.transAxes, color='white', 
                 fontdict={'family': 'monospace', 'weight': 'bold', 'size': 14})
@@ -180,7 +212,7 @@ def render_interactive_sim(sesion, driver_code, show_corners):
         car_trail.set_data(x[0:idx], y[0:idx])
         
         window_size = 800
-        view_min = current_dist - window_size
+        view_min = max(0, current_dist - window_size)
         view_max = current_dist + window_size
 
         ax_thr.set_xlim(view_min,view_max)
@@ -216,7 +248,7 @@ def render_interactive_sim(sesion, driver_code, show_corners):
     # 1. Extraemos el HTML crudo de la animación
     html_animacion = ani.to_jshtml()
     
-    # 2. Lo envolvemos en el div centrador (Opción 2)
+    # 2. Lo envolvemos en el div centrador
     html_centrado = f"""
     <div style="display: flex; justify-content: center; width: 100%;">
         {html_animacion}
@@ -224,6 +256,6 @@ def render_interactive_sim(sesion, driver_code, show_corners):
     """
     
     # 3. Lo pasamos a Streamlit con la altura que ya tenías
-    components.html(html_centrado, height=1600, scrolling=True)
+    components.html(html_centrado, height=1000, scrolling=False)
     
     plt.close(fig) # Cerramos la figura para liberar memoria

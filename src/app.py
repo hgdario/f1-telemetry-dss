@@ -12,6 +12,9 @@ st.markdown("""
     <style>
     .main { background-color: #0b0d10; }
     .stSidebar { background-color: #161b22; }
+    .block-container{max-width:100%!important;padding:2rem 2.5rem!important;}
+    #MainMenu,footer,[data-testid='stHeader']{visibility:hidden;}
+    [data-testid="stMetric"]{border-top:2px solid #E8002D;background:#1E1E2D;padding:12px 16px;}
     </style>
     """, unsafe_allow_html=True)
 

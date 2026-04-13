@@ -17,7 +17,7 @@ textColor           = "#D0D2DC"
 font                = "monospace"
 
 [server]
-headless            = true
+headless            = false
 runOnSave           = true
 
 [runner]
