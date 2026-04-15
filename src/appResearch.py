@@ -8,6 +8,7 @@ import Circuit2d as c2d
 import requests
 import SpeedHeatMap as sm
 import GearHeatMap as gm
+import Telemetrytrace as trace
 # ─── CONSTANTES DE NAVEGACIÓN ─────────────────────────────────────────────────
 
 NAV = {
@@ -17,6 +18,7 @@ NAV = {
         "Circuito Estático",
         "Mapa de Velocidad",
         "Mapa de Marchas",
+        "Telemetry Trace",
     ],
     "Comparaciones": [
         "Comparación de Pilotos",
@@ -396,6 +398,29 @@ elif active == "Mapa de Marchas":
         format_func=lambda x: f"Vuelta {int(x)} ⏱️ (Best Lap)" if x == num_fastest else f"Vuelta {int(x)}"
     )
     gm.render_gear_heatmap(f1s, driver,corners,lap_n)
+
+elif active == "Telemetry Trace":
+    st.header("Mapa de calor de marchas (1-8)")
+    st.divider()
+    f1s    = st.session_state["f1_session"]
+    driver_names= { d: f1s.get_driver(d).get("FullName", str(d))
+                   for d in f1s.drivers}
+    driver = st.selectbox("Piloto", options= f1s.drivers,format_func=lambda x: driver_names.get(x,x))
+
+    vuelta_limpia = f1s.laps.pick_drivers(driver).pick_accurate()
+    num_fastest = vuelta_limpia.pick_fastest()['LapNumber']
+    lista_vueltas = vuelta_limpia['LapNumber'].tolist()
+    
+    lap_n = st.selectbox(
+        "Vuelta a analizar", 
+        options=lista_vueltas,
+        index=lista_vueltas.index(num_fastest),
+        format_func=lambda x: f"Vuelta {int(x)} ⏱️ (Best Lap)" if x == num_fastest else f"Vuelta {int(x)}"
+    )
+    trace.render_telemetry_trace(f1s, driver, int(lap_n))
+
+
+
 
 
 
