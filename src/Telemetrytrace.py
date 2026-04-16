@@ -40,6 +40,9 @@ PLOTLY_FONT   = dict(family="'JetBrains Mono', 'Courier New', monospace",
                      color=F1_WHITE, size=11)
 
 TYRE_COLORS = {
+    "SUPERSOFT": "#E8002D", 
+    "ULTRASOFT": "#C77DFF",     
+    "HYPERSOFT": "#FF66B2",    
     "SOFT"    : "#E8002D",
     "MEDIUM"  : "#FFF200",
     "HARD"    : "#EBEBEB",
@@ -49,6 +52,9 @@ TYRE_COLORS = {
 }
 
 TYRE_ICONS = {
+    "HYPERSOFT": "●",
+    "SUPERSOFT": "🔴",
+    "ULTRASOFT": "🟣",
     "SOFT"  : "🔴",
     "MEDIUM": "🟡",
     "HARD"  : "⚪",
@@ -71,6 +77,80 @@ def _format_laptime(td: pd.Timedelta) -> str:
     except Exception:
         return "—"
 
+def _get_real_mid_throttle_mask(tel: pd.DataFrame, threshold: float = 25.0) -> pd.Series:
+    """
+    Calcula la derivada del acelerador.
+    """
+    # 1. Calculamos los incrementos (Delta)
+    dt = tel['Time'].dt.total_seconds().diff()
+    d_thr = tel['Throttle'].diff()
+    
+    # 2. Derivada = Velocidad a la que se mueve el pedal. Rellenamos el primer NaN con 0
+    derivative = (d_thr / dt).fillna(0)
+    
+    # 3. Condiciones: Posición intermedia Y pedal relativamente quieto
+    is_mid_position = (tel['Throttle'] > 0) & (tel['Throttle'] < 99)
+    is_pedal_stable = derivative.abs() < threshold
+    
+    return is_mid_position & is_pedal_stable
+
+def _generate_driving_summary(tel: pd.DataFrame) -> str:
+    """Analiza la telemetría y genera un resumen en lenguaje natural para el usuario."""
+    # 1. Extraemos los datos (misma lógica que el gráfico)
+    brake_col = tel['Brake'].copy()
+    if brake_col.dtype == bool or set(brake_col.dropna().unique()).issubset({0, 1, True, False}):
+        brake_val = brake_col.astype(float) * 100
+    else:
+        brake_val = brake_col
+
+    throttle_col = tel['Throttle']
+    mask_mid_gas = _get_real_mid_throttle_mask(tel, threshold=25.0)
+
+    t_full = len(tel[throttle_col >= 99])
+    t_part = len(tel[mask_mid_gas])
+    brk    = len(tel[brake_val > 0])
+    coast  = len(tel[(throttle_col == 0) & (brake_val == 0)])
+
+    total = t_full + t_part + brk + coast
+    if total == 0:
+        return "No hay datos suficientes para generar un perfil de conducción."
+
+    # 2. Calculamos porcentajes
+    p_full = (t_full / total) * 100
+    p_part = (t_part / total) * 100
+    p_coast = (coast / total) * 100
+    p_brk = (brk / total) * 100
+
+    # 3. Reglas de Inferencia
+    insights = []
+    
+    # Análisis de Agresividad / Motor
+    if p_full > 72:
+        insights.append("una alta exigencia de motor. El piloto pasa casi toda la vuelta con el pedal a fondo, lo que indica que busca su vuelta más rápida sin preocuparse por el consumo de gasolina (típico de circuitos de alta velocidad o vuelta de clasificación en modo ataque)")
+    elif p_full < 55:
+        insights.append("un perfil de tracción limitada. Encuentra una dificultad para acelerar a fondo por condiciones del trazado o del propio circuito (circuitos con curvas cerradas o urbanos como Mónaco o Singapur presentan este perfil)")
+
+    # Análisis de Coasting (Ahorro)
+    if p_coast > 8:
+        insights.append("una fase de 'Lift & Coast'. El piloto levanta el pie del acelerador para ahorrar combustible, conservar freno/neumáticos o por tráfico en pista.")
+    elif p_coast < 2.5:
+        insights.append("pocas concesiones en frenada que da como resultado una conducción agresiva. El piloto no deja que el coche ruede por inercia, pasa de acelerar al máximo a pisar el freno en milisegundos (típico al intentar adelantar a un rival)")
+
+    # Análisis de Tracción
+    if p_part > 12:
+        insights.append("mucho tiempo pisando el acelerador a media lo que indica una búsqueda constante de tracción en curvas o condiciones de pista de poca tracción")
+
+    # 4. Construimos el texto final
+    if not insights:
+        return "el piloto muestra un perfil de conducción equilibrado, propio de un ritmo de carrera estándar en este circuito, sin excesos térmicos ni ahorro extremo"
+    
+    # Unimos los insights con comas y un 'y' al final
+    if len(insights) > 1:
+        resumen = ", ".join(insights[:-1]) + " y " + insights[-1]
+    else:
+        resumen = insights[0]
+
+    return f"El análisis de telemetría revela {resumen}."
 
 def _format_gap(gap_td: Optional[pd.Timedelta]) -> str:
     """Convierte un gap al pole a string +S.mmm."""
@@ -257,7 +337,7 @@ def _render_metrics_dashboard(metrics: dict, lap_number: int) -> None:
         )
 
     with col3:
-        # Neumático con color de compuesto
+        # Neumático con color de compuesto dinámico para el icono
         st.markdown(
             f"""
             <div style="padding: 4px 0;">
@@ -268,7 +348,7 @@ def _render_metrics_dashboard(metrics: dict, lap_number: int) -> None:
                     font-family: 'JetBrains Mono', monospace;
                     letter-spacing: 1px;
                     text-transform: uppercase;
-                ">{tyre_icon} NEUMÁTICO</p>
+                "><span style="color: {tyre_color}; font-size: 14px;">{tyre_icon}</span> NEUMÁTICO</p>
                 <p style="
                     font-size: 22px;
                     font-weight: 700;
@@ -550,9 +630,107 @@ def _build_telemetry_figure(tel: pd.DataFrame, team_color: str) -> go.Figure:
             xanchor="left",
         )
 
+    # --- AÑADIR ETIQUETAS DE CURVAS ---
+    try:
+        # Recuperamos la información del circuito desde la sesión
+        # Nota: La sesión debe estar cargada previamente
+        circuit_info = tel.session.get_circuit_info()
+        
+        for _, corner in circuit_info.corners.iterrows():
+            # 1. Línea vertical punteada que atraviesa todos los subplots
+            fig.add_vline(
+                x=corner['Distance'],
+                line_width=1,
+                line_dash="dash",
+                line_color="rgba(255, 255, 255, 0.2)",
+                layer="below"
+            )
+            
+            # 2. Etiqueta con el número de curva (T1, T2...) arriba del todo
+            fig.add_annotation(
+                x=corner['Distance'],
+                y=1.02, # Un poco por encima del primer gráfico
+                xref="x",
+                yref="paper",
+                text=f"T{corner['Number']}",
+                showarrow=False,
+                font=dict(
+                    family="JetBrains Mono, monospace",
+                    size=10,
+                    color="rgba(255, 255, 255, 0.5)"
+                ),
+                align="center"
+            )
+    except Exception as e:
+        # Si por algún motivo no hay datos de mapa, la app sigue funcionando
+        pass
     return fig
 
+# ── Histograma ────────────────────────────────────────
 
+def _build_pedal_histogram(tel: pd.DataFrame) -> go.Figure:
+    brake_col = tel['Brake'].copy()
+    if brake_col.dtype == bool or set(brake_col.dropna().unique()).issubset({0, 1, True, False}):
+        brake_val = brake_col.astype(float) * 100
+    else:
+        brake_val = brake_col
+
+    throttle_col = tel['Throttle']
+
+    t_full = len(tel[throttle_col >= 99])
+    # USAMOS LA DERIVADA PARA EL MEDIO GAS REAL
+    mask_mid_gas = _get_real_mid_throttle_mask(tel, threshold=25.0)
+    t_part = len(tel[mask_mid_gas])
+    
+    brk    = len(tel[brake_val > 0])
+    coast  = len(tel[(throttle_col == 0) & (brake_val == 0)])
+
+    labels = ['A FONDO', 'MEDIO GAS', 'FRENANDO', 'COASTING']
+    values = [t_full, t_part, brk, coast]
+    colors = [ACCENT_GREEN, '#206020', ACCENT_AMBER, '#50506A']
+
+    fig = go.Figure()
+
+    # 1. El donut anclado a la mitad derecha (domain x)
+    fig.add_trace(go.Pie(
+        labels=labels,
+        values=values,
+        hole=0.45,
+        domain=dict(x=[0.5, 1.0]), # Ocupa del centro a la derecha
+        marker=dict(colors=colors, line=dict(color=BG_DARK, width=2)),
+        textinfo='percent',
+        hoverinfo='label+percent',
+        textfont=dict(family="JetBrains Mono, monospace", size=14, color=F1_WHITE),
+    ))
+
+    # 2. La leyenda inyectada nativamente en la parte izquierda
+    legend_text = (
+        "<b>Distribución de la Vuelta</b><br><br>"
+        "<span style='font-size: 11px; color: rgba(255,255,255,0.6);'>Porcentaje de tiempo dedicado a cada fase de pilotaje.</span><br>"
+        "<span style='font-size: 11px; color: rgba(255,255,255,0.6);'>Útil para identificar exceso de 'Lift & Coast' o tracción.</span><br><br>"
+        f"<span style='color: {ACCENT_GREEN};'>■</span> A fondo: Pie a tabla (100%)<br>"
+        f"<span style='color: {ACCENT_AMBER};'>■</span> Frenando: Fase de deceleración<br>"
+        "<span style='color: #50506A;'>■</span> Coasting: Ni acelerador ni freno"
+    )
+
+    fig.add_annotation(
+        x=0, y=0.5, # Centro de la mitad izquierda
+        xref="paper", yref="paper",
+        text=legend_text,
+        showarrow=False,
+        align="left",
+        font=dict(family="JetBrains Mono, monospace", size=12, color=F1_WHITE)
+    )
+
+    # 3. El panel completo en negro
+    fig.update_layout(
+        height=220,
+        margin=dict(t=20, b=20, l=20, r=20),
+        paper_bgcolor=BG_DARK, # Esto pinta todo el bloque de negro
+        plot_bgcolor=BG_DARK,
+        showlegend=False
+    )
+    return fig
 # ─────────────────────────────────────────────────────────────────────────────
 # PUNTO DE ENTRADA PÚBLICO
 # ─────────────────────────────────────────────────────────────────────────────
@@ -620,3 +798,29 @@ def render_telemetry_trace(
             "scale"   : 2,
         },
     })
+    # ---------------------------------------------------------
+    # 7. ANÁLISIS DE PILOTAJE (USO DE PEDALES)
+    # ---------------------------------------------------------
+    st.divider()
+    st.caption("ESTILO DE CONDUCCIÓN · USO DE PEDALES")
+
+    # Renderizamos la gráfica que ahora contiene también el texto
+    fig_pedals = _build_pedal_histogram(tel)
+    st.plotly_chart(fig_pedals, use_container_width=True, config={"displayModeBar": False})
+
+    # ---------------------------------------------------------
+    # 8. CONCLUSIÓN PARA STAKEHOLDERS
+    # ---------------------------------------------------------
+    summary_text = _generate_driving_summary(tel)
+    
+    st.markdown(
+        f"""
+        <div style="background-color: {BG_PANEL}; padding: 15px; border-left: 3px solid {ACCENT_CYAN}; border-radius: 2px; margin-top: 15px;">
+            <p style="font-family: 'Titillium Web', sans-serif; font-size: 14px; color: {F1_WHITE}; margin: 0;">
+                <span style="color: {ACCENT_CYAN}; font-size: 16px;">💡 <b>ESTILO DE CONDUCCIÓN:</b></span><br>
+                <span style="color: rgba(255,255,255,0.8); line-height: 1.5;">{summary_text}</span>
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
