@@ -9,25 +9,36 @@ import requests
 import SpeedHeatMap as sm
 import GearHeatMap as gm
 import Telemetrytrace as trace
+import SessionTimeLine as stl
+import Strat_Grid as sgrid
+import SessionSummary as ss
+
+# ─── CONSTANTES DE NAVEGACIÓN ─────────────────────────────────────────────────
+
 # ─── CONSTANTES DE NAVEGACIÓN ─────────────────────────────────────────────────
 
 NAV = {
-    "Datos del Coche": [
-        "Vuelta por Tiempo",
-        "Información de Sesión",
-        "Circuito Estático",
+    "Información de Sesión": [
+        "Resumen de la sesión",
+        "Cronología de Eventos",
+        "Estrategia de Neumáticos",
+        
+    ],
+    "Análisis de Piloto (Micro)": [
+        "Circuito Animado",
         "Mapa de Velocidad",
         "Mapa de Marchas",
         "Telemetry Trace",
     ],
-    "Comparaciones": [
-        "Comparación de Pilotos",
-        "Comparación de Deltas",
-        "Mapa de Calor",
+    "Comparativas Competitivas": [
+        "Superposición de Deltas",
+        "La Vuelta Ideal",
+        "Coche Fantasma (Ghost)",
     ],
     "Dinámica Vehicular": [
         "Diagrama G-G",
-        "Eficiencia de Frenada",
+        "Carga Aerodinámica",
+        "Modelo Térmico de Frenos",
     ],
 }
 
@@ -102,7 +113,7 @@ with st.sidebar:
     st.divider()
     st.caption("CONFIGURACIÓN DE SESIÓN")
 
-    year     = st.number_input("Año",          min_value=2018, max_value=2025, value=2024)
+    year     = st.number_input("Año",          min_value=2018, max_value=2026, value=2024)
     gp       = st.text_input ("Gran Premio",   value="Monaco")
     ses_type = st.selectbox  ("Sesión",        ["Q", "R", "FP1", "FP2", "FP3"])
     corners  = st.checkbox   ("Mostrar curvas", value=False)
@@ -165,6 +176,7 @@ def placeholder(module_name: str, description: str, channels: list[str] | None =
 active = st.session_state["active_module"]
 
 # ── HUB ───────────────────────────────────────────────────────────────────────
+# ── HUB ───────────────────────────────────────────────────────────────────────
 if active is None:
     st.markdown("---")
 
@@ -181,25 +193,17 @@ if active is None:
 
     st.divider()
 
-    # Tarjetas de módulo con métricas nativas
     st.subheader("Módulos disponibles")
 
-    col1, col2, col3 = st.columns(3, gap="large")
+    # Creamos 4 columnas dinámicamente basadas en nuestro nuevo diccionario NAV
+    cols = st.columns(len(NAV), gap="medium")
 
-    with col1:
-        st.subheader("Datos del Coche")
-        for m in NAV["Datos del Coche"]:
-            st.button(m, key=f"hub_{m}", use_container_width=True)
-
-    with col2:
-        st.subheader("Comparaciones")
-        for m in NAV["Comparaciones"]:
-            st.button(m, key=f"hub_{m}", use_container_width=True)
-
-    with col3:
-        st.subheader("Dinámica Vehicular")
-        for m in NAV["Dinámica Vehicular"]:
-            st.button(m, key=f"hub_{m}", use_container_width=True)
+    for col, (category, modules) in zip(cols, NAV.items()):
+        with col:
+            st.markdown(f"##### {category}")
+            for m in modules:
+                # El botón dibuja el módulo y si se clica, cambia el estado
+                st.button(m, key=f"hub_{m}", use_container_width=True)
 
     # Detectar click desde el hub
     for m in MODULE_KEYS:
@@ -207,31 +211,29 @@ if active is None:
             st.session_state["active_module"] = m
             st.rerun()
 
-
-# ── DATOS DEL COCHE ───────────────────────────────────────────────────────────
-
-elif active == "Vuelta por Tiempo":
+# ── INFORMACIÓN DE SESIÓN ─────────────────────────────────────────────────────
+elif active == "Resumen de la sesión":
     if not require_session(): st.stop()
-    # ↓ Aquí conectas tu módulo real
-    placeholder(
-        "Vuelta por Tiempo",
-        "Telemetría canal único por vuelta.",
-        channels=["vCar", "nGear", "rThrottle", "rBrake", "DRS"],
-    )
-
-elif active == "Información de Sesión":
+    ss.render_session_summary(st.session_state["f1_session"])
+    
+elif active == "Cronología de Eventos":
     if not require_session(): st.stop()
-    placeholder(
-        "Información de Sesión",
-        "Resumen de resultados, tiempos y condiciones de la sesión.",
-        channels=["LapTime", "Sector1", "Sector2", "Sector3", "Compound"],
-    )
+    stl.render_timeline(st.session_state["f1_session"])
 
-elif active == "Circuito Estático":
+elif active == "Estrategia de Neumáticos":
+    if not require_session(): st.stop()
+    sgrid.render_strategy_dashboard(st.session_state["f1_session"])
+
+
+    
+
+# ── ANÁLISIS DE PILOTO (MICRO) ────────────────────────────────────────────────
+
+elif active == "Circuito Animado":
     if not require_session(): st.stop()
 
 
-    st.header("Circuito Estático")
+    st.header("Circuito Animado")
     st.divider()
     f1s    = st.session_state["f1_session"]
 
@@ -357,120 +359,72 @@ elif active == "Circuito Estático":
 
 elif active == "Mapa de Velocidad":
     if not require_session(): st.stop()
-
-    st.header("Mapa de calor de Velocidad (Km/h)")
+    st.header("Mapa de Calor: Velocidad (Km/h)")
     st.divider()
-    f1s    = st.session_state["f1_session"]
-    driver_names= { d: f1s.get_driver(d).get("FullName", str(d))
-                   for d in f1s.drivers}
-    driver = st.selectbox("Piloto", options= f1s.drivers,format_func=lambda x: driver_names.get(x,x))
-
+    f1s = st.session_state["f1_session"]
+    driver_names = {d: f1s.get_driver(d).get("FullName", str(d)) for d in f1s.drivers}
+    driver = st.selectbox("Piloto", options=f1s.drivers, format_func=lambda x: driver_names.get(x, x), key="spd_drv")
     vuelta_limpia = f1s.laps.pick_drivers(driver).pick_accurate()
     num_fastest = vuelta_limpia.pick_fastest()['LapNumber']
     lista_vueltas = vuelta_limpia['LapNumber'].tolist()
+    lap_n = st.selectbox("Vuelta a analizar", options=lista_vueltas, index=lista_vueltas.index(num_fastest), format_func=lambda x: f"Vuelta {int(x)} ⏱️ (Best Lap)" if x == num_fastest else f"Vuelta {int(x)}", key="spd_lap")
     
-    lap_n = st.selectbox(
-        "Vuelta a analizar", 
-        options=lista_vueltas,
-        index=lista_vueltas.index(num_fastest),
-        format_func=lambda x: f"Vuelta {int(x)} ⏱️ (Best Lap)" if x == num_fastest else f"Vuelta {int(x)}"
-    )
-    sm.render_speed_heatmap(f1s, driver,corners,lap_n)
+    sm.render_speed_heatmap(f1s, driver, st.session_state.get("corners", False), lap_n)
 
 elif active == "Mapa de Marchas":
     if not require_session(): st.stop()
-
-    st.header("Mapa de calor de marchas (1-8)")
+    st.header("Mapa de Calor: Marchas (1-8)")
     st.divider()
-    f1s    = st.session_state["f1_session"]
-    driver_names= { d: f1s.get_driver(d).get("FullName", str(d))
-                   for d in f1s.drivers}
-    driver = st.selectbox("Piloto", options= f1s.drivers,format_func=lambda x: driver_names.get(x,x))
-
+    f1s = st.session_state["f1_session"]
+    driver_names = {d: f1s.get_driver(d).get("FullName", str(d)) for d in f1s.drivers}
+    driver = st.selectbox("Piloto", options=f1s.drivers, format_func=lambda x: driver_names.get(x, x), key="gear_drv")
     vuelta_limpia = f1s.laps.pick_drivers(driver).pick_accurate()
     num_fastest = vuelta_limpia.pick_fastest()['LapNumber']
     lista_vueltas = vuelta_limpia['LapNumber'].tolist()
+    lap_n = st.selectbox("Vuelta a analizar", options=lista_vueltas, index=lista_vueltas.index(num_fastest), format_func=lambda x: f"Vuelta {int(x)} ⏱️ (Best Lap)" if x == num_fastest else f"Vuelta {int(x)}", key="gear_lap")
     
-    lap_n = st.selectbox(
-        "Vuelta a analizar", 
-        options=lista_vueltas,
-        index=lista_vueltas.index(num_fastest),
-        format_func=lambda x: f"Vuelta {int(x)} ⏱️ (Best Lap)" if x == num_fastest else f"Vuelta {int(x)}"
-    )
-    gm.render_gear_heatmap(f1s, driver,corners,lap_n)
+    gm.render_gear_heatmap(f1s, driver, st.session_state.get("corners", False), lap_n)
 
 elif active == "Telemetry Trace":
-    st.header("Mapa de calor de marchas (1-8)")
+    if not require_session(): st.stop()
+    st.header("Análisis de Telemetría (Trace)")
     st.divider()
-    f1s    = st.session_state["f1_session"]
-    driver_names= { d: f1s.get_driver(d).get("FullName", str(d))
-                   for d in f1s.drivers}
-    driver = st.selectbox("Piloto", options= f1s.drivers,format_func=lambda x: driver_names.get(x,x))
-
+    f1s = st.session_state["f1_session"]
+    driver_names = {d: f1s.get_driver(d).get("FullName", str(d)) for d in f1s.drivers}
+    driver = st.selectbox("Piloto", options=f1s.drivers, format_func=lambda x: driver_names.get(x, x), key="trace_drv")
     vuelta_limpia = f1s.laps.pick_drivers(driver).pick_accurate()
     num_fastest = vuelta_limpia.pick_fastest()['LapNumber']
     lista_vueltas = vuelta_limpia['LapNumber'].tolist()
+    lap_n = st.selectbox("Vuelta a analizar", options=lista_vueltas, index=lista_vueltas.index(num_fastest), format_func=lambda x: f"Vuelta {int(x)} ⏱️ (Best Lap)" if x == num_fastest else f"Vuelta {int(x)}", key="trace_lap")
     
-    lap_n = st.selectbox(
-        "Vuelta a analizar", 
-        options=lista_vueltas,
-        index=lista_vueltas.index(num_fastest),
-        format_func=lambda x: f"Vuelta {int(x)} ⏱️ (Best Lap)" if x == num_fastest else f"Vuelta {int(x)}"
-    )
     trace.render_telemetry_trace(f1s, driver, int(lap_n))
 
 
+# ── COMPARATIVAS COMPETITIVAS ─────────────────────────────────────────────────
 
-
-
-
-# ── COMPARACIONES ─────────────────────────────────────────────────────────────
-
-elif active == "Comparación de Pilotos":
+elif active == "Superposición de Deltas":
     if not require_session(): st.stop()
-    st.header("Comparación de Pilotos")
-    st.divider()
-    f1s = st.session_state["f1_session"]
-    c1, c2 = st.columns(2)
-    with c1:
-        d1 = st.selectbox("Piloto A", f1s.drivers, key="cmp_d1")
-    with c2:
-        d2 = st.selectbox("Piloto B", f1s.drivers, key="cmp_d2",
-                          index=min(1, len(f1s.drivers) - 1))
-    # ↓ Aquí conectas tu módulo real
-    st.info("Módulo **Comparación de Pilotos** listo para conectar.")
+    placeholder("Superposición de Deltas", "Comparativa de velocidad y delta de tiempo entre dos pilotos.", ["Speed", "Distance", "Delta Time"])
 
-elif active == "Comparación de Deltas":
+elif active == "La Vuelta Ideal":
     if not require_session(): st.stop()
-    placeholder(
-        "Comparación de Deltas",
-        "Delta acumulado entre dos vueltas a lo largo de la distancia.",
-        channels=["Delta-T", "vCar ×2", "Distance"],
-    )
+    placeholder("La Vuelta Ideal", "El circuito pintado con los colores del piloto más rápido en cada micro-sector.", ["Sectors", "MinTime", "DriverColor"])
 
-elif active == "Mapa de Calor":
+elif active == "Coche Fantasma (Ghost)":
     if not require_session(): st.stop()
-    placeholder(
-        "Mapa de Calor",
-        "Heatmap de velocidad o carga sobre el trazado del circuito.",
-        channels=["vCar", "gLat", "gLon"],
-    )
+    placeholder("Coche Fantasma (Ghost)", "Animación 2D de persecución entre dos pilotos interpolada por spline.", ["X", "Y", "Time", "Interpolation"])
 
 
 # ── DINÁMICA VEHICULAR ────────────────────────────────────────────────────────
 
 elif active == "Diagrama G-G":
     if not require_session(): st.stop()
-    placeholder(
-        "Diagrama G-G",
-        "Envolvente de aceleraciones laterales y longitudinales.",
-        channels=["gLat", "gLon", "vCar"],
-    )
+    placeholder("Diagrama G-G (Círculo de Tracción)", "Envolvente de aceleraciones laterales y longitudinales para evaluar el uso del neumático.", ["gLat", "gLon", "vCar"])
 
-elif active == "Eficiencia de Frenada":
+elif active == "Carga Aerodinámica":
     if not require_session(): st.stop()
-    placeholder(
-        "Eficiencia de Frenada",
-        "Análisis de puntos de frenada, presión y distancia de parada.",
-        channels=["rBrake", "vCar", "nGear", "gLon"],
-    )
+    placeholder("Mapa de Carga Aerodinámica", "Relación matemática entre velocidad y la capacidad de generar fuerzas laterales.", ["vCar", "gLat", "Downforce Estimate"])
+
+elif active == "Modelo Térmico de Frenos":
+    if not require_session(): st.stop()
+    placeholder("Modelo Térmico de Frenos", "Simulación del calentamiento de discos basada en presión de freno y enfriamiento por velocidad.", ["Brake", "vCar", "Time"])
