@@ -513,18 +513,28 @@ def _build_g_distribution(tel: pd.DataFrame) -> go.Figure:
             env_theta.append(theta_center)
             env_r.append(r_max)
             
-    if len(env_theta) > 10: # Si hay suficientes datos para pintar una envolvente
-        # Cerramos la curva uniendo el último punto con el primero (360º)
+    if len(env_theta) > 10: 
+        # Cerramos la curva repitiendo el primer punto al final (matemática polar)
         env_theta.append(env_theta[0] + 2*np.pi)
         env_r.append(env_r[0])
         
         env_theta = np.array(env_theta)
         env_r = np.array(env_r)
         
-        # Suavizamos el radio para que la línea no quede "dentada"
+        # Tamaño de la ventana del filtro (siempre impar)
         window = min(15, len(env_r) - 1 if len(env_r) % 2 == 0 else len(env_r) - 2)
+        
         if window > 3:
-            env_r_smooth = savgol_filter(env_r, window_length=window, polyorder=3)
+            # MÉTODO PRO: Padding periódico para señales circulares
+            # Copiamos la "cola" al principio y la "cabeza" al final
+            pad_size = window
+            r_padded = np.concatenate((env_r[-pad_size:], env_r, env_r[:pad_size]))
+            
+            # Pasamos el filtro Savitzky-Golay a la señal extendida
+            r_smooth_padded = savgol_filter(r_padded, window_length=window, polyorder=3)
+            
+            # Recortamos la señal original ya suavizada sin costuras
+            env_r_smooth = r_smooth_padded[pad_size:-pad_size]
         else:
             env_r_smooth = env_r
             

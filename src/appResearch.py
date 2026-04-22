@@ -16,6 +16,7 @@ import Ghostcar as ghost
 import OptimalLap as ol
 import Head2head as h2h
 import OverallStandings as os
+import GGDiagram as gg
 # ─── CONSTANTES DE NAVEGACIÓN ─────────────────────────────────────────────────
 
 # ─── CONSTANTES DE NAVEGACIÓN ─────────────────────────────────────────────────
@@ -437,7 +438,15 @@ elif active == "Coche Fantasma":
 
 elif active == "Diagrama G-G":
     if not require_session(): st.stop()
-    placeholder("Diagrama G-G (Círculo de Tracción)", "Envolvente de aceleraciones laterales y longitudinales para evaluar el uso del neumático.", ["gLat", "gLon", "vCar"])
+    f1s = st.session_state["f1_session"]
+    driver_names = {d: f1s.get_driver(d).get("FullName", str(d)) for d in f1s.drivers}
+    driver = st.selectbox("Piloto", options=f1s.drivers, format_func=lambda x: driver_names.get(x, x), key="trace_drv")
+    vuelta_limpia = f1s.laps.pick_drivers(driver).pick_accurate()
+    num_fastest = vuelta_limpia.pick_fastest()['LapNumber']
+    lista_vueltas = vuelta_limpia['LapNumber'].tolist()
+    lap_n = st.selectbox("Vuelta a analizar", options=lista_vueltas, index=lista_vueltas.index(num_fastest), format_func=lambda x: f"Vuelta {int(x)} ⏱️ (Best Lap)" if x == num_fastest else f"Vuelta {int(x)}", key="trace_lap")
+    
+    gg.render_demand_map(f1s, driver, lap_n)
 
 elif active == "Carga Aerodinámica":
     if not require_session(): st.stop()
