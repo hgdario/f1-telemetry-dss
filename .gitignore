@@ -6,3 +6,4 @@ venv/
 AnteproyectosPDFEjemplos/
 Cache/
 *.sqlite
+docs/

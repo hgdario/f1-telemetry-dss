@@ -13,7 +13,7 @@ fastf1.Cache.enable_cache('C:/Users/hgdar/Desktop/TFG - Unnamed\Cache')
 fastf1.plotting.setup_mpl(misc_mpl_mods=False)
 print("###### Cargando datos ###### \n")
 
-sesion = fastf1.get_session(2026, 'Australia', 'Q')
+sesion = fastf1.get_session(2025, 'Jeddah', 'Q')
 sesion.load()
 
 #Data

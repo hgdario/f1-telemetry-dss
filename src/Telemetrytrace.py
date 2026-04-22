@@ -18,6 +18,7 @@ from plotly.subplots import make_subplots
 import fastf1
 from fastf1.core import Session, Lap
 from typing import Optional
+from Circuit2d import render_interactive_sim
 
 # ─────────────────────────────────────────────────────────────────────────────
 # CONSTANTES DE DISEÑO
@@ -547,7 +548,7 @@ def _extract_telemetry(session: Session, driver: str, lap_number: int) -> Option
 # PANEL DE MÉTRICAS
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _render_metrics_dashboard(metrics: dict, lap_number: int) -> None:
+def _render_metrics_dashboard(metrics: dict, lap_number: int ,) -> None:
     """
     Renderiza el panel de contexto de vuelta con métricas clave.
     Diseño tipo 'data terminal': compacto, denso en información, sin relleno.
@@ -560,6 +561,7 @@ def _render_metrics_dashboard(metrics: dict, lap_number: int) -> None:
     gap_str      = _format_gap(metrics.get("gap_to_pole"))
     vmax_str     = f"{metrics['vmax']} km/h" if metrics["vmax"] else "—"
     tyre_life_str = f"{metrics['tyre_life']} vueltas" if metrics["tyre_life"] else "—"
+    
 
     # Cabecera: Piloto + Vuelta
     st.markdown(
@@ -1009,6 +1011,7 @@ def render_telemetry_trace(
     session: Session,
     driver: str,
     lap_number: int,
+    show_corners,
 ) -> None:
     """
     Punto de entrada principal del módulo TelemetryTrace.
@@ -1048,49 +1051,64 @@ def render_telemetry_trace(
     if "Distance" not in tel.columns:
         st.error("❌ El canal 'Distance' no está disponible en los datos de telemetría.")
         return
-
-    # 6. Gráfico
-    st.markdown(
-        "<p style='font-family: JetBrains Mono, monospace; font-size: 11px; "
-        "letter-spacing: 2px; color: rgba(255,255,255,0.35); margin-bottom: 8px;'>"
-        "TELEMETRY TRACE · DISTANCIA vs CANALES</p>",
-        unsafe_allow_html=True,
-    )
-
-    fig = _build_telemetry_figure(tel, metrics.get("team_color", F1_RED))
-    st.plotly_chart(fig, use_container_width=True, config={
-        "displayModeBar"  : True,
-        "displaylogo"     : False,
-        "modeBarButtonsToRemove": ["select2d", "lasso2d", "autoScale2d"],
-        "toImageButtonOptions": {
-            "format"  : "png",
-            "filename": f"talos_trace_{driver}_lap{lap_number}",
-            "scale"   : 2,
-        },
-    })
-    # ---------------------------------------------------------
-    # 7. ANÁLISIS DE PILOTAJE (USO DE PEDALES)
-    # ---------------------------------------------------------
-    st.divider()
-    st.caption("ESTILO DE CONDUCCIÓN · USO DE PEDALES")
-
-    # Renderizamos la gráfica que ahora contiene también el texto
-    fig_pedals = _build_pedal_histogram(tel)
-    st.plotly_chart(fig_pedals, use_container_width=True, config={"displayModeBar": False})
-
-    # ---------------------------------------------------------
-    # 8. CONCLUSIÓN PARA STAKEHOLDERS
-    # ---------------------------------------------------------
-    summary_text = _generate_driving_summary(tel, session=session, driver=driver)
     
-    st.markdown(
-        f"""
-        <div style="background-color: {BG_PANEL}; padding: 15px; border-left: 3px solid {ACCENT_CYAN}; border-radius: 2px; margin-top: 15px;">
-            <p style="font-family: 'Titillium Web', sans-serif; font-size: 14px; color: {F1_WHITE}; margin: 0;">
-                <span style="color: {ACCENT_CYAN}; font-size: 16px;">💡 <b>ESTILO DE CONDUCCIÓN:</b></span><br>
-                <span style="color: rgba(255,255,255,0.8); line-height: 1.5;">{summary_text}</span>
-            </p>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    tab_clásica, tab_simulacion = st.tabs([
+        "TELEMETRÍA", 
+        "SIMULACIÓN 2D"
+    ])
+
+    with tab_clásica:
+        # 6. Gráfico Clásico
+        st.markdown(
+            "<p style='font-family: JetBrains Mono, monospace; font-size: 11px; "
+            "letter-spacing: 2px; color: rgba(255,255,255,0.35); margin-bottom: 8px;'>"
+            "TELEMETRY TRACE · DISTANCIA vs CANALES</p>",
+            unsafe_allow_html=True,
+        )
+
+        fig = _build_telemetry_figure(tel, metrics.get("team_color", F1_RED))
+        st.plotly_chart(fig, use_container_width=True, config={
+            "displayModeBar"  : True,
+            "displaylogo"     : False,
+            "modeBarButtonsToRemove": ["select2d", "lasso2d", "autoScale2d"],
+            "toImageButtonOptions": {
+                "format"  : "png",
+                "filename": f"talos_trace_{driver}_lap{lap_number}",
+                "scale"   : 2,
+            },
+        })
+        # ---------------------------------------------------------
+        # 7. ANÁLISIS DE PILOTAJE (USO DE PEDALES)
+        # ---------------------------------------------------------
+        st.divider()
+        st.caption("ESTILO DE CONDUCCIÓN · USO DE PEDALES")
+
+        # Renderizamos la gráfica que ahora contiene también el texto
+        fig_pedals = _build_pedal_histogram(tel)
+        st.plotly_chart(fig_pedals, use_container_width=True, config={"displayModeBar": False})
+
+        # ---------------------------------------------------------
+        # 8. CONCLUSIÓN PARA STAKEHOLDERS
+        # ---------------------------------------------------------
+        summary_text = _generate_driving_summary(tel, session=session, driver=driver)
+        
+        st.markdown(
+            f"""
+            <div style="background-color: {BG_PANEL}; padding: 15px; border-left: 3px solid {ACCENT_CYAN}; border-radius: 2px; margin-top: 15px;">
+                <p style="font-family: 'Titillium Web', sans-serif; font-size: 14px; color: {F1_WHITE}; margin: 0;">
+                    <span style="color: {ACCENT_CYAN}; font-size: 16px;">💡 <b>ESTILO DE CONDUCCIÓN:</b></span><br>
+                    <span style="color: rgba(255,255,255,0.8); line-height: 1.5;">{summary_text}</span>
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+    with tab_simulacion:
+        # Llamamos al monstruo de Plotly que hemos creado en Circuit2d.py
+        # Le pasamos show_corners=True para que siempre se vean las curvas
+        render_interactive_sim(
+            sesion=session, 
+            driver_code=driver, 
+            show_corners=show_corners, 
+            lap_number=lap_number
+        )

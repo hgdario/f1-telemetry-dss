@@ -12,7 +12,10 @@ import Telemetrytrace as trace
 import SessionTimeLine as stl
 import Strat_Grid as sgrid
 import SessionSummary as ss
-
+import Ghostcar as ghost
+import OptimalLap as ol
+import Head2head as h2h
+import OverallStandings as os
 # ─── CONSTANTES DE NAVEGACIÓN ─────────────────────────────────────────────────
 
 # ─── CONSTANTES DE NAVEGACIÓN ─────────────────────────────────────────────────
@@ -31,9 +34,10 @@ NAV = {
         "Telemetry Trace",
     ],
     "Comparativas Competitivas": [
+        "Comparativa de Sesión",
         "Superposición de Deltas",
         "La Vuelta Ideal",
-        "Coche Fantasma (Ghost)",
+        "Coche Fantasma",
     ],
     "Dinámica Vehicular": [
         "Diagrama G-G",
@@ -397,22 +401,36 @@ elif active == "Telemetry Trace":
     lista_vueltas = vuelta_limpia['LapNumber'].tolist()
     lap_n = st.selectbox("Vuelta a analizar", options=lista_vueltas, index=lista_vueltas.index(num_fastest), format_func=lambda x: f"Vuelta {int(x)} ⏱️ (Best Lap)" if x == num_fastest else f"Vuelta {int(x)}", key="trace_lap")
     
-    trace.render_telemetry_trace(f1s, driver, int(lap_n))
+    trace.render_telemetry_trace(f1s, driver, int(lap_n),st.session_state.get("corners", False))
 
 
 # ── COMPARATIVAS COMPETITIVAS ─────────────────────────────────────────────────
+elif active == "Comparativa de Sesión":
+    if not require_session(): st.stop()
+    st.header("Comparativa de Sesión")
+    st.divider()
+    os.render_session_compare(st.session_state["f1_session"])
 
 elif active == "Superposición de Deltas":
     if not require_session(): st.stop()
-    placeholder("Superposición de Deltas", "Comparativa de velocidad y delta de tiempo entre dos pilotos.", ["Speed", "Distance", "Delta Time"])
+    st.header("Superposición H2H · Mapa de Dominio")
+    st.divider()
+    h2h.render_lap_overlay(st.session_state["f1_session"], corners=corners)
 
 elif active == "La Vuelta Ideal":
     if not require_session(): st.stop()
-    placeholder("La Vuelta Ideal", "El circuito pintado con los colores del piloto más rápido en cada micro-sector.", ["Sectors", "MinTime", "DriverColor"])
+    st.header("La Vuelta Ideal · Microsectores")
+    st.divider()
+    ol.render_ideal_lap(st.session_state["f1_session"], corners=corners)
 
-elif active == "Coche Fantasma (Ghost)":
+elif active == "Coche Fantasma":
     if not require_session(): st.stop()
-    placeholder("Coche Fantasma (Ghost)", "Animación 2D de persecución entre dos pilotos interpolada por spline.", ["X", "Y", "Time", "Interpolation"])
+    st.header("Coche Fantasma")
+    st.divider()
+    ghost.render_ghost_car(
+            sesion=st.session_state["f1_session"],
+            corners=corners,   
+        )
 
 
 # ── DINÁMICA VEHICULAR ────────────────────────────────────────────────────────
