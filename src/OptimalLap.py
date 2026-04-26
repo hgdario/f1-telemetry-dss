@@ -74,11 +74,8 @@ F1_RED     = "#E8002D"
 GREY_TRACK = "rgba(80,80,106,0.4)"
 MONO_FONT  = "'JetBrains Mono', 'Courier New', monospace"
 
-# Número de microsectores por defecto
 DEFAULT_N_SECTORS = 25
-
-# Resolución del mapa: puntos por metro de circuito (afecta suavidad visual)
-MAP_POINTS_PER_M  = 0.5   # ~2500 pts para un circuito de 5km
+MAP_POINTS_PER_M  = 0.5
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -86,7 +83,6 @@ MAP_POINTS_PER_M  = 0.5   # ~2500 pts para un circuito de 5km
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _fmt_time(seconds: float) -> str:
-    """Segundos flotante → M:SS.mmm"""
     if np.isnan(seconds) or seconds <= 0:
         return "—"
     m  = int(seconds // 60)
@@ -149,12 +145,6 @@ def _load_best_laps_telemetry(
     _sesion: Session,
     driver_codes: tuple[str, ...],
 ) -> dict[str, pd.DataFrame]:
-    """
-    Para cada piloto, carga la telemetría de su mejor vuelta.
-    Cacheado para evitar re-descargas al cambiar el filtro de equipos.
-
-    Retorna dict {driver_code: DataFrame con columnas X, Y, Distance, Speed, Time}.
-    """
     result: dict[str, pd.DataFrame] = {}
     for drv in driver_codes:
         try:
@@ -179,26 +169,10 @@ def _compute_microsectors(
     tel_map: dict[str, pd.DataFrame],
     n_sectors: int,
 ) -> pd.DataFrame:
-    """
-    Divide el circuito en n_sectors segmentos equiespaciados y calcula,
-    para cada piloto en cada sector:
-        · v_mean  : velocidad media dentro del sector  [km/h]
-        · t_sector: tiempo real invertido en el sector [s]
-        · v_entry : velocidad al inicio del sector     [km/h]
-        · v_exit  : velocidad al final del sector      [km/h]
-        · v_min   : velocidad mínima (ápex)            [km/h]
-        · v_max   : velocidad máxima                   [km/h]
-
-    Devuelve un DataFrame con columnas:
-        sector, driver, v_mean, t_sector, v_entry, v_exit, v_min, v_max
-    """
     if not tel_map:
         return pd.DataFrame()
 
-    # Distancia máxima común a todos los pilotos
     dist_max = min(float(tel["Distance"].max()) for tel in tel_map.values())
-
-    # Bordes de los microsectores
     edges    = np.linspace(0, dist_max, n_sectors + 1)
 
     rows = []
@@ -216,7 +190,6 @@ def _compute_microsectors(
             spd_seg  = speed[mask]
             time_seg = time[mask]
 
-            # Tiempo del sector = diferencia entre la primera y última muestra
             t_sector = float(time_seg[-1] - time_seg[0])
             if t_sector <= 0:
                 continue
@@ -238,14 +211,8 @@ def _compute_microsectors(
 
 
 def _find_sector_winners(df_sectors: pd.DataFrame) -> pd.DataFrame:
-    """
-    Para cada microsector, identifica el piloto con mayor velocidad media.
-    Retorna DataFrame con una fila por sector con columnas:
-        sector, winner_driver, v_mean, t_sector, v_entry, v_exit, v_min, v_max, d_start, d_end
-    """
     if df_sectors.empty:
         return pd.DataFrame()
-
     idx_max = df_sectors.groupby("sector")["v_mean"].idxmax()
     winners = df_sectors.loc[idx_max].rename(columns={"driver": "winner_driver"})
     return winners.reset_index(drop=True).sort_values("sector")
@@ -263,19 +230,6 @@ def _build_microsector_map(
     show_corners: bool,
     n_sectors: int,
 ) -> go.Figure:
-    """
-    Construye el mapa del circuito coloreado por microsectores.
-
-    Técnica de rendering
-    ─────────────────────
-    Para cada microsector se selecciona el subconjunto de puntos XY de la
-    telemetría de referencia que caen en ese rango de distancia, y se pintan
-    como una traza Scattergl independiente con el color del equipo ganador.
-    Esto crea visualmente una línea continua multicolor.
-
-    El contorno base (gris oscuro, width mayor) se pinta antes como capa única
-    para que los bordes entre sectores sean suaves sin artefactos.
-    """
     x    = ref_tel["X"].values.astype(float)
     y    = ref_tel["Y"].values.astype(float)
     dist = ref_tel["Distance"].values.astype(float)
@@ -289,7 +243,6 @@ def _build_microsector_map(
 
     fig = go.Figure()
 
-    # ── Capa base del circuito (gris, ancha → actúa como borde) ──────────
     fig.add_trace(go.Scattergl(
         x=x, y=y,
         mode="lines",
@@ -299,7 +252,6 @@ def _build_microsector_map(
         name="_base",
     ))
 
-    # ── Un trace por microsector, coloreado por equipo ganador ────────────
     dist_max = float(dist.max())
     edges    = np.linspace(0, dist_max, n_sectors + 1)
 
@@ -327,7 +279,6 @@ def _build_microsector_map(
             f"Dist: {d0:.0f}–{d1:.0f} m"
         )
 
-        # Añadimos 1 punto de overlap con el sector siguiente para evitar gaps
         next_mask = np.zeros_like(mask)
         idxs      = np.where(mask)[0]
         if len(idxs) and idxs[-1] + 1 < len(mask):
@@ -344,7 +295,6 @@ def _build_microsector_map(
             name=f"_s{s_idx}",
         ))
 
-    # ── Línea de meta ─────────────────────────────────────────────────────
     dx_m  = float(x[1]-x[0]); dy_m = float(y[1]-y[0])
     mag_m = np.sqrt(dx_m**2+dy_m**2) or 1.0
     nmx, nmy = -dy_m/mag_m, dx_m/mag_m
@@ -357,7 +307,6 @@ def _build_microsector_map(
         hoverinfo="skip", showlegend=False, name="_meta",
     ))
 
-    # ── Etiquetas de curva ────────────────────────────────────────────────
     if show_corners and circuit_info is not None:
         for _, row in circuit_info.corners.iterrows():
             d_c   = float(row["Distance"])
@@ -376,13 +325,11 @@ def _build_microsector_map(
                 hoverinfo="skip", showlegend=False, name=f"_T{int(row['Number'])}",
             ))
 
-    # ── Numeración de microsectores (cada 5, para no saturar) ─────────────
     for s_idx in range(0, n_sectors, max(1, n_sectors // 10)):
         if s_idx >= len(winners):
             continue
         d_center = (edges[s_idx] + edges[s_idx + 1]) / 2
         idx_c    = int(np.argmin(np.abs(dist - d_center)))
-        # Label interior al circuito
         cx = float(x[idx_c]) + (mid_x - float(x[idx_c])) * 0.08
         cy = float(y[idx_c]) + (mid_y - float(y[idx_c])) * 0.08
         fig.add_annotation(
@@ -423,10 +370,6 @@ def _build_team_legend(
     sesion: Session,
     n_sectors: int,
 ) -> go.Figure:
-    """
-    Gráfico de barras horizontal: sectores ganados por equipo.
-    Doble función: leyenda de colores + ranking de dominio.
-    """
     if winners.empty:
         return go.Figure()
 
@@ -471,7 +414,7 @@ def _build_team_legend(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# TABLA DE MICROSECTORES
+# TABLA DE MICROSECTORES (SIN IDENTACIÓN EN HTML)
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _render_sector_table(
@@ -480,11 +423,6 @@ def _render_sector_table(
     ideal_time: float,
     pole_time: float,
 ) -> None:
-    """
-    Tabla HTML estilo data terminal con un fila por microsector:
-        S# | PILOTO | EQUIPO | V_ENTRY | V_MIN (ápex) | V_EXIT | V_MEDIA | TIEMPO
-    Footer con tiempo ideal y diferencia respecto al pole.
-    """
     st.markdown(
         "<p style='font-family: JetBrains Mono, monospace; font-size: 11px; "
         "letter-spacing: 2px; color: rgba(255,255,255,0.35); margin: 16px 0 8px;'>"
@@ -507,96 +445,62 @@ def _render_sector_table(
         d_start    = float(row.get("d_start", 0))
         d_end      = float(row.get("d_end", 0))
 
+        # Importante: Pegado a la izquierda
         rows_html += f"""
-        <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
-            <td style="padding:6px 10px;color:rgba(255,255,255,0.4);font-size:10px;">
-                S{s_idx}
-            </td>
-            <td style="padding:6px 10px;">
-                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;
-                    background:{team_color};margin-right:8px;"></span>
-                <b style="color:{team_color};">{drv}</b>
-                <span style="color:rgba(255,255,255,0.5);font-size:10px;"> {full_name}</span>
-            </td>
-            <td style="padding:6px 10px;color:rgba(255,255,255,0.55);font-size:10px;">
-                {team_name}
-            </td>
-            <td style="padding:6px 10px;color:rgba(255,255,255,0.6);font-size:11px;text-align:right;">
-                {v_entry:.0f}
-            </td>
-            <td style="padding:6px 10px;color:#C77DFF;font-size:11px;text-align:right;">
-                {v_min:.0f}
-            </td>
-            <td style="padding:6px 10px;color:rgba(255,255,255,0.6);font-size:11px;text-align:right;">
-                {v_exit:.0f}
-            </td>
-            <td style="padding:6px 10px;color:#00D2FF;font-weight:700;text-align:right;">
-                {v_mean:.1f}
-            </td>
-            <td style="padding:6px 10px;color:#39FF14;font-weight:700;text-align:right;">
-                {t_sector:.3f}s
-            </td>
-            <td style="padding:6px 10px;color:rgba(255,255,255,0.3);font-size:9px;text-align:right;">
-                {d_start:.0f}–{d_end:.0f} m
-            </td>
-        </tr>
-        """
+<tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+<td style="padding:6px 10px;color:rgba(255,255,255,0.4);font-size:10px;">S{s_idx}</td>
+<td style="padding:6px 10px;">
+<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:{team_color};margin-right:8px;"></span>
+<b style="color:{team_color};">{drv}</b>
+<span style="color:rgba(255,255,255,0.5);font-size:10px;"> {full_name}</span>
+</td>
+<td style="padding:6px 10px;color:rgba(255,255,255,0.55);font-size:10px;">{team_name}</td>
+<td style="padding:6px 10px;color:rgba(255,255,255,0.6);font-size:11px;text-align:right;">{v_entry:.0f}</td>
+<td style="padding:6px 10px;color:#C77DFF;font-size:11px;text-align:right;">{v_min:.0f}</td>
+<td style="padding:6px 10px;color:rgba(255,255,255,0.6);font-size:11px;text-align:right;">{v_exit:.0f}</td>
+<td style="padding:6px 10px;color:#00D2FF;font-weight:700;text-align:right;">{v_mean:.1f}</td>
+<td style="padding:6px 10px;color:#39FF14;font-weight:700;text-align:right;">{t_sector:.3f}s</td>
+<td style="padding:6px 10px;color:rgba(255,255,255,0.3);font-size:9px;text-align:right;">{d_start:.0f}–{d_end:.0f} m</td>
+</tr>
+"""
 
-    # Footer con tiempos
     delta_vs_pole = ideal_time - pole_time if pole_time > 0 else 0
     delta_str     = f"−{abs(delta_vs_pole):.3f}s" if delta_vs_pole < 0 else f"+{delta_vs_pole:.3f}s"
     delta_color   = "#39FF14" if delta_vs_pole <= 0 else F1_RED
 
+    # Importante: Pegado a la izquierda
     html_table = f"""
-    <div style="overflow-x:auto;overflow-y:auto;max-height:520px;">
-    <table style="
-        width:100%;
-        border-collapse:collapse;
-        font-family:{MONO_FONT};
-        font-size:12px;
-        color:{F1_WHITE};
-        background:{BG_MAP};
-    ">
-        <thead>
-        <tr style="border-bottom:2px solid rgba(255,255,255,0.12);
-                   color:rgba(255,255,255,0.35);font-size:9px;letter-spacing:1px;
-                   position:sticky;top:0;background:{BG_MAP};z-index:10;">
-            <th style="padding:8px 10px;text-align:left;">SEC</th>
-            <th style="padding:8px 10px;text-align:left;">PILOTO</th>
-            <th style="padding:8px 10px;text-align:left;">EQUIPO</th>
-            <th style="padding:8px 10px;text-align:right;">V ENTRADA</th>
-            <th style="padding:8px 10px;text-align:right;color:#C77DFF;">V ÁPEX</th>
-            <th style="padding:8px 10px;text-align:right;">V SALIDA</th>
-            <th style="padding:8px 10px;text-align:right;color:#00D2FF;">V MEDIA</th>
-            <th style="padding:8px 10px;text-align:right;color:#39FF14;">TIEMPO</th>
-            <th style="padding:8px 10px;text-align:right;">DISTANCIA</th>
-        </tr>
-        </thead>
-        <tbody>{rows_html}</tbody>
-        <tfoot>
-        <tr style="border-top:2px solid rgba(255,255,255,0.15);background:{BG_PANEL};">
-            <td colspan="7" style="padding:10px 10px;
-                font-size:13px;font-weight:800;letter-spacing:2px;">
-                VUELTA IDEAL TEÓRICA
-            </td>
-            <td style="padding:10px 10px;color:#39FF14;font-size:14px;
-                font-weight:800;text-align:right;">
-                {_fmt_time(ideal_time)}
-            </td>
-            <td style="padding:10px 10px;color:{delta_color};font-size:11px;
-                text-align:right;font-weight:700;">
-                {delta_str} vs pole
-            </td>
-        </tr>
-        </tfoot>
-    </table>
-    </div>
-    """
+<div style="overflow-x:auto;overflow-y:auto;max-height:520px;">
+<table style="width:100%;border-collapse:collapse;font-family:{MONO_FONT};font-size:12px;color:{F1_WHITE};background:{BG_MAP};">
+<thead>
+<tr style="border-bottom:2px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.35);font-size:9px;letter-spacing:1px;position:sticky;top:0;background:{BG_MAP};z-index:10;">
+<th style="padding:8px 10px;text-align:left;">SEC</th>
+<th style="padding:8px 10px;text-align:left;">PILOTO</th>
+<th style="padding:8px 10px;text-align:left;">EQUIPO</th>
+<th style="padding:8px 10px;text-align:right;">V ENTRADA</th>
+<th style="padding:8px 10px;text-align:right;color:#C77DFF;">V ÁPEX</th>
+<th style="padding:8px 10px;text-align:right;">V SALIDA</th>
+<th style="padding:8px 10px;text-align:right;color:#00D2FF;">V MEDIA</th>
+<th style="padding:8px 10px;text-align:right;color:#39FF14;">TIEMPO</th>
+<th style="padding:8px 10px;text-align:right;">DISTANCIA</th>
+</tr>
+</thead>
+<tbody>{rows_html}</tbody>
+<tfoot>
+<tr style="border-top:2px solid rgba(255,255,255,0.15);background:{BG_PANEL};">
+<td colspan="7" style="padding:10px 10px;font-size:13px;font-weight:800;letter-spacing:2px;">VUELTA IDEAL TEÓRICA</td>
+<td style="padding:10px 10px;color:#39FF14;font-size:14px;font-weight:800;text-align:right;">{_fmt_time(ideal_time)}</td>
+<td style="padding:10px 10px;color:{delta_color};font-size:11px;text-align:right;font-weight:700;">{delta_str} vs pole</td>
+</tr>
+</tfoot>
+</table>
+</div>
+"""
     st.markdown(html_table, unsafe_allow_html=True)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# GRÁFICO DE VELOCIDADES POR SECTOR (sparkline comparison)
+# GRÁFICO DE VELOCIDADES POR SECTOR 
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _build_speed_profile(
@@ -605,25 +509,15 @@ def _build_speed_profile(
     sesion: Session,
     n_sectors: int,
 ) -> go.Figure:
-    """
-    Perfil de velocidad media por microsector para todos los pilotos
-    del subconjunto filtrado. Cada piloto = una línea de su color.
-    El piloto ganador de cada sector tiene su punto marcado.
-
-    Útil para ver si un coche gana por velocidad punta (tramos rápidos)
-    o por velocidad en curva (sectores lentos).
-    """
     if tel_map is None or winners.empty:
         return go.Figure()
 
-    # Calcular el centroide de distancia de cada sector
     dist_max_ref = min(float(tel["Distance"].max()) for tel in tel_map.values())
     edges        = np.linspace(0, dist_max_ref, n_sectors + 1)
     d_centers    = [(edges[i]+edges[i+1])/2 for i in range(n_sectors)]
 
     fig = go.Figure()
 
-    # Una línea por piloto
     for drv, tel in tel_map.items():
         dist  = tel["Distance"].values.astype(float)
         speed = tel["Speed"].values.astype(float)
@@ -646,7 +540,6 @@ def _build_speed_profile(
             hovertemplate=f"<b>{drv}</b>  S%{{x}}: %{{y:.1f}} km/h<extra></extra>",
         ))
 
-    # Resaltar la velocidad ganadora de cada sector con un marcador
     winner_x, winner_y, winner_colors, winner_hover = [], [], [], []
     for _, row in winners.iterrows():
         s_idx     = int(row["sector"])
@@ -701,105 +594,10 @@ def _build_speed_profile(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# SUGERENCIAS PARA MÉTRICAS ADICIONALES (render en sidebar / expander)
-# ─────────────────────────────────────────────────────────────────────────────
-
-def _render_ideal_lap_insights(
-    winners: pd.DataFrame,
-    df_sectors: pd.DataFrame,
-    sesion: Session,
-    ideal_time: float,
-    pole_time: float,
-) -> None:
-    """
-    Panel de análisis adicional de la vuelta ideal:
-    métricas derivadas que no caben en el mapa ni la tabla.
-    """
-    if winners.empty or df_sectors.empty:
-        return
-
-    # ── Dominancia por equipo ─────────────────────────────────────────────
-    team_counts: dict[str, int] = {}
-    for _, row in winners.iterrows():
-        drv  = str(row["winner_driver"])
-        team = _get_team_name(sesion, drv)
-        team_counts[team] = team_counts.get(team, 0) + 1
-
-    top_team  = max(team_counts, key=lambda t: team_counts[t])
-    top_count = team_counts[top_team]
-    pct_dom   = top_count / len(winners) * 100
-
-    # ── Zonas de fuerza vs debilidad ──────────────────────────────────────
-    # Sector más lento (ápex más bajo) = zona técnica
-    idx_slow = winners["v_min"].idxmin()
-    s_slow   = int(winners.loc[idx_slow, "sector"]) + 1
-    d_slow   = float(winners.loc[idx_slow, "d_start"])
-
-    # Sector más rápido (v_mean mayor) = zona de carga aerodinámica
-    idx_fast = winners["v_mean"].idxmax()
-    s_fast   = int(winners.loc[idx_fast, "sector"]) + 1
-
-    # ── Gap ideal vs pole ─────────────────────────────────────────────────
-    gap_s    = abs(ideal_time - pole_time) if pole_time > 0 else 0
-    gap_pct  = gap_s / pole_time * 100 if pole_time > 0 else 0
-
-    # ── Render ────────────────────────────────────────────────────────────
-    st.markdown(
-        "<p style='font-family: JetBrains Mono, monospace; font-size: 11px; "
-        "letter-spacing: 2px; color: rgba(255,255,255,0.35); margin: 16px 0 8px;'>"
-        "ANÁLISIS DE LA VUELTA IDEAL</p>",
-        unsafe_allow_html=True,
-    )
-
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric(
-        "Equipo dominante",
-        top_team,
-        f"{top_count} sec · {pct_dom:.0f}%",
-        help="Equipo con más microsectores ganados",
-    )
-    c2.metric(
-        "Sector técnico",
-        f"S{s_slow}  ({d_slow:.0f} m)",
-        f"V ápex {winners.loc[idx_slow,'v_min']:.0f} km/h",
-        help="Microsector con menor velocidad en ápex (curva más lenta)",
-    )
-    c3.metric(
-        "Sector más veloz",
-        f"S{s_fast}",
-        f"{winners.loc[idx_fast,'v_mean']:.0f} km/h media",
-        help="Microsector con mayor velocidad media (tramo más rápido)",
-    )
-    c4.metric(
-        "Gap ideal vs pole",
-        f"−{gap_s:.3f}s",
-        f"−{gap_pct:.2f}%",
-        help="Diferencia entre la vuelta ideal teórica y el tiempo de pole real. "
-             "Siempre negativo: la vuelta ideal es siempre mejor que cualquier vuelta real.",
-    )
-
-
-# ─────────────────────────────────────────────────────────────────────────────
 # PUNTO DE ENTRADA PÚBLICO
 # ─────────────────────────────────────────────────────────────────────────────
 
 def render_ideal_lap(sesion: Session, corners: bool = True) -> None:
-    """
-    Punto de entrada principal del módulo La Vuelta Ideal.
-
-    Renders:
-      1. Controles: número de microsectores + filtro de equipos.
-      2. Mapa del circuito coloreado por equipo más veloz en cada sector.
-      3. Leyenda de dominio (barras por equipo).
-      4. Perfil de velocidad por sector para todos los pilotos.
-      5. Tabla de microsectores con piloto, equipo, velocidades y tiempo.
-      6. KPIs de la vuelta ideal (tiempo teórico, gaps, zona técnica).
-
-    Parámetros
-    ──────────
-    sesion  : fastf1.core.Session ya cargada (con load_telemetry=True).
-    corners : si se muestran etiquetas de curva en el mapa.
-    """
     st.markdown(
         "<p style='font-family: JetBrains Mono, monospace; font-size: 11px; "
         "letter-spacing: 2px; color: rgba(255,255,255,0.35); margin-bottom: 8px;'>"
@@ -819,8 +617,7 @@ def render_ideal_lap(sesion: Session, corners: bool = True) -> None:
             key="il_nsectors",
         )
 
-    # Todos los equipos disponibles en la sesión
-    all_teams: dict[str, list[str]] = {}   # team_name → [driver_codes]
+    all_teams: dict[str, list[str]] = {}
     driver_names: dict[str, str]    = {}
     for drv in sesion.drivers:
         try:
@@ -839,17 +636,11 @@ def render_ideal_lap(sesion: Session, corners: bool = True) -> None:
             options=sorted(all_teams.keys()),
             default=[],
             key="il_teams",
-            help="Selecciona equipos para comparar solo ese subconjunto. "
-                 "Útil para batallas de midfield o comparativas intra-equipo.",
+            help="Selecciona equipos para comparar solo ese subconjunto.",
         )
 
-    # Drivers activos según filtro
     if selected_teams:
-        active_drivers = [
-            drv
-            for team in selected_teams
-            for drv in all_teams.get(team, [])
-        ]
+        active_drivers = [drv for team in selected_teams for drv in all_teams.get(team, [])]
     else:
         active_drivers = list(sesion.drivers)
 
@@ -859,62 +650,61 @@ def render_ideal_lap(sesion: Session, corners: bool = True) -> None:
 
     st.divider()
 
-    # ── 2. Carga de telemetría ─────────────────────────────────────────────
-    with st.spinner("Cargando mejor vuelta de cada piloto..."):
+    # ── 2. Carga y Cálculo ─────────────────────────────────────────────
+    with st.spinner("Cargando telemetrías y calculando sectores..."):
         tel_map = _load_best_laps_telemetry(sesion, tuple(active_drivers))
+        if not tel_map:
+            st.error("❌ No se pudo cargar telemetría.")
+            return
 
-    if not tel_map:
-        st.error("❌ No se pudo cargar telemetría para ningún piloto del filtro.")
-        return
-
-    # ── 3. Cálculo de microsectores ────────────────────────────────────────
-    with st.spinner(f"Calculando {n_sectors} microsectores..."):
         df_sectors = _compute_microsectors(tel_map, n_sectors)
         winners    = _find_sector_winners(df_sectors)
 
-    if winners.empty:
-        st.error("❌ No hay datos suficientes para calcular los microsectores.")
-        return
+        if winners.empty:
+            st.error("❌ No hay datos suficientes.")
+            return
 
-    # ── 4. Tiempo ideal = suma de los mínimos tiempos reales por sector ────
     ideal_time = float(winners["t_sector"].sum())
-
-    # Tiempo de pole de la sesión para comparar
     try:
-        pole_time = float(
-            sesion.laps.pick_accurate().pick_fastest()["LapTime"].total_seconds()
-        )
+        pole_time = float(sesion.laps.pick_accurate().pick_fastest()["LapTime"].total_seconds())
     except Exception:
         pole_time = 0.0
 
-    # ── 5. Circuit info ────────────────────────────────────────────────────
     try:
         circuit_info = sesion.get_circuit_info()
     except Exception:
         circuit_info = None
 
-    # Telemetría de referencia para el mapa XY (usamos el primer piloto)
     ref_driver = list(tel_map.keys())[0]
     ref_tel    = tel_map[ref_driver]
 
-    # ── 6. KPIs rápidos en cabecera ───────────────────────────────────────
+    # ── 3. Panel de Insights (Subido aquí) ──────────────────────────────
+    team_counts: dict[str, int] = {}
+    for _, row in winners.iterrows():
+        drv  = str(row["winner_driver"])
+        team = _get_team_name(sesion, drv)
+        team_counts[team] = team_counts.get(team, 0) + 1
+
+    top_team  = max(team_counts, key=lambda t: team_counts[t])
+    top_count = team_counts[top_team]
+    pct_dom   = top_count / len(winners) * 100
+
+    idx_slow = winners["v_min"].idxmin()
+    s_slow   = int(winners.loc[idx_slow, "sector"]) + 1
+    
+
+    idx_fast = winners["v_mean"].idxmax()
+    s_fast   = int(winners.loc[idx_fast, "sector"]) + 1
+
     k1, k2, k3, k4 = st.columns(4)
-    k1.metric("Pilotos comparados", len(tel_map))
-    k2.metric("Microsectores",      n_sectors)
-    k3.metric(
-        "Vuelta ideal teórica",
-        _fmt_time(ideal_time),
-        help="Suma de los tiempos mínimos reales por sector. Lower bound físico.",
-    )
-    k4.metric(
-        "Gap vs pole real",
-        f"−{abs(ideal_time-pole_time):.3f}s" if pole_time else "—",
-        help="Diferencia entre la vuelta ideal y el mejor tiempo real de la sesión.",
-    )
+    k1.metric("Equipo dominante", top_team, f"{top_count} sec · {pct_dom:.0f}%")
+    k2.metric("Sector más veloz", f"S{s_fast}", f"{winners.loc[idx_fast,'v_mean']:.0f} km/h")
+    k3.metric("Sector más lento (Vértice)", f"S{s_slow}", f"{winners.loc[idx_slow,'v_min']:.0f} km/h")
+    k4.metric("Vuelta ideal teórica", _fmt_time(ideal_time))
 
     st.divider()
 
-    # ── 7. Mapa + leyenda ─────────────────────────────────────────────────
+    # ── 4. Mapa + leyenda ─────────────────────────────────────────────────
     col_map, col_legend = st.columns([3, 1])
 
     with col_map:
@@ -924,21 +714,8 @@ def render_ideal_lap(sesion: Session, corners: bool = True) -> None:
             "CIRCUIT IDEAL MAP · COLOR = EQUIPO MÁS VELOZ</p>",
             unsafe_allow_html=True,
         )
-        fig_map = _build_microsector_map(
-            ref_tel=ref_tel, winners=winners,
-            sesion=sesion, circuit_info=circuit_info,
-            show_corners=corners, n_sectors=n_sectors,
-        )
-        st.plotly_chart(fig_map, use_container_width=True, config={
-            "displayModeBar"         : True,
-            "displaylogo"            : False,
-            "modeBarButtonsToRemove" : ["select2d", "lasso2d"],
-            "toImageButtonOptions"   : {
-                "format"  : "png",
-                "filename": "talos_ideal_lap_map",
-                "scale"   : 2,
-            },
-        })
+        fig_map = _build_microsector_map(ref_tel, winners, sesion, circuit_info, corners, n_sectors)
+        st.plotly_chart(fig_map, use_container_width=True, config={"displayModeBar": False})
 
     with col_legend:
         st.markdown(
@@ -948,10 +725,9 @@ def render_ideal_lap(sesion: Session, corners: bool = True) -> None:
             unsafe_allow_html=True,
         )
         fig_legend = _build_team_legend(winners, sesion, n_sectors)
-        st.plotly_chart(fig_legend, use_container_width=True,
-                        config={"displayModeBar": False})
+        st.plotly_chart(fig_legend, use_container_width=True, config={"displayModeBar": False})
 
-    # ── 8. Perfil de velocidad por sector ─────────────────────────────────
+    # ── 5. Perfil de velocidad ──────────────────────────────────────────
     st.markdown(
         "<p style='font-family: JetBrains Mono, monospace; font-size: 11px; "
         "letter-spacing: 2px; color: rgba(255,255,255,0.35); margin: 8px 0 4px;'>"
@@ -959,12 +735,7 @@ def render_ideal_lap(sesion: Session, corners: bool = True) -> None:
         unsafe_allow_html=True,
     )
     fig_speed = _build_speed_profile(tel_map, winners, sesion, n_sectors)
-    st.plotly_chart(fig_speed, use_container_width=True,
-                    config={"displayModeBar": False})
+    st.plotly_chart(fig_speed, use_container_width=True, config={"displayModeBar": False})
 
-    # ── 9. Tabla ──────────────────────────────────────────────────────────
+    # ── 6. Tabla (Con el Gap vs Pole en el footer) ────────────────────────
     _render_sector_table(winners, sesion, ideal_time, pole_time)
-
-    # ── 10. Análisis adicional ────────────────────────────────────────────
-    st.divider()
-    _render_ideal_lap_insights(winners, df_sectors, sesion, ideal_time, pole_time)

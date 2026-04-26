@@ -26,6 +26,7 @@ NAV = {
         "Telemetry Trace",
     ],
     "Comparativas Competitivas": [
+        "Panel de Equipo",
         "Superposición de Deltas",
         "La Vuelta Ideal",
         "Coche Fantasma (Ghost)",
@@ -395,6 +396,11 @@ elif active == "Telemetry Trace":
 
 
 # ── COMPARATIVAS COMPETITIVAS ─────────────────────────────────────────────────
+
+elif active == "Panel de Equipo":
+    if not require_session(): st.stop()
+    import TeamTelemetry as tteam
+    tteam.render_team_telemetry(st.session_state["f1_session"], corners=st.session_state.get("corners", False))
 
 elif active == "Superposición de Deltas":
     if not require_session(): st.stop()

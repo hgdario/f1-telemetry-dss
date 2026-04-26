@@ -326,8 +326,8 @@ def _build_telemetry_overlay(
     circuit_info,
 ) -> go.Figure:
     """
-    4 subplots verticales compartiendo eje X de distancia:
-      Speed · Throttle+Brake · Gear · RPM
+    5 subplots verticales compartiendo eje X de distancia:
+      Speed · Throttle · Brake · Gear · RPM
     Ambas vueltas superpuestas en cada panel.
     """
     # Detectar curvas para vlines
@@ -339,10 +339,10 @@ def _build_telemetry_overlay(
                 corner_dists.append(float(row["Distance"]))
 
     fig = make_subplots(
-        rows=4, cols=1, shared_xaxes=True,
+        rows=5, cols=1, shared_xaxes=True,
         vertical_spacing=0.03,
-        subplot_titles=["SPEED (km/h)", "THROTTLE / BRAKE", "GEAR", "RPM"],
-        row_heights=[0.35, 0.25, 0.20, 0.20],
+        subplot_titles=["SPEED (km/h)", "THROTTLE (%)", "BRAKE (%)", "GEAR", "RPM"],
+        row_heights=[0.30, 0.20, 0.15, 0.15, 0.20],
     )
 
     def add_pair(channel, row, suffix="", dash_b="dot"):
@@ -364,28 +364,13 @@ def _build_telemetry_overlay(
 
     add_pair("speed",    1, " km/h")
     add_pair("throttle", 2, "%")
-    add_pair("brake",    2, "%")
-    add_pair("gear",     3)
-    add_pair("rpm",      4, " rpm")
-
-    # Freno: mismo row que throttle con colores más claros
-    for r in [2]:
-        fig.add_trace(go.Scatter(
-            x=dist_grid, y=da["brake"],
-            mode="lines",
-            line=dict(color=f"rgba({_hex_rgb(color_a)},0.5)", width=1.2, dash="dashdot"),
-            showlegend=False, hoverinfo="skip", name=f"_brk_a",
-        ), row=r, col=1)
-        fig.add_trace(go.Scatter(
-            x=dist_grid, y=db["brake"],
-            mode="lines",
-            line=dict(color=f"rgba({_hex_rgb(color_b)},0.5)", width=1.2, dash="dashdot"),
-            showlegend=False, hoverinfo="skip", name=f"_brk_b",
-        ), row=r, col=1)
+    add_pair("brake",    3, "%")
+    add_pair("gear",     4)
+    add_pair("rpm",      5, " rpm")
 
     # Vlines de curvas
     for d_c in corner_dists:
-        for r in range(1, 5):
+        for r in range(1, 6):
             fig.add_vline(x=d_c, line_width=0.6, line_dash="dash",
                           line_color="rgba(255,255,255,0.1)", row=r, col=1)
 
@@ -409,7 +394,7 @@ def _build_telemetry_overlay(
     )
 
     fig.update_layout(
-        height=560,
+        height=700,
         paper_bgcolor=BG_DARK, plot_bgcolor=BG_PANEL,
         font=dict(family=MONO_FONT, color=F1_WHITE, size=10),
         hovermode="x unified",
@@ -417,9 +402,9 @@ def _build_telemetry_overlay(
                     bgcolor="rgba(0,0,0,0)", font=dict(size=10)),
         margin=dict(l=54, r=20, t=50, b=40),
         hoverlabel=dict(bgcolor=BG_SURFACE, font=dict(family=MONO_FONT, size=10)),
-        xaxis4=dict(**ax_common, title="Distancia (m)", ticksuffix=" m"),
+        xaxis5=dict(**ax_common, title="Distancia (m)", ticksuffix=" m"),
     )
-    for i in range(1, 5):
+    for i in range(1, 6):
         fig.update_layout(**{f"xaxis{i if i>1 else ''}": ax_common})
         fig.update_layout(**{f"yaxis{i if i>1 else ''}": ax_common})
 
@@ -515,102 +500,12 @@ def _build_delta_and_dominance(
         margin=dict(l=54, r=20, t=30, b=40),
         showlegend=False, hovermode="x",
         xaxis2=dict(**ax, title="Distancia (m)", ticksuffix=" m"),
-        yaxis=dict(**ax, zeroline=True, zerolinecolor="rgba(255,255,255,0.2)",
-                   ticksuffix="s"),
+        yaxis={**ax, "zeroline": True, "zerolinecolor": "rgba(255,255,255,0.2)", "ticksuffix": "s"},
         yaxis2=dict(showgrid=False, zeroline=False, showticklabels=False),
     )
     for ann in fig.layout.annotations:
         ann.update(font=dict(family=MONO_FONT, size=9, color="rgba(255,255,255,0.40)"),
                    x=0, xanchor="left")
-    return fig
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# DIAGRAMA G-G SUPERPUESTO
-# ─────────────────────────────────────────────────────────────────────────────
-
-def _build_gg_overlay(
-    da: dict, db: dict,
-    dist_grid: np.ndarray,
-    color_a: str, color_b: str,
-    label_a: str, label_b: str,
-) -> Optional[go.Figure]:
-    """
-    Calcula G lateral y longitudinal para ambas vueltas y los superpone
-    en el mismo diagrama G-G. La "huella" de cada piloto revela su estilo:
-    · Huella grande y circular → usa todo el círculo de fricción.
-    · Huella alargada en eje Y → curvas rápidas dominan.
-    · Huella alargada en eje X → frenadas/aceleraciones fuertes.
-    """
-    from scipy.ndimage import gaussian_filter1d
-
-    def calc_g(data: dict) -> tuple[np.ndarray, np.ndarray]:
-        speed_ms = data["speed"] / 3.6
-        # Tiempo artificial desde distancia (aprox)
-        # Usamos dist_grid y velocidad para estimar dt[i] = dd/v[i]
-        dd = np.diff(dist_grid, prepend=dist_grid[1]-dist_grid[0])
-        dt = np.where(speed_ms > 0, dd / speed_ms, 0.01)
-        dt = np.clip(dt, 1e-4, 1.0)
-
-        # G longitudinal
-        d_speed = np.gradient(speed_ms, dist_grid)
-        g_lon   = gaussian_filter1d(d_speed * speed_ms / 9.81, sigma=5)
-
-        # G lateral: requiere heading — aproximamos con x, y
-        heading = np.arctan2(np.gradient(data["y"], dist_grid),
-                             np.gradient(data["x"], dist_grid))
-        omega   = np.gradient(np.unwrap(heading), dist_grid) * speed_ms
-        g_lat   = gaussian_filter1d(omega / 9.81, sigma=5)
-
-        return np.clip(g_lat, -6, 6), np.clip(g_lon, -6, 6)
-
-    try:
-        g_lat_a, g_lon_a = calc_g(da)
-        g_lat_b, g_lon_b = calc_g(db)
-    except Exception:
-        return None
-
-    fig = go.Figure()
-
-    # Círculo de fricción de referencia
-    g_max = max(np.percentile(np.sqrt(g_lat_a**2+g_lon_a**2), 98),
-                np.percentile(np.sqrt(g_lat_b**2+g_lon_b**2), 98))
-    theta = np.linspace(0, 2*np.pi, 200)
-    fig.add_trace(go.Scatter(
-        x=g_max*np.cos(theta), y=g_max*np.sin(theta),
-        mode="lines", line=dict(color="rgba(255,255,255,0.12)", width=1, dash="dot"),
-        hoverinfo="skip", showlegend=False,
-    ))
-    fig.add_annotation(x=g_max*0.72, y=g_max*0.72, text=f"{g_max:.1f}G",
-                       font=dict(color="rgba(255,255,255,0.25)", size=9, family=MONO_FONT),
-                       showarrow=False)
-
-    for g_lat, g_lon, color, label in [
-        (g_lat_a, g_lon_a, color_a, label_a),
-        (g_lat_b, g_lon_b, color_b, label_b),
-    ]:
-        fig.add_trace(go.Scattergl(
-            x=g_lon, y=g_lat,
-            mode="markers",
-            marker=dict(size=2, color=color, opacity=0.5),
-            name=label,
-            hovertemplate=f"<b>{label}</b><br>G lon: %{{x:.2f}}<br>G lat: %{{y:.2f}}<extra></extra>",
-        ))
-
-    fig.update_layout(
-        height=380,
-        paper_bgcolor=BG_DARK, plot_bgcolor=BG_PANEL,
-        font=dict(family=MONO_FONT, color=F1_WHITE, size=10),
-        legend=dict(orientation="h", y=1.05, x=0.5, xanchor="center",
-                    bgcolor="rgba(0,0,0,0)", font=dict(size=10)),
-        margin=dict(l=54, r=20, t=30, b=50),
-        xaxis=dict(title="G Longitudinal", showgrid=True, gridcolor="rgba(255,255,255,0.06)",
-                   zeroline=True, zerolinecolor="rgba(255,255,255,0.2)",
-                   tickfont=dict(size=9, color="rgba(255,255,255,0.4)")),
-        yaxis=dict(title="G Lateral", showgrid=True, gridcolor="rgba(255,255,255,0.06)",
-                   zeroline=True, zerolinecolor="rgba(255,255,255,0.2)",
-                   tickfont=dict(size=9, color="rgba(255,255,255,0.4)")),
-    )
     return fig
 
 
@@ -720,10 +615,15 @@ def _lap_selector(sesion: Session, prefix: str, label: str,
 # PUNTO DE ENTRADA PÚBLICO
 # ─────────────────────────────────────────────────────────────────────────────
 
+# ─────────────────────────────────────────────────────────────────────────────
+# PUNTO DE ENTRADA PÚBLICO (SIN PESTAÑAS)
+# ─────────────────────────────────────────────────────────────────────────────
+
 def render_lap_overlay(sesion: Session, corners: bool = True) -> None:
     """
     Render principal del módulo LapOverlay.
-    Tabs: Mapa H2H · Telemetría superpuesta · Delta · G-G · Sugerencias TFG
+    Muestra de forma secuencial y sin pestañas: 
+    KPIs, Mapa H2H, Telemetría superpuesta, y Delta acumulado.
     """
     st.markdown(
         "<p style='font-family:JetBrains Mono,monospace;font-size:11px;"
@@ -758,7 +658,7 @@ def render_lap_overlay(sesion: Session, corners: bool = True) -> None:
 
     st.divider()
 
-    # ── Carga ─────────────────────────────────────────────────────────────
+    # ── Carga de Telemetría ───────────────────────────────────────────────
     with st.spinner("Cargando telemetría H2H..."):
         tel_a = _extract_lap(sesion, driver_a, lap_a)
         tel_b = _extract_lap(sesion, driver_b, lap_b)
@@ -770,80 +670,70 @@ def render_lap_overlay(sesion: Session, corners: bool = True) -> None:
         st.error(f"❌ No se pudo cargar telemetría de {driver_b} · V{lap_b}")
         return
 
+    # Interpolación espacial y dominio
     dist_max  = min(float(tel_a["Distance"].max()), float(tel_b["Distance"].max()))
     dist_grid = np.linspace(0, dist_max, GRID_N)
     da        = _interpolate(tel_a, dist_grid)
     db        = _interpolate(tel_b, dist_grid)
     dominance = _compute_dominance(da["speed"], db["speed"])
 
+    # Colores 
     color_a = _get_team_color(sesion, driver_a)
     color_b = _get_team_color(sesion, driver_b)
+    # Evitar colores idénticos si son del mismo equipo
     if color_a.lower() == color_b.lower():
         color_b = ACCENT_CYAN
 
-    label_a = driver_a if driver_a != driver_b else f"{driver_a}·V{lap_a}"
-    label_b = driver_b if driver_a != driver_b else f"{driver_b}·V{lap_b}"
+    label_a = _get_full_name(sesion,driver_a) if driver_a != driver_b else f"{ _get_full_name(sesion,driver_a)}·V{lap_a}"
+    label_b = _get_full_name(sesion,driver_b) if driver_a != driver_b else f"{_get_full_name(sesion,driver_b)}·V{lap_b}"
 
     try:
         circuit_info = sesion.get_circuit_info()
     except Exception:
         circuit_info = None
 
-    # ── KPIs cabecera ─────────────────────────────────────────────────────
+    # ── 1. KPIs cabecera ──────────────────────────────────────────────────
     _render_h2h_kpis(da, db, label_a, label_b, color_a, color_b,
                      lap_time_a, lap_time_b, dominance, dist_grid)
 
-    # ── Tabs ──────────────────────────────────────────────────────────────
-    tab_map, tab_tel, tab_delta, tab_gg, tab_tfg = st.tabs([
-        "🗺 Mapa H2H",
-        "📊 Telemetría",
-        "⏱ Delta",
-        "⭕ G-G",
-        "🎓 Ideas TFG",
-    ])
+    st.divider()
 
-    with tab_map:
-        fig_map = _build_h2h_map(
-            da, db, color_a, color_b, label_a, label_b,
-            dominance, dist_grid, circuit_info, corners,
-        )
-        st.plotly_chart(fig_map, use_container_width=True, config={
-            "displayModeBar": True, "displaylogo": False,
-            "toImageButtonOptions": {"format": "png", "scale": 2,
-                                     "filename": f"talos_h2h_{driver_a}_vs_{driver_b}"},
-        })
+    # ── 2. Mapa de Dominio ────────────────────────────────────────────────
+    st.markdown(
+        "<p style='font-family:JetBrains Mono,monospace;font-size:12px;"
+        "letter-spacing:2px;color:rgba(255,255,255,0.7);'>🗺️ MAPA DE DOMINIO H2H</p>",
+        unsafe_allow_html=True,
+    )
+    fig_map = _build_h2h_map(
+        da, db, color_a, color_b, label_a, label_b,
+        dominance, dist_grid, circuit_info, corners,
+    )
+    st.plotly_chart(fig_map, use_container_width=True, config={
+        "displayModeBar": True, "displaylogo": False,
+        "toImageButtonOptions": {"format": "png", "scale": 2,
+                                 "filename": f"talos_h2h_{driver_a}_vs_{driver_b}"},
+    })
+    
+    # ── 3. Telemetría Superpuesta ─────────────────────────────────────────
+    st.markdown(
+        "<p style='font-family:JetBrains Mono,monospace;font-size:12px;"
+        "letter-spacing:2px;color:rgba(255,255,255,0.7);margin-top:20px;'>"
+        "📊 TELEMETRÍA SUPERPUESTA · LÍNEA CONTINUA = A · PUNTEADA = B</p>",
+        unsafe_allow_html=True,
+    )
+    fig_tel = _build_telemetry_overlay(
+        da, db, dist_grid, color_a, color_b, label_a, label_b, circuit_info,
+    )
+    st.plotly_chart(fig_tel, use_container_width=True, config={"displayModeBar": False})
 
-    with tab_tel:
-        st.markdown(
-            "<p style='font-family:JetBrains Mono,monospace;font-size:10px;"
-            "letter-spacing:2px;color:rgba(255,255,255,0.35);'>"
-            "TELEMETRÍA SUPERPUESTA · línea continua = A · punteada = B</p>",
-            unsafe_allow_html=True,
-        )
-        fig_tel = _build_telemetry_overlay(
-            da, db, dist_grid, color_a, color_b, label_a, label_b, circuit_info,
-        )
-        st.plotly_chart(fig_tel, use_container_width=True,
-                        config={"displayModeBar": False})
-
-    with tab_delta:
-        fig_delta = _build_delta_and_dominance(
-            da, db, dist_grid, dominance, color_a, color_b, label_a, label_b, circuit_info,
-        )
-        st.plotly_chart(fig_delta, use_container_width=True,
-                        config={"displayModeBar": False})
-
-    with tab_gg:
-        st.markdown(
-            "<p style='font-family:JetBrains Mono,monospace;font-size:10px;"
-            "letter-spacing:2px;color:rgba(255,255,255,0.35);'>"
-            "DIAGRAMA G-G · huella del círculo de fricción por piloto</p>",
-            unsafe_allow_html=True,
-        )
-        fig_gg = _build_gg_overlay(da, db, dist_grid, color_a, color_b, label_a, label_b)
-        if fig_gg:
-            st.plotly_chart(fig_gg, use_container_width=True,
-                            config={"displayModeBar": False})
-        else:
-            st.info("Datos G-G no disponibles para esta vuelta.")
-
+    # ── 4. Delta Acumulado ────────────────────────────────────────────────
+    st.markdown(
+        "<p style='font-family:JetBrains Mono,monospace;font-size:12px;"
+        "letter-spacing:2px;color:rgba(255,255,255,0.7);margin-top:20px;'>"
+        "⏱️ DELTA ACUMULADO</p>",
+        unsafe_allow_html=True,
+    )
+    fig_delta = _build_delta_and_dominance(
+        da, db, dist_grid, dominance, color_a, color_b, label_a, label_b, circuit_info,
+    )
+    st.plotly_chart(fig_delta, use_container_width=True, config={"displayModeBar": False})

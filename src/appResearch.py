@@ -17,8 +17,8 @@ import OptimalLap as ol
 import Head2head as h2h
 import OverallStandings as os
 import GGDiagram as gg
-# ─── CONSTANTES DE NAVEGACIÓN ─────────────────────────────────────────────────
-
+import Aero as aero
+import TyreLoad as tload
 # ─── CONSTANTES DE NAVEGACIÓN ─────────────────────────────────────────────────
 
 NAV = {
@@ -26,24 +26,22 @@ NAV = {
         "Resumen de la sesión",
         "Cronología de Eventos",
         "Estrategia de Neumáticos",
-        
     ],
     "Análisis de Piloto (Micro)": [
-        "Circuito Animado",
         "Mapa de Velocidad",
         "Mapa de Marchas",
         "Telemetry Trace",
     ],
     "Comparativas Competitivas": [
+        "Panel de Equipo",
         "Comparativa de Sesión",
-        "Superposición de Deltas",
         "La Vuelta Ideal",
         "Coche Fantasma",
     ],
     "Dinámica Vehicular": [
         "Diagrama G-G",
         "Carga Aerodinámica",
-        "Modelo Térmico de Frenos",
+        "Mapa de Carga por Rueda",
     ],
 }
 
@@ -122,6 +120,8 @@ with st.sidebar:
     gp       = st.text_input ("Gran Premio",   value="Monaco")
     ses_type = st.selectbox  ("Sesión",        ["Q", "R", "FP1", "FP2", "FP3"])
     corners  = st.checkbox   ("Mostrar curvas", value=False)
+    # Lo guardamos en session_state para poder pasarlo a los módulos
+    st.session_state["corners"] = corners 
 
     st.divider()
 
@@ -161,6 +161,30 @@ def require_session() -> bool:
         return False
     return True
 
+def select_driver_and_lap(f1_session, key_prefix: str):
+    """Genera los selectores de Piloto y Vuelta en 2 columnas y devuelve las selecciones."""
+    col1, col2 = st.columns(2)
+    driver_names = {d: f1_session.get_driver(d).get("FullName", str(d)) for d in f1_session.drivers}
+    
+    with col1:
+        drv = st.selectbox("Piloto", options=f1_session.drivers, format_func=lambda x: driver_names.get(x, x), key=f"{key_prefix}_drv")
+    
+    vuelta_limpia = f1_session.laps.pick_drivers(drv).pick_accurate()
+    
+    if vuelta_limpia.empty:
+        st.warning(f"⚠️ No hay datos de telemetría válidos para {drv} en esta sesión.")
+        return drv, None
+
+    num_fastest = vuelta_limpia.pick_fastest()['LapNumber']
+    lista_vueltas = vuelta_limpia['LapNumber'].tolist()
+    def_idx = lista_vueltas.index(num_fastest) if num_fastest in lista_vueltas else 0
+    
+    with col2:
+        lap = st.selectbox("Vuelta a analizar", options=lista_vueltas, index=def_idx, 
+                           format_func=lambda x: f"Vuelta {int(x)} ⏱️ (Best Lap)" if x == num_fastest else f"Vuelta {int(x)}", 
+                           key=f"{key_prefix}_lap")
+        
+    return drv, int(lap)
 
 def placeholder(module_name: str, description: str, channels: list[str] | None = None):
     """Vista placeholder estándar para módulos no implementados aún."""
@@ -179,8 +203,9 @@ def placeholder(module_name: str, description: str, channels: list[str] | None =
 # ─── ENRUTADOR PRINCIPAL ──────────────────────────────────────────────────────
 
 active = st.session_state["active_module"]
+f1s = st.session_state["f1_session"]
+show_corners = st.session_state.get("corners", False)
 
-# ── HUB ───────────────────────────────────────────────────────────────────────
 # ── HUB ───────────────────────────────────────────────────────────────────────
 if active is None:
     st.markdown("---")
@@ -197,118 +222,83 @@ if active is None:
         )
 
     st.divider()
-
     st.subheader("Módulos disponibles")
 
-    # Creamos 4 columnas dinámicamente basadas en nuestro nuevo diccionario NAV
+    # Creamos columnas dinámicamente basadas en nuestro diccionario NAV
     cols = st.columns(len(NAV), gap="medium")
-
     for col, (category, modules) in zip(cols, NAV.items()):
         with col:
             st.markdown(f"##### {category}")
             for m in modules:
-                # El botón dibuja el módulo y si se clica, cambia el estado
-                st.button(m, key=f"hub_{m}", use_container_width=True)
-
-    # Detectar click desde el hub
-    for m in MODULE_KEYS:
-        if st.session_state.get(f"hub_{m}"):
-            st.session_state["active_module"] = m
-            st.rerun()
+                if st.button(m, key=f"hub_{m}", use_container_width=True):
+                    st.session_state["active_module"] = m
+                    st.rerun()
 
 # ── INFORMACIÓN DE SESIÓN ─────────────────────────────────────────────────────
 elif active == "Resumen de la sesión":
     if not require_session(): st.stop()
-    ss.render_session_summary(st.session_state["f1_session"])
+    ss.render_session_summary(f1s)
     
 elif active == "Cronología de Eventos":
     if not require_session(): st.stop()
-    stl.render_timeline(st.session_state["f1_session"])
+    stl.render_timeline(f1s)
 
 elif active == "Estrategia de Neumáticos":
     if not require_session(): st.stop()
-    sgrid.render_strategy_dashboard(st.session_state["f1_session"])
-
-
-    
+    sgrid.render_strategy_dashboard(f1s)
 
 # ── ANÁLISIS DE PILOTO (MICRO) ────────────────────────────────────────────────
-
-elif active == "Circuito Animado":
+elif active == "Mapa de Velocidad":
     if not require_session(): st.stop()
-
-
-    st.header("Circuito Animado")
+    st.header("Mapa de Calor: Velocidad (Km/h)")
     st.divider()
-    f1s    = st.session_state["f1_session"]
+    driver, lap_n = select_driver_and_lap(f1s, "spd")
+    if lap_n:
+        sm.render_speed_heatmap(f1s, driver, show_corners, lap_n)
 
-    #Diccionario para mapear el id con el nombre
-    driver_names= { d: f1s.get_driver(d).get("FullName", str(d))
-                   for d in f1s.drivers}
-    driver = st.selectbox("Piloto", options= f1s.drivers,format_func=lambda x: driver_names.get(x,x))
+elif active == "Mapa de Marchas":
+    if not require_session(): st.stop()
+    st.header("Mapa de Calor: Marchas (1-8)")
+    st.divider()
+    driver, lap_n = select_driver_and_lap(f1s, "gear")
+    if lap_n:
+        gm.render_gear_heatmap(f1s, driver, show_corners, lap_n)
 
-    vuelta_limpia = f1s.laps.pick_drivers(driver).pick_accurate()
-    num_fastest = vuelta_limpia.pick_fastest()['LapNumber']
-    lista_vueltas = vuelta_limpia['LapNumber'].tolist()
+elif active == "Telemetry Trace":
+    if not require_session(): st.stop()
+    st.header("Análisis de Telemetría (Trace)")
+    st.divider()
     
-    lap_n = st.selectbox(
-        "Vuelta a analizar", 
-        options=lista_vueltas,
-        index=lista_vueltas.index(num_fastest),
-        format_func=lambda x: f"Vuelta {int(x)} ⏱️ (Best Lap)" if x == num_fastest else f"Vuelta {int(x)}"
-    )
-
-# ── Tarjeta del piloto ───────────────────────────────────────────────────
+    driver, lap_n = select_driver_and_lap(f1s, "trace")
+    if not lap_n: st.stop()
+    
+    # ── Tarjeta del piloto ───────────────────────────────────────────────────
     @st.cache_data(show_spinner=False)
     def fetch_driver_stats(ergast_id: str) -> dict:
         base  = "https://api.jolpi.ca/ergast/f1"
-        stats = {"nationality": "—", "dob": "—",
-                 "wins": "—", "podiums": "—", "championships": "—"}
-        
-        # Si el ID está vacío, no se llama a la api
-        if not ergast_id:
-            return stats
-            
+        stats = {"nationality": "—", "dob": "—", "wins": "—", "podiums": "—", "championships": "—"}
+        if not ergast_id: return stats
         try:
-            # 1. Nacionalidad y Nacimiento
             r = requests.get(f"{base}/drivers/{ergast_id}.json", timeout=5)
-            if r.ok:
-                d = r.json()["MRData"]["DriverTable"]["Drivers"]
-                if d:
-                    stats["nationality"] = d[0].get("nationality", "—")
-                    stats["dob"]         = d[0].get("dateOfBirth", "—")
+            if r.ok and r.json()["MRData"]["DriverTable"]["Drivers"]:
+                d = r.json()["MRData"]["DriverTable"]["Drivers"][0]
+                stats["nationality"] = d.get("nationality", "—")
+                stats["dob"]         = d.get("dateOfBirth", "—")
 
-            # 2. Victorias totales (1er puesto)
             r = requests.get(f"{base}/drivers/{ergast_id}/results/1.json?limit=1000", timeout=5)
-            if r.ok:
-                stats["wins"] = r.json()["MRData"]["total"]
+            if r.ok: stats["wins"] = r.json()["MRData"]["total"]
 
-            # 3. Podios totales (Filtrando posiciones 1, 2 y 3)
             r = requests.get(f"{base}/drivers/{ergast_id}/results.json?limit=1000", timeout=5)
             if r.ok:
                 races = r.json()["MRData"]["RaceTable"]["Races"]
-                stats["podiums"] = sum(
-                    1 for race in races for res in race["Results"]
-                    if int(res.get("position", 99)) <= 3
-                )
+                stats["podiums"] = sum(1 for race in races for res in race["Results"] if int(res.get("position", 99)) <= 3)
 
-            # 4. Campeonatos del mundo
-            CAMPEONES = {
-                    "hamilton": "7",
-                    "max_verstappen": "4",
-                    "alonso": "2",
-                    "norris": "1",
-                    "vettel": "4",
-                    "raikkonen":"1"
-                }
+            CAMPEONES = {"hamilton": "7", "max_verstappen": "4", "alonso": "2", "norris": "1", "vettel": "4", "raikkonen":"1"}
             stats["championships"] = CAMPEONES.get(ergast_id, "0")
         except Exception: pass
         return stats
 
-    # ─── EXTRAER DATOS 100% NATIVOS DE FASTF1 ───
     driver_info = f1s.get_driver(driver)
-    
-    # Diccionario de banderas para la parrilla actual
     BANDERAS = {
             "Spanish": "🇪🇸", "Monegasque": "🇲🇨", "Dutch": "🇳🇱", "British": "🇬🇧",
             "Mexican": "🇲🇽", "Australian": "🇦🇺", "French": "🇫🇷", "Japanese": "🇯🇵",
@@ -316,35 +306,22 @@ elif active == "Circuito Animado":
             "Chinese": "🇨🇳", "Danish": "🇩🇰", "German": "🇩🇪", "New Zealander": "🇳🇿",
             "Italian": "🇮🇹", "Brazilian": "🇧🇷", "Argentine": "🇦🇷", "Colombian": "🇨🇴"
     }
-    # y la URL de la foto oficial que FastF1 ya nos provee
     ergast_id   = driver_info.get("DriverId", "")
     headshot    = driver_info.get("HeadshotUrl", None)
-    
     first_name  = driver_info.get("FirstName", "")
     last_name   = driver_info.get("LastName", driver)
     team        = driver_info.get("TeamName", "—")
+    number      = driver_info.get("DriverNumber", driver)
 
-    number      = driver_info.get("DriverNumber",driver)
-
-    # Llamamos a la API 
     stats = fetch_driver_stats(ergast_id)
 
-
-    # ─── RENDERIZAR LA TARJETA ───
     col_img, col_data = st.columns([1, 3], gap="large")
     with col_img:
         try:
-            # Si FastF1 tiene la foto, la pintamos directamente
-            if headshot:
-                st.image(headshot, width=200)
-            else:
-                raise ValueError
+            if headshot: st.image(headshot, width=200)
+            else: raise ValueError
         except Exception:
-            st.markdown(
-                f"<div style='font-size:56px;text-align:center;padding:16px;'>"
-                f"{driver[:3].upper()}</div>",
-                unsafe_allow_html=True,
-            )
+            st.markdown(f"<div style='font-size:56px;text-align:center;padding:16px;'>{driver[:3].upper()}</div>", unsafe_allow_html=True)
 
     with col_data:
         st.markdown(f"### {number} {first_name} {last_name}")
@@ -354,104 +331,61 @@ elif active == "Circuito Animado":
         m2.metric("Podios",       stats["podiums"])
         m3.metric("Campeonatos",  stats["championships"])
         m4.metric("Nacimiento",   stats["dob"])
-        bandera = BANDERAS.get(stats['nationality'],"🏁")
+        bandera = BANDERAS.get(stats['nationality'], "🏁")
         st.caption(f"Nacionalidad: {stats['nationality']} {bandera}")
-
-    st.divider()
-    
-    # Lanzamos el mapa 2D
-    c2d.render_interactive_sim(f1s, driver, corners, lap_n)
-
-elif active == "Mapa de Velocidad":
-    if not require_session(): st.stop()
-    st.header("Mapa de Calor: Velocidad (Km/h)")
-    st.divider()
-    f1s = st.session_state["f1_session"]
-    driver_names = {d: f1s.get_driver(d).get("FullName", str(d)) for d in f1s.drivers}
-    driver = st.selectbox("Piloto", options=f1s.drivers, format_func=lambda x: driver_names.get(x, x), key="spd_drv")
-    vuelta_limpia = f1s.laps.pick_drivers(driver).pick_accurate()
-    num_fastest = vuelta_limpia.pick_fastest()['LapNumber']
-    lista_vueltas = vuelta_limpia['LapNumber'].tolist()
-    lap_n = st.selectbox("Vuelta a analizar", options=lista_vueltas, index=lista_vueltas.index(num_fastest), format_func=lambda x: f"Vuelta {int(x)} ⏱️ (Best Lap)" if x == num_fastest else f"Vuelta {int(x)}", key="spd_lap")
-    
-    sm.render_speed_heatmap(f1s, driver, st.session_state.get("corners", False), lap_n)
-
-elif active == "Mapa de Marchas":
-    if not require_session(): st.stop()
-    st.header("Mapa de Calor: Marchas (1-8)")
-    st.divider()
-    f1s = st.session_state["f1_session"]
-    driver_names = {d: f1s.get_driver(d).get("FullName", str(d)) for d in f1s.drivers}
-    driver = st.selectbox("Piloto", options=f1s.drivers, format_func=lambda x: driver_names.get(x, x), key="gear_drv")
-    vuelta_limpia = f1s.laps.pick_drivers(driver).pick_accurate()
-    num_fastest = vuelta_limpia.pick_fastest()['LapNumber']
-    lista_vueltas = vuelta_limpia['LapNumber'].tolist()
-    lap_n = st.selectbox("Vuelta a analizar", options=lista_vueltas, index=lista_vueltas.index(num_fastest), format_func=lambda x: f"Vuelta {int(x)} ⏱️ (Best Lap)" if x == num_fastest else f"Vuelta {int(x)}", key="gear_lap")
-    
-    gm.render_gear_heatmap(f1s, driver, st.session_state.get("corners", False), lap_n)
-
-elif active == "Telemetry Trace":
-    if not require_session(): st.stop()
-    st.header("Análisis de Telemetría (Trace)")
-    st.divider()
-    f1s = st.session_state["f1_session"]
-    driver_names = {d: f1s.get_driver(d).get("FullName", str(d)) for d in f1s.drivers}
-    driver = st.selectbox("Piloto", options=f1s.drivers, format_func=lambda x: driver_names.get(x, x), key="trace_drv")
-    vuelta_limpia = f1s.laps.pick_drivers(driver).pick_accurate()
-    num_fastest = vuelta_limpia.pick_fastest()['LapNumber']
-    lista_vueltas = vuelta_limpia['LapNumber'].tolist()
-    lap_n = st.selectbox("Vuelta a analizar", options=lista_vueltas, index=lista_vueltas.index(num_fastest), format_func=lambda x: f"Vuelta {int(x)} ⏱️ (Best Lap)" if x == num_fastest else f"Vuelta {int(x)}", key="trace_lap")
-    
-    trace.render_telemetry_trace(f1s, driver, int(lap_n),st.session_state.get("corners", False))
-
+        
+    trace.render_telemetry_trace(f1s, driver, lap_n, show_corners)
 
 # ── COMPARATIVAS COMPETITIVAS ─────────────────────────────────────────────────
+elif active == "Panel de Equipo":
+    if not require_session(): st.stop()
+    st.header("Panel de Equipo (SAP)")
+    st.divider()
+    import TeamTelemetry as tteam
+    tteam.render_team_telemetry(f1s, corners=show_corners)
+
 elif active == "Comparativa de Sesión":
     if not require_session(): st.stop()
     st.header("Comparativa de Sesión")
     st.divider()
-    os.render_session_compare(st.session_state["f1_session"])
-
-elif active == "Superposición de Deltas":
-    if not require_session(): st.stop()
-    st.header("Superposición H2H · Mapa de Dominio")
-    st.divider()
-    h2h.render_lap_overlay(st.session_state["f1_session"], corners=corners)
+    os.render_session_compare(f1s, corners=show_corners)
 
 elif active == "La Vuelta Ideal":
     if not require_session(): st.stop()
     st.header("La Vuelta Ideal · Microsectores")
     st.divider()
-    ol.render_ideal_lap(st.session_state["f1_session"], corners=corners)
+    ol.render_ideal_lap(f1s, corners=show_corners)
 
 elif active == "Coche Fantasma":
     if not require_session(): st.stop()
     st.header("Coche Fantasma")
     st.divider()
-    ghost.render_ghost_car(
-            sesion=st.session_state["f1_session"],
-            corners=corners,   
-        )
-
+    ghost.render_ghost_car(sesion=f1s, corners=show_corners)
 
 # ── DINÁMICA VEHICULAR ────────────────────────────────────────────────────────
-
 elif active == "Diagrama G-G":
     if not require_session(): st.stop()
-    f1s = st.session_state["f1_session"]
-    driver_names = {d: f1s.get_driver(d).get("FullName", str(d)) for d in f1s.drivers}
-    driver = st.selectbox("Piloto", options=f1s.drivers, format_func=lambda x: driver_names.get(x, x), key="trace_drv")
-    vuelta_limpia = f1s.laps.pick_drivers(driver).pick_accurate()
-    num_fastest = vuelta_limpia.pick_fastest()['LapNumber']
-    lista_vueltas = vuelta_limpia['LapNumber'].tolist()
-    lap_n = st.selectbox("Vuelta a analizar", options=lista_vueltas, index=lista_vueltas.index(num_fastest), format_func=lambda x: f"Vuelta {int(x)} ⏱️ (Best Lap)" if x == num_fastest else f"Vuelta {int(x)}", key="trace_lap")
-    
-    gg.render_demand_map(f1s, driver, lap_n)
+    st.header("Diagrama de Fricción (G-G)")
+    st.divider()
+    driver, lap_n = select_driver_and_lap(f1s, "gg")
+    if lap_n:
+        gg.render_demand_map(f1s, driver, lap_n)
 
 elif active == "Carga Aerodinámica":
     if not require_session(): st.stop()
-    placeholder("Mapa de Carga Aerodinámica", "Relación matemática entre velocidad y la capacidad de generar fuerzas laterales.", ["vCar", "gLat", "Downforce Estimate"])
+    st.header("Carga Aerodinámica (Estimación G-Lat vs Velocidad)")
+    st.divider()
+    
+    import Aero as aero
+    
+    # Reutilizamos tu helper para no repetir código
+    driver, lap_n = select_driver_and_lap(f1s, "aero")
+    if lap_n:
+        aero.render_aero_analysis(f1s, driver, lap_n)
 
-elif active == "Modelo Térmico de Frenos":
+elif active == "Mapa de Carga por Rueda":
     if not require_session(): st.stop()
-    placeholder("Modelo Térmico de Frenos", "Simulación del calentamiento de discos basada en presión de freno y enfriamiento por velocidad.", ["Brake", "vCar", "Time"])
+    
+    driver, lap_n = select_driver_and_lap(f1s, "tyre")
+    if lap_n:
+        tload.render_tyre_load(f1s, driver, lap_n)

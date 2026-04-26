@@ -1,17 +1,315 @@
-Módulos Simples:
-- Vuelta por tiempo
-- Datos del vehículo
-- Visualización del circuito estática.
+from __future__ import annotations
+Aa='Sin datos.'
+AZ='#C77DFF'
+AY='0.0.0.0'
+AX='#888888'
+AW='#39FF14'
+AI='skip'
+AH='g_total'
+AG='_pkts'
+AF='_error'
+AE='tyre_color'
+AD='lap_number'
+AC='lap_distance'
+AB='drs'
+AA='rpm'
+A9='gear'
+A8='brake'
+A7='throttle'
+A6='world_z'
+A5='world_x'
+A4='pid'
+A3='#0E0E0F'
+A2='#E8002D'
+w='markers'
+v='Distance'
+u='\n'
+t='_f124_frames'
+s='_f124_error'
+r='_f124_pkt'
+q='_f124_raw_count'
+p='frames'
+o='tyre_age'
+n='compound'
+m='?'
+l=max
+g=.0
+f='_f124_last'
+e='ts'
+d='speed'
+Z='LapNumber'
+Y='Time'
+X='_f124_listener'
+W='g_lon'
+T='_f124_diag'
+S=None
+R='g_lat'
+Q='displayModeBar'
+P=Exception
+N='_f124_rows'
+I=int
+F=float
+E=len
+D=False
+C=True
+B=dict
+import io,queue as J,socket as G,struct as K,threading as AJ,time as O
+from datetime import datetime as Ab
+from typing import Optional
+import numpy as L,pandas as M,streamlit as A,plotly.graph_objects as H
+from plotly.subplots import make_subplots
+h=J.Queue(maxsize=20000)
+i=J.Queue(maxsize=500)
+j=20777
+AK=18000
+U='#FFFFFF'
+k=A2
+x=A3
+a='#111115'
+Ac='#1A1A2E'
+AL=AW
+Ad='#00D2FF'
+At='#FFA500'
+V="'JetBrains Mono', 'Courier New', monospace"
+Ae={16:('SOFT',A2),17:('MEDIUM','#FFF200'),18:('HARD','#EBEBEB'),7:('INTER','#43B02A'),8:('WET','#0067FF')}
+AM='<HBBBBBQfIIBB'
+b=K.calcsize(AM)
+AN='<ffffffhhhhhffff'
+AO=K.calcsize(AN)
+AP='<HfffBbHBBHHHHHBBBBBBBBHffffBBBB'
+AQ=K.calcsize(AP)
+AR='<BBBBBfffHHBBHBBBbBBffffB'
+AS=K.calcsize(AR)
+def AT(data):
+	if E(data)<b:return
+	try:A=K.unpack_from(AM,data,0);return{A4:I(A[5]),'sess_t':F(A[7]),'pidx':I(A[10])}
+	except P:return
+def Af(data,pidx):
+	B=b+pidx*AO
+	if E(data)<B+AO:return
+	try:A=K.unpack_from(AN,data,B);return{A5:F(A[0]),A6:F(A[2]),R:F(A[12]),W:F(A[13])}
+	except P:return
+def Ag(data,pidx):
+	B=b+pidx*AQ
+	if E(data)<B+AQ:return
+	try:A=K.unpack_from(AP,data,B);return{d:F(A[0]),A7:F(A[1])*1e2,A8:F(A[3])*1e2,A9:I(A[5]),AA:F(A[6]),AB:I(A[7])}
+	except P:return
+def Ah(data,pidx):
+	A=data;B=b+pidx*57
+	if E(A)<B+57:return
+	try:C=K.unpack_from('<f',A,B+18)[0];D=K.unpack_from('<B',A,B+43)[0];return{AC:F(C),AD:I(D)}
+	except P:return
+def Ai(data,pidx):
+	B=b+pidx*AS
+	if E(data)<B+AS:return
+	try:A=K.unpack_from(AR,data,B);C=I(A[18])if E(A)>18 else 0;D,F=Ae.get(C,(m,AX));return{n:D,AE:F,o:I(A[19])if E(A)>19 else 0}
+	except P:return
+class Aj(AJ.Thread):
+	def __init__(A,port,data_q,diag_q):super().__init__(daemon=C,name='F124-UDP');A.port=port;A.data_q=data_q;A.diag_q=diag_q;A._stop=AJ.Event()
+	def stop(A):A._stop.set()
+	def _diag(A,msg):
+		try:A.diag_q.put_nowait(f"[{O.strftime("%H:%M:%S")}] {msg}")
+		except J.Full:pass
+	def run(A):
+		A._diag(f"Hilo iniciado. Bind en 0.0.0.0:{A.port}");D=G.socket(G.AF_INET,G.SOCK_DGRAM);D.setsockopt(G.SOL_SOCKET,G.SO_REUSEADDR,1)
+		try:D.setsockopt(G.SOL_SOCKET,G.SO_REUSEPORT,1)
+		except AttributeError:pass
+		D.settimeout(1.)
+		try:D.bind((AY,A.port));A._diag('Bind OK. Escuchando...')
+		except OSError as N:
+			A._diag(f"ERROR bind: {N}")
+			try:A.data_q.put_nowait({AF:str(N)})
+			except J.Full:pass
+			D.close();return
+		K=0;F={};Q={};R={};T={}
+		while not A._stop.is_set():
+			try:H,U=D.recvfrom(4096)
+			except G.timeout:continue
+			except P as W:A._diag(f"recvfrom error: {W}");break
+			K+=1
+			if K==1:A._diag(f"Primer datagrama de {U[0]}:{U[1]} ({E(H)} bytes)")
+			elif K%500==0:A._diag(f"Datagramas RAW: {K}  frames: {F.get(p,0)}")
+			M=AT(H)
+			if M is S:continue
+			I=M[A4];L=M['pidx'];F[I]=F.get(I,0)+1
+			if I==0:
+				C=Af(H,L)
+				if C:Q=C
+			elif I==2:
+				C=Ah(H,L)
+				if C:R=C
+			elif I==7:
+				C=Ai(H,L)
+				if C:T=C
+			elif I==6:
+				C=Ag(H,L)
+				if C:
+					V={**C,**Q,**R,**(T or{n:m,AE:AX,o:0}),'_raw':K,AG:B(F),e:O.time()};F[p]=F.get(p,0)+1
+					try:A.data_q.put_nowait(V)
+					except J.Full:
+						try:A.data_q.get_nowait();A.data_q.put_nowait(V)
+						except J.Empty:pass
+		D.close();A._diag('Hilo terminado.')
+def Ak():
+	C={X:S,N:[],f:{},T:[],q:0,r:{},s:'',t:0}
+	for(B,D)in C.items():
+		if B not in A.session_state:A.session_state[B]=D
+def Al():
+	while C:
+		try:
+			D=i.get_nowait();A.session_state[T].append(D)
+			if E(A.session_state[T])>50:A.session_state[T]=A.session_state[T][-50:]
+		except J.Empty:break
+	while C:
+		try:B=h.get_nowait()
+		except J.Empty:break
+		if AF in B:A.session_state[s]=B[AF];continue
+		A.session_state[f]=B;A.session_state[q]=B.get('_raw',0);A.session_state[r]=B.get(AG,{});A.session_state[t]=B.get(AG,{}).get(p,0);A.session_state[N].append(B)
+		if E(A.session_state[N])>AK:A.session_state[N]=A.session_state[N][-AK:]
+def y():
+	B=A.session_state.get(X)
+	if B and B.is_alive():return
+	while not h.empty():
+		try:h.get_nowait()
+		except J.Empty:break
+	while not i.empty():
+		try:i.get_nowait()
+		except J.Empty:break
+	A.session_state[N]=[];A.session_state[f]={};A.session_state[T]=[];A.session_state[q]=0;A.session_state[r]={};A.session_state[s]='';A.session_state[t]=0;C=Aj(j,h,i);C.start();A.session_state[X]=C
+def AU():
+	B=A.session_state.get(X)
+	if B:B.stop();A.session_state[X]=S
+def z():B=A.session_state.get(X);return B is not S and B.is_alive()
+def Am(seconds=5.):
+	B=seconds;H=z()
+	if H:AU();O.sleep(.3)
+	A.info(f"🔌 Test síncrono: escuchando 0.0.0.0:{j} durante {B:.0f}s. Envía un paquete ahora.");K=A.progress(g);I=A.empty();C=[];D=G.socket(G.AF_INET,G.SOCK_DGRAM);D.setsockopt(G.SOL_SOCKET,G.SO_REUSEADDR,1);D.settimeout(.25)
+	try:D.bind((AY,j));C.append(f"✅ Socket abierto en 0.0.0.0:{j}");I.code(u.join(C))
+	except OSError as Q:
+		A.error(f"❌ No se pudo abrir el socket: {Q}\n\nPosiblemente otro proceso (tu script de prueba) tiene el puerto ocupado.")
+		if H:y()
+		return
+	L=O.time();F=0
+	while O.time()-L<B:
+		M=O.time()-L;K.progress(min(M/B,1.))
+		try:J,N=D.recvfrom(4096);F+=1;P=AT(J);R=P[A4]if P else m;C.append(f"✅ PKT #{F}  {E(J):4d}B  de {N[0]}:{N[1]}  id={R}  hex={J[:6].hex()}");I.code(u.join(C[-15:]))
+		except G.timeout:
+			if not F:I.caption(f"Esperando... {M:.1f}s / {B:.0f}s")
+	D.close();K.empty()
+	if F:A.success(f"✅ Recibidos {F} paquetes. La red funciona correctamente.");A.code(u.join(C));A.info('La red funciona. Si el listener en hilo no captura, reinicia la aplicación con Ctrl+C y vuelve a ejecutar `streamlit run`.')
+	else:A.error(f"""❌ Cero paquetes en {B:.0f}s.
 
-Módulos Medio:
-- Módulo de comparación
-- Módulo de mapa
-- Mapa de calor
-- Comparación de deltas en mapa.
-
-Modulos Complejos:
-- Estimación de fuerzas G transversales y Longitudinales
-- Aceleración lateral y radio de curvatura.
-- Diagrama G-G
-- Coast time
-- Trazada ideal mediante los mejores microsectores de una sesión
+**Comprueba:**
+- F1 24: UDP Telemetry **On**, IP **127.0.0.1**, Puerto **20777**, Format **2024**
+- Que estés **en pista** (no en menús)
+- Firewall desactivado o con excepción para el puerto 20777 UDP
+- En Windows: ejecutar la consola / Streamlit como **Administrador**""")
+	if H:y()
+def A0(rows):
+	N='DRS';K='TyreLife';J='Compound';I='RPM';H='nGear';G='Brake';D='Throttle';B='Speed'
+	if not rows:return M.DataFrame()
+	O=[{A:B for(A,B)in A.items()if not A.startswith('_')}for A in rows];A=M.DataFrame(O);P=F(A[e].iloc[0]);A[Y]=M.to_timedelta(A[e]-P,unit='s');A=A.rename(columns={d:B,A7:D,A8:G,A5:'X',A6:'Y',A9:H,AA:I,AC:v,AD:Z,n:J,o:K});A[N]=A.get(AB,M.Series([0]*E(A))).apply(lambda x:12 if x==1 else 0);A[AH]=L.sqrt(A.get(R,M.Series([g]*E(A)))**2+A.get(W,M.Series([g]*E(A)))**2);Q=[Y,B,D,G,H,I,N,v,'X','Y',R,W,AH,J,K,Z];return A[[B for B in Q if B in A.columns]].reset_index(drop=C)
+def c(fig,h=220):fig.update_layout(height=h,paper_bgcolor='rgba(0,0,0,0)',plot_bgcolor=a,font=B(family=V,color=U,size=9),margin=B(l=6,r=6,t=6,b=6));return fig
+def A1(val,max_val,color,suffix,threshold=S):
+	C=threshold;A=color;D=B(axis=B(range=[0,max_val],tickfont=B(size=7)),bar=B(color=A,thickness=.25),bgcolor=a,bordercolor='rgba(255,255,255,0.08)')
+	if C:D['threshold']=B(line=B(color=k,width=2),thickness=.65,value=C)
+	E=H.Figure(H.Indicator(mode='gauge+number',value=val,number=B(font=B(size=22,color=A,family=V),suffix=suffix),gauge=D));return c(E,180)
+def An(rows):
+	P='rgba(255,255,255,0.2)';O='rgba(255,255,255,0.05)'
+	if E(rows)<5:return c(H.Figure(),220)
+	G=rows[-500:];I=L.array([A.get(R,0)for A in G],dtype=F);J=L.array([A.get(W,0)for A in G],dtype=F);K=L.sqrt(I**2+J**2);M=H.Figure(H.Scattergl(x=I,y=J,mode=w,marker=B(size=3,color=K,colorscale=[[0,A3],[.4,'#4B0082'],[.8,AZ],[1,'#FFF']],opacity=.75,showscale=D),hoverinfo=AI));N=F(L.percentile(K,98));A=l(2.,N*1.15)if not L.isnan(N)else 2.;M.update_layout(showlegend=D,xaxis=B(range=[-A,A],showgrid=C,zeroline=C,gridcolor=O,zerolinecolor=P,title=B(text='G Lat',font=B(size=8)),tickfont=B(size=7)),yaxis=B(range=[-A,A],showgrid=C,zeroline=C,gridcolor=O,zerolinecolor=P,title=B(text='G Lon',font=B(size=8)),scaleanchor='x',scaleratio=1,tickfont=B(size=7)));return c(M,220)
+def Ao(rows):
+	G=rows
+	if E(G)<10:return c(H.Figure(),220)
+	A=[A.get(A5,0)for A in G];C=[A.get(A6,0)for A in G];N=[A.get(d,0)for A in G];I=H.Figure();I.add_trace(H.Scattergl(x=A,y=C,mode=w,marker=B(size=2,color=N,colorscale=[[0,'#0044FF'],[.5,AW],[1,A2]],opacity=.5,showscale=D),hoverinfo=AI));I.add_trace(H.Scatter(x=[A[-1]],y=[C[-1]],mode=w,marker=B(size=11,color=U,symbol='circle',line=B(color=k,width=2)),hoverinfo=AI));K=F(L.mean(A));M=F(L.mean(C));J=l(F(l(A)-min(A)),F(l(C)-min(C)),10)/1.8;I.update_layout(showlegend=D,xaxis=B(range=[K-J,K+J],showgrid=D,zeroline=D,showticklabels=D,scaleanchor='y',scaleratio=1),yaxis=B(range=[M-J,M+J],showgrid=D,zeroline=D,showticklabels=D));return c(I,220)
+def Ap(frame,color):D=color;B=frame;T=B.get(d,0);G=B.get(A9,0);H=B.get(AA,0);J=B.get(AB,0);K=B.get(AD,0);M=B.get(AC,0);N=B.get(n,m);O=B.get(o,0);P=B.get(AE,'#888');E=B.get(R,g);F=B.get(W,g);Q=L.sqrt(E**2+F**2);S=f"<span style='color:{AL};font-weight:800;'>OPEN</span>"if J==1 else"<span style='color:rgba(255,255,255,0.25);'>—</span>";A.markdown(f'''
+    <div style="background:{Ac};border-left:4px solid {D};
+        padding:10px 18px;border-radius:3px;font-family:{V};
+        display:grid;grid-template-columns:repeat(5,1fr);gap:10px;">
+      <div>
+        <div style="font-size:9px;color:rgba(255,255,255,0.4);">LAP / DIST</div>
+        <div style="font-size:15px;font-weight:800;color:{D};">
+          L{I(K)} · {M:.0f}m</div></div>
+      <div>
+        <div style="font-size:9px;color:rgba(255,255,255,0.4);">GEAR / RPM</div>
+        <div style="font-size:15px;font-weight:800;color:{U};">
+          {I(G)}&nbsp;<span style=\'font-size:11px;\'>{H:.0f}</span></div></div>
+      <div>
+        <div style="font-size:9px;color:rgba(255,255,255,0.4);">G LAT / LON / TOT</div>
+        <div style="font-size:12px;font-weight:700;color:{Ad};">
+          {E:+.2f} / {F:+.2f} / {Q:.2f}</div></div>
+      <div>
+        <div style="font-size:9px;color:rgba(255,255,255,0.4);">NEUMÁTICO</div>
+        <div style="font-size:13px;font-weight:700;">
+          <span style="background:{P};color:#000;padding:2px 6px;
+              border-radius:3px;">{N}</span>
+          <span style="color:rgba(255,255,255,0.5);font-size:10px;
+              margin-left:5px;">{I(O)} vlt</span></div></div>
+      <div>
+        <div style="font-size:9px;color:rgba(255,255,255,0.4);">DRS</div>
+        <div style="font-size:14px;">{S}</div></div>
+    </div>''',unsafe_allow_html=C)
+def Aq():
+	C=A.session_state[q];E=A.session_state[r];J=A.session_state[t];F=A.session_state[s];G=A.session_state[T];D=z();H=A.session_state.get(f,{});I=O.time()-H.get(e,0)if H.get(e)else 9999;B=A.columns(6);B[0].metric('Hilo UDP','🔴 VIVO'if D else'⚫ Detenido');B[1].metric('Paquetes RAW',f"{C:,}",help='Datagramas recibidos por el socket antes de parsear');B[2].metric('Pkt Motion(0)',f"{E.get(0,0):,}");B[3].metric('Pkt Telem(6)',f"{E.get(6,0):,}");B[4].metric('Frames',f"{J:,}");B[5].metric('Último',f"{I:.1f}s"if I<9999 else'—')
+	if F:A.error(f"❌ {F}")
+	if G:
+		with A.expander('📋 Log del hilo UDP',expanded=C==0 and D):A.code(u.join(G[-20:]))
+	if D and C==0:A.warning('🔌 Socket abierto pero **sin ningún datagrama** todavía.\n\nUsa el botón **🧪 Test Síncrono** para verificar si es un problema de red. Ese test escucha directamente en el hilo principal, sin threading.')
+	elif D and C>0 and E.get(6,0)==0:A.warning(f"📦 Llegan datagramas RAW ({C:,}) pero **ninguno es packet_id=6** (Car Telemetry).\nVerifica que el juego usa **UDP Format: 2024** y que el script de prueba envía paquetes con el header correcto.")
+def AV(df,color):
+	F=df
+	if F.empty:A.info(Aa);return
+	K=sorted(F[Z].unique().tolist())if Z in F.columns else[1];L=A.selectbox('Vuelta',K,format_func=lambda x:f"Vuelta {I(x)}",key='f124_lap');G=F[F[Z]==L].copy()if Z in F.columns else F;A.metric('Muestras',f"{E(G):,}");M,N=A.tabs(['📊 Telemetría','⭕ G-G'])
+	with M:
+		if v in G.columns:from Telemetrytrace import _build_telemetry_figure as O;J=O(G,color);J.update_layout(height=600,paper_bgcolor=x,plot_bgcolor=a,font=B(family=V,color=U),margin=B(l=40,r=10,t=40,b=40));A.plotly_chart(J,use_container_width=C,config={Q:D},key='post_telem')
+	with N:
+		if R in G.columns:J=H.Figure(H.Scattergl(x=G[R],y=G[W],mode=w,marker=B(size=3,color=G[AH],colorscale=[[0,A3],[.6,AZ],[1,'#FFF']],showscale=D,opacity=.7)));J.update_layout(height=400,paper_bgcolor=x,plot_bgcolor=a,font=B(family=V,color=U),xaxis=B(title='G Lateral',scaleanchor='y',scaleratio=1),yaxis=B(title='G Longitudinal'),showlegend=D);A.plotly_chart(J,use_container_width=C,config={Q:D},key='post_gg')
+def Ar(rows):
+	B=A0(rows)
+	if B.empty:A.info(Aa);return
+	C=Ab.now().strftime('%Y%m%d_%H%M%S');F=B.to_csv(index=D).encode();G,H=A.columns(2);G.download_button('⬇ CSV',F,f"f124_{C}.csv",'text/csv',key='dl_csv')
+	try:E=io.BytesIO();B.to_parquet(E,index=D);H.download_button('⬇ Parquet',E.getvalue(),f"f124_{C}.parquet",key='dl_pq')
+	except P:pass
+def As():
+	C=A.file_uploader('Sesión grabada (.csv / .parquet)',type=['csv','parquet'],key='f124_up')
+	if C is S:return
+	try:
+		B=M.read_parquet(C)if C.name.endswith('.parquet')else M.read_csv(C)
+		if Y in B.columns and B[Y].dtype==object:B[Y]=M.to_timedelta(B[Y])
+		A.success(f"✅ {E(B):,} muestras cargadas");return B
+	except P as D:A.error(str(D));return
+def Au():
+	T='<br>';R='📊 Post-Sesión';P='📡 Live';Ak();Al();A.markdown("<p style='font-family:JetBrains Mono,monospace;font-size:11px;letter-spacing:2px;color:rgba(255,255,255,0.35);'>F1 24 · TELEMETRÍA UDP EN TIEMPO REAL</p>",unsafe_allow_html=C);G=A.color_picker('Color piloto',k,key='f124_color');W,X,Y,Z=A.columns(4)
+	with W:
+		if A.button('▶ Iniciar',type='primary',key='f124_start'):y();A.rerun()
+	with X:
+		if A.button('⏹ Detener',key='f124_stop'):AU();A.rerun()
+	with Y:
+		F=A.session_state.get(N,[])
+		if F:Ar(F)
+	with Z:
+		if A.button('🧪 Test Síncrono',key='f124_test',help='Escucha directamente sin hilos durante 5s'):Am(5.)
+	A.divider();Aq();A.divider();K=A.radio('Vista',[P,R,'📂 Cargar'],horizontal=C,key='f124_view')
+	if K==P:
+		if not z():A.info('Pulsa **▶ Iniciar** para empezar la captura.');return
+		H=A.session_state.get(f,{});F=A.session_state.get(N,[])
+		if H:
+			Ap(H,G);A.markdown(T,unsafe_allow_html=C);I=A.columns([1.5,1,1,2,2])
+			with I[0]:A.caption('VELOCIDAD');A.plotly_chart(A1(H.get(d,0),380,G,' km/h',320),use_container_width=C,config={Q:D},key='live_gauge_spd')
+			with I[1]:A.caption('ACELERADOR');A.plotly_chart(A1(H.get(A7,0),100,AL,'%'),use_container_width=C,config={Q:D},key='live_gauge_thr')
+			with I[2]:A.caption('FRENO');A.plotly_chart(A1(H.get(A8,0),100,k,'%'),use_container_width=C,config={Q:D},key='live_gauge_brk')
+			with I[3]:A.caption('G-G (últimos 500)');A.plotly_chart(An(F),use_container_width=C,config={Q:D},key='live_gg')
+			with I[4]:A.caption('TRAZADO');A.plotly_chart(Ao(F),use_container_width=C,config={Q:D},key='live_track')
+			A.markdown(T,unsafe_allow_html=C)
+			if E(F)>0:
+				J=A0(F)
+				if not J.empty and v in J.columns:from Telemetrytrace import _build_telemetry_figure as b;L=b(J,G);L.update_layout(height=500,paper_bgcolor=x,plot_bgcolor=a,font=B(family=V,color=U),margin=B(l=40,r=10,t=40,b=40));A.plotly_chart(L,use_container_width=C,config={Q:D},key='live_telemetry_trace')
+		else:A.info('Hilo activo. Esperando primer frame...')
+		if A.toggle('Auto-refresco (Live)',value=C,key='f124_auto'):O.sleep(.1);A.rerun()
+	elif K==R:
+		F=A.session_state.get(N,[])
+		if F:AV(A0(F),G)
+		else:A.info('Sin datos en esta sesión.')
+	else:
+		M=As()
+		if M is not S:AV(M,G)
