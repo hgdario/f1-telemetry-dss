@@ -1,0 +1,123 @@
+% ======================================================================
+%  UMA – ETSI Informática · Thesis Cover Macros · v1.2 (2025-06-24)
+%  Author: Mario Pascual González  <mpascual@uma.es>
+% ======================================================================
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{template/sty_files/colaborador_cover-blueuma}[2025/06/24 v1.2 UMA bachelor thesis cover]
+
+% ---------- Dependencies ----------
+\RequirePackage{tikz}
+\RequirePackage{xcolor}
+\RequirePackage{graphicx}
+\RequirePackage{pgfkeys}
+\RequirePackage{iftex}
+\RequirePackage{pagecolor}
+
+% ---------- Corporate palette ----------
+\definecolor{UMAblue}{HTML}{002E5D}
+\definecolor{UMAgray}{HTML}{63666A}
+
+
+
+% ---------- Key–value interface --------------------------------------
+\pgfkeys{/umaCover/.is family, /umaCover,
+  degree/.store in     = \uma@degree,
+  mencion/.store in    = \uma@mencion,     
+  titleES/.store in    = \uma@titleES,
+  titleEN/.store in    = \uma@titleEN,
+  author/.store in     = \uma@author,
+  tutor/.store in      = \uma@tutor,
+  colaborador/.store in    = \uma@colaborador,    
+  dept/.store in       = \uma@dept,
+  cityDate/.store in   = \uma@cityDate,
+  logoLeft/.store in   = \uma@logoL,
+  logoRight/.store in  = \uma@logoR,
+  % default values:
+  mencion  = ,  
+  colaborador  = ,
+  logoLeft  = template/logos/NEG-uma-logo.png,
+  logoRight = template/logos/NEG-etsi-logo.png,
+}
+
+
+% ----------------------------------------------------------------------
+%  \MakeUMACover{<key=value,...>}
+% ----------------------------------------------------------------------
+\RequirePackage{etoolbox}
+
+\newcommand*\MakeColabBlueUMACover[1]{%
+  \pgfkeys{/umaCover,#1}%  parse user keys
+  \begingroup
+    \setmainfont[
+      Path = {template/fonts/Malacitana/},
+      UprightFont    = *-Regular.otf,
+      BoldFont       = *-Bold.otf,
+      ItalicFont     = *-Italic.otf,
+      BoldItalicFont = *-BoldItalic.otf
+    ]{Malacitana}
+    \pagecolor{UMAblue}\color{UMAgray}% background + text colour
+
+    \begin{titlepage}
+      \thispagestyle{empty}
+      \centering
+
+      % ----- logos (overlay) -----
+      \begin{tikzpicture}[remember picture,overlay]
+        \node[anchor=north west,xshift=1.5cm,yshift=-1.5cm]
+              at (current page.north west)
+              {\includegraphics[width=4.5cm]{\uma@logoL}};
+        \node[anchor=north east,xshift=-1.5cm,yshift=-1.5cm]
+              at (current page.north east)
+              {\includegraphics[width=9cm]{\uma@logoR}};
+      \end{tikzpicture}
+
+      % ----- text block -----
+      \vspace*{3cm}
+
+      {\color{white}\fontsize{16pt}{18pt}\selectfont \uma@degree\par}
+
+      %── Optional “Mención” just below degree ──
+     \ifblank{\uma@mencion}{
+     }{
+       \vspace{0.2cm}
+       {\color{white}\fontsize{14pt}{16pt}\selectfont \textit{\uma@mencion}\par}
+     }
+
+      \vspace{1cm}
+
+      {\color{white}\bfseries\fontsize{20pt}{22pt}\selectfont \uma@titleES\par}
+      \vspace{0.5cm}
+      {\color{white}\bfseries\fontsize{20pt}{22pt}\selectfont \uma@titleEN\par}
+
+      \vspace{1cm}
+
+      {\Large\textit{Realizado por}\par}
+      {\color{white}\Large \uma@author\par}
+
+      \vspace{0.2cm}
+
+      {\Large\textit{Tutorizado por}\par}
+      {\color{white}\Large \uma@tutor\par}
+
+      %── Optional “Co-tutor” just below tutor ──
+     \ifblank{\uma@colaborador}{
+        
+     }{
+       \vspace{0.1cm}
+       {\Large\textit{Con la Colaboración Externa de:}\par}
+       {\color{white}\Large \uma@colaborador\par}
+     }
+
+      \vspace{0.2cm}
+
+      {\Large\textit{Departamento}\par}
+      {\color{white}\Large \uma@dept\par}
+
+      \vfill
+      {\Large \uma@cityDate\par}
+    \end{titlepage}
+
+    % restore colours
+    \nopagecolor\color{black}
+  \endgroup
+}

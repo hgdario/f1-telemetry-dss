@@ -1,0 +1,906 @@
+% ─────────────────────────────────────────────────────────────────────────────
+%  templateTFGenglishuma.sty
+%  English scientific‑thesis template, Univ. Málaga
+%  Author ......... Mario Pascual González  <mpascual@uma.es>
+%  Licence ........ LPPL 1.3c
+%  Version ........ 2026‑02‑04 v2.2
+%
+%  Changelog v2.2:
+%    - Fixed blank page between covers (now has no page number)
+%    - Page numbering starts at Resumen (page 1)
+%    - TOC/LoF/LoT titles now match Nomenclature style (large chapter* heading)
+%    - Added bookmark package for better PDF navigation
+%    - Improved hyperref configuration
+%    - Added cleveref format for umatheorem counter (fixes Overleaf error)
+% ─────────────────────────────────────────────────────────────────────────────
+
+% ╔═══════════════════════════════════════════════════════════════════════════╗
+% ║   0 · Package set‑up / global options                                     ║
+% ╚═══════════════════════════════════════════════════════════════════════════╝
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{template/sty_files/template-TFGenglish-uma}[2026/02/04 v2.2 Scientific-style]
+
+\makeatletter                    % internal @‑macros allowed
+
+% ╔═══════════════════════════════════════════════════════════════════════════╗
+% ║   1 · Fonts & micro‑typography  (fixed families:                         ║
+% ║       – body  → Malacitana‑Sans                                          ║
+% ║       – all else→ Malacitana)                                            ║
+% ╚═══════════════════════════════════════════════════════════════════════════╝
+\RequirePackage{fontspec}
+
+% Sans becomes “main”
+\setmainfont[
+  Path   = {template/fonts/Malacitana_Sans/},
+  UprightFont    = *-Regular.otf,
+  BoldFont       = *-Bold.otf,
+  ItalicFont     = *-Italic.otf,
+  BoldItalicFont = *-BoldItalic.otf
+]{Malacitana-Sans}
+
+% Roman saved under its own command
+\newfontfamily\MalacitanaRoman[
+  Path   = {template/fonts/Malacitana/},
+  UprightFont    = *-Regular.otf,
+  BoldFont       = *-Bold.otf,
+  ItalicFont     = *-Italic.otf,
+  BoldItalicFont = *-BoldItalic.otf
+]{Malacitana}
+
+
+\RequirePackage{microtype}
+
+
+% ╔═══════════════════════════════════════════════════════════════════════════╗
+% ║   2 · Geometry                                                            ║
+% ╚═══════════════════════════════════════════════════════════════════════════╝
+
+% --- Opción de modo encuadernación en la plantilla ---
+\RequirePackage{kvoptions}
+\SetupKeyvalOptions{family=uma,prefix=uma@}
+\DeclareBoolOption[false]{encuadernar}
+\ProcessKeyvalOptions*
+
+
+\RequirePackage{geometry}
+\ifuma@encuadernar
+  % No fijamos margen aquí; lo hace uma-bindmode.sty
+\else
+  \geometry{margin=25mm} % modo digital simétrico
+\fi
+
+% --- Activar lógica de encuadernación cuando proceda ---
+\ifuma@encuadernar
+  % Opcional: ajustar medidas desde la plantilla
+  \PassOptionsToPackage{inner=30mm,outer=20mm,top=25mm,bottom=25mm,bindingoffset=5mm}{uma-bindmode}
+  \RequirePackage{template/sty_files/uma-bindmode}
+\fi
+
+
+% ╔═══════════════════════════════════════════════════════════════════════════╗
+% ║   3 · Page style (simple footer)                                          ║
+% ╚═══════════════════════════════════════════════════════════════════════════╝
+\RequirePackage{fancyhdr}
+\fancyhf{}\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+% Start with empty page style (covers have no page numbers)
+% \frontmatter will switch to fancy style when content begins
+\pagestyle{empty}
+
+
+% ╔═══════════════════════════════════════════════════════════════════════════╗
+% ║   4 · Line spacing                                                        ║
+% ╚═══════════════════════════════════════════════════════════════════════════╝
+\renewcommand{\baselinestretch}{1.5}
+
+% ╔═══════════════════════════════════════════════════════════════════════════╗
+% ║   5 · Colours & heading design                                            ║
+% ╚═══════════════════════════════════════════════════════════════════════════╝
+\RequirePackage{titlesec}
+\PassOptionsToPackage{dvipsnames}{xcolor}
+\RequirePackage{xcolor}
+\definecolor{UMAblue}{HTML}{002E5D}
+\definecolor{UMAgray}{HTML}{63666A}
+
+% –– Numbered vs. unnumbered chapter formats ---------------------------------
+\titleformat{\chapter}[display]
+  {\MalacitanaRoman\filleft\bfseries\fontsize{45}{50}\selectfont}
+  {\color{UMAgray}\fontsize{120}{130}\selectfont\thechapter}
+  {-50pt}{}
+\titlespacing{\chapter}{0pt}{-100pt}{10pt}
+
+\titleformat{name=\chapter,numberless}[display]
+  {\MalacitanaRoman\filleft\bfseries\fontsize{45}{50}\selectfont}{}
+  {0pt}{}
+\titlespacing*{name=\chapter,numberless}{0pt}{-100pt}{18pt}
+
+
+% –– Part headings -----------------------------------------------------------
+\titleclass{\part}{top}[\chapter]
+\titleformat{\part}[display]
+  {\MalacitanaRoman\filleft\bfseries\Huge}
+  {\color{UMAgray}\fontsize{100}{110}\selectfont Part~\Roman{part}}
+  {12pt}{}
+\titlespacing*{\part}{0pt}{-28pt}{18pt}
+
+% –– Section headings --------------------------------------------------------
+\titleformat{\section}
+  {\MalacitanaRoman\normalfont\bfseries\color{UMAblue}\Large}
+  {\thesection}{1em}{}
+\titlespacing*{\section}{0pt}{1.5ex plus 0.5ex minus 2.5ex}{1ex plus .2ex}
+% add immediately after the existing \titleformat lines
+\titleformat{\subsection}
+  {\MalacitanaRoman\normalfont\bfseries\color{UMAblue}\large}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}
+  {\MalacitanaRoman\normalfont\bfseries\color{UMAblue}}{\thesubsubsection}{1em}{}
+\titleformat{\paragraph}
+  {\MalacitanaRoman\normalfont\bfseries}{\theparagraph}{1em}{}
+\titlespacing*{\subsection}{0pt}{1.5ex plus .3ex}{1ex plus .2ex}
+\titlespacing*{\subsubsection}{0pt}{1ex plus .2ex}{0.8ex}
+
+% ╔═══════════════════════════════════════════════════════════════════════════╗
+% ║   6 · Nomenclature heading (titlesec style)                               ║
+% ╚═══════════════════════════════════════════════════════════════════════════╝
+\RequirePackage{etoolbox}
+\AtBeginDocument{%
+  \@ifundefined{printnomenclature}{}{%
+    % prepend our own heading – grouped so Roman doesn’t leak
+    \pretocmd{\printnomenclature}{%
+      \cleardoublepage
+      {\MalacitanaRoman\chapter*{\nomname}}%  ⟵ grouped
+      \addcontentsline{toc}{chapter}{\nomname}%
+      \markboth{\nomname}{\nomname}%
+      \vspace{10pt}}{}{}%
+    % strip the original heading lines
+    \patchcmd{\printnomenclature}{\chapter*{\nomname}}{}{}{}%
+    \patchcmd{\printnomenclature}{\addcontentsline{toc}{chapter}{\nomname}}{}{}{}%
+    \patchcmd{\printnomenclature}{\markboth{\nomname}{\nomname}}{}{}{}%
+  }%
+}
+
+% ════════════════════════════════════════════════════════════════════════════
+
+
+% ╔═══════════════════════════════════════════════════════════════════════════╗
+% ║   7 · Abstract environment                                                ║
+% ╚═══════════════════════════════════════════════════════════════════════════╝
+% Body paragraphs use Malacitana-Sans
+\makeatletter  
+\providecommand{\abstractname}{Abstract}
+
+\AtBeginDocument{%
+  % Si la clase NO define 'abstract' (p.ej. book), lo creamos
+  % Si ya existe (p.ej. article, report), lo reestilizamos
+  \@ifundefined{abstract}{%
+    \newenvironment{abstract}
+    {%
+      \cleardoublepage                % nueva página (respeta twoside+openright)
+      {\MalacitanaRoman\chapter*{\abstractname}}%
+      \addcontentsline{toc}{chapter}{\abstractname}%
+      \markboth{\abstractname}{\abstractname}%
+      \begingroup\sffamily            % cuerpo en Sans
+        \setlength{\parindent}{0pt}%
+        \begin{quotation}%
+    }{%
+        \end{quotation}%
+      \endgroup
+    }%
+  }{%
+    \renewenvironment{abstract}
+    {%
+      \cleardoublepage
+      {\MalacitanaRoman\chapter*{\abstractname}}%
+      \addcontentsline{toc}{chapter}{\abstractname}%
+      \markboth{\abstractname}{\abstractname}%
+      \begingroup\sffamily
+        \setlength{\parindent}{0pt}%
+        \begin{quotation}%
+    }{%
+        \end{quotation}%
+      \endgroup
+    }%
+  }%
+}
+
+
+
+
+% ╔═══════════════════════════════════════════════════════════════════════════╗
+% ║   8 · TOC / LoF / LoT title style                                         ║
+% ╚═══════════════════════════════════════════════════════════════════════════╝
+\RequirePackage{hyperref}
+\hypersetup{%
+  colorlinks,linkcolor=UMAblue,citecolor=UMAblue,urlcolor=UMAblue,
+  linktoc=all,
+  pdftitle={University of Málaga TFG ETS Informatics},
+  pdfsubject={Scientific‑engineering thesis template},
+  pdfcreator={LaTeX with UMA-ETSI template},
+  breaklinks=true}
+\RequirePackage{bookmark}           % Better PDF bookmarks (supersedes hyperref's)
+
+\RequirePackage[titles]{tocloft}  % 'titles' option uses standard \chapter* for TOC/LoF/LoT titles
+\AtBeginDocument{%
+  \newcommand*\uma@UnnumChapFmt{{\MalacitanaRoman\bfseries\fontsize{45}{50}\selectfont\hspace*{\fill}}}
+
+  \renewcommand{\cfttoctitlefont}{\uma@UnnumChapFmt}
+  \renewcommand{\cftloftitlefont}{\uma@UnnumChapFmt}
+  \renewcommand{\cftlottitlefont}{\uma@UnnumChapFmt}
+  \renewcommand{\cftaftertoctitle}{\par\vspace{-10pt}}
+  \renewcommand{\cftafterloftitle}{\par\vspace{-10pt}}
+  \renewcommand{\cftafterlottitle}{\par\vspace{-10pt}}
+  \setlength{\cftbeforetoctitleskip}{0pt}
+  \setlength{\cftbeforeloftitleskip}{0pt}
+  \setlength{\cftbeforelottitleskip}{0pt}
+  \setlength{\cftbeforechapskip}{-1pt}
+  % blue TOC entries
+  \renewcommand{\cftpartfont}{\color{UMAblue}\bfseries}
+  \renewcommand{\cftpartpagefont}{\color{UMAblue}}
+  \renewcommand{\cftchapfont}{\color{UMAblue}\bfseries}
+  \renewcommand{\cftchappagefont}{\color{UMAblue}}
+  \renewcommand{\cftsecfont}{\color{UMAblue}}
+  \renewcommand{\cftsecpagefont}{\color{UMAblue}}
+  \renewcommand{\cftsubsecfont}{\color{UMAblue}}
+  \renewcommand{\cftsubsecpagefont}{\color{UMAblue}}
+}
+
+% NOTE: TOC/LoF/LoT \cleardoublepage is now handled in section 8b redefinitions
+
+% Bibliografía con BibTeX: forzar impar al entrar en el entorno
+\AtBeginDocument{%
+  \pretocmd{\thebibliography}{\cleardoublepage}{}{}%
+}
+
+% Bibliografía con biblatex: forzar impar antes de imprimir
+\AtBeginDocument{%
+  \@ifundefined{printbibliography}{}{%
+    \pretocmd{\printbibliography}{\cleardoublepage}{}{}%
+  }%
+}
+
+% Índice con makeidx
+\AtBeginDocument{%
+  \@ifundefined{printindex}{}{%
+    \pretocmd{\printindex}{\cleardoublepage}{}{}%
+  }%
+}
+
+% Para biblatex: entrada en TOC sin numerar
+\AtBeginDocument{%
+  \@ifundefined{printbibliography}{}{%
+    \pretocmd{\printbibliography}{\begingroup\def\bibname{Bibliografía}\endgroup}{}{}%
+  }%
+}
+
+% --- Espaciado antes/después de títulos (sección y subsección) ---
+% Valores configurables en un solo sitio
+\newcommand{\umasecbeforeskip}{1.8\baselineskip}   % espacio ANTES de \section
+\newcommand{\umasecafterskip}{0.6\baselineskip}    % espacio DESPUÉS de \section
+\newcommand{\umasubsecbeforeskip}{1.2\baselineskip}% espacio ANTES de \subsection
+\newcommand{\umasubsecafterskip}{0.5\baselineskip} % espacio DESPUÉS de \subsection
+
+% titlesec ya está cargado; usamos \titlespacing* para anular sangría del párrafo siguiente
+\titlespacing*{\section}{0pt}{\umasecbeforeskip}{\umasecafterskip}
+\titlespacing*{\subsection}{0pt}{\umasubsecbeforeskip}{\umasubsecafterskip}
+
+% ╔═══════════════════════════════════════════════════════════════════════════╗
+% ║ 8b · Force TOC / LoF / LoT headings to use chapter* style                ║
+% ║      Definitions placed in \AtBeginDocument to run AFTER tocloft init    ║
+% ╚═══════════════════════════════════════════════════════════════════════════╝
+\makeatletter
+\AtBeginDocument{%
+  \renewcommand{\tableofcontents}{%
+    \cleardoublepage
+    \phantomsection
+    \chapter*{\contentsname}%
+    \addcontentsline{toc}{chapter}{\contentsname}%
+    \markboth{\contentsname}{\contentsname}%
+    \vspace{10pt}%
+    \@starttoc{toc}%
+  }%
+  \renewcommand{\listoffigures}{%
+    \cleardoublepage
+    \phantomsection
+    \chapter*{\listfigurename}%
+    \addcontentsline{toc}{chapter}{\listfigurename}%
+    \markboth{\listfigurename}{\listfigurename}%
+    \vspace{10pt}%
+    \@starttoc{lof}%
+  }%
+  \renewcommand{\listoftables}{%
+    \cleardoublepage
+    \phantomsection
+    \chapter*{\listtablename}%
+    \addcontentsline{toc}{chapter}{\listtablename}%
+    \markboth{\listtablename}{\listtablename}%
+    \vspace{10pt}%
+    \@starttoc{lot}%
+  }%
+}
+\makeatother
+
+
+% ╔═══════════════════════════════════════════════════════════════════════════╗
+% ║   9 · Parts helper (custom TOC + body heading)                            ║
+% ╚═══════════════════════════════════════════════════════════════════════════╝
+\makeatletter
+\newlength\uma@partbeforevspace
+\newlength\uma@partaftervspace
+\setlength\uma@partbeforevspace{1cm}
+\setlength\uma@partaftervspace{0.1cm}
+\newcounter{umapart}\renewcommand\theumapart{\Roman{umapart}}
+
+\newcommand{\TOCPart}[1]{%
+  \refstepcounter{umapart}%
+  \addtocontents{toc}{\protect\vspace{\uma@partbeforevspace}}%
+  \addtocontents{toc}{%
+    \protect\noindent
+    \protect\cftpartfont Part~\theumapart\hspace{1em}#1%
+    \protect\cftpartpagefont\protect\par}%
+  \addtocontents{toc}{\protect\vspace{\uma@partaftervspace}}%
+  \addtocontents{toc}{\protect\normalfont\protect\mdseries}}
+\newcommand{\BODYPart}[1]{%
+  \cleardoublepage{\raggedleft
+    {\scshape\Huge\color{UMAblue} Part~\theumapart\par}\vspace{0.5\baselineskip}
+    {\bfseries\Huge\color{UMAblue} #1\par}}\vspace{2\baselineskip}}
+\makeatother
+
+% ╔═══════════════════════════════════════════════════════════════════════════╗
+% ║ 10 · Appendix helper (local numbering A.1, A.1.1 …)                       ║
+% ╚═══════════════════════════════════════════════════════════════════════════╝
+\makeatletter
+\newcounter{uma@appendix}\renewcommand{\theuma@appendix}{\Alph{uma@appendix}}
+\newenvironment{umaappendices}
+  {\cleardoublepage\begingroup\setcounter{uma@appendix}{0}%
+   \let\uma@savesection\thesection
+   \let\uma@savesub\thesubsection
+   \let\uma@savesubsub\thesubsubsection}
+  {\let\thesection\uma@savesection
+   \let\thesubsection\uma@savesub
+   \let\thesubsubsection\uma@savesubsub
+   \titleformat{\section}{\normalfont\bfseries\color{UMAblue}\Large}{\thesection}{1em}{}%
+   \endgroup}
+
+\newcommand{\umaappendix}[1]{%
+  \refstepcounter{uma@appendix}%
+  \setcounter{section}{0}\setcounter{subsection}{0}\setcounter{subsubsection}{0}%
+  \renewcommand{\thesection}{\theuma@appendix.\arabic{section}}%
+  \renewcommand{\thesubsection}{\thesection.\arabic{subsection}}%
+  \renewcommand{\thesubsubsection}{\thesubsection.\arabic{subsubsection}}%
+  \titleformat{\section}{\normalfont\bfseries\color{UMAgray}\Large}{\thesection}{1em}{}%
+  \cleardoublepage{%
+    \raggedleft
+    {\MalacitanaRoman\color{UMAgray}\bfseries\fontsize{42}{45}\selectfont
+      Appendix~\theuma@appendix.\ #1\par}%
+  }\vspace{18pt}%
+  \addcontentsline{toc}{chapter}{Appendix~\theuma@appendix.\ #1}%
+  \markboth{Appendix~\theuma@appendix.\ #1}{Appendix~\theuma@appendix.\ #1}}
+\makeatother
+
+% ╔═══════════════════════════════════════════════════════════════════════════╗
+% ║ 11 · Captions & tables                                                    ║
+% ╚═══════════════════════════════════════════════════════════════════════════╝
+\RequirePackage{caption,subcaption}
+\captionsetup{labelfont=bf,textfont=it,justification=centering,labelsep=period}
+\RequirePackage{booktabs,array,tabularx}
+\RequirePackage{siunitx}
+\sisetup{locale=UK,per-mode=symbol,detect-weight}
+
+% ╔═══════════════════════════════════════════════════════════════════════════╗
+% ║ 12 · Listings (enhanced syntax highlighting)                              ║
+% ╚═══════════════════════════════════════════════════════════════════════════╝
+\RequirePackage{listings}
+
+% –– Color palette for code highlighting (Paul Tol colorblind-friendly) ––
+% Based on Paul Tol's bright and muted schemes for accessibility
+\definecolor{codebg}{HTML}{F8F9FA}
+\definecolor{coderule}{HTML}{BBBBBB}
+\definecolor{codeindigo}{HTML}{332288}      % Paul Tol muted - keywords
+\definecolor{codegreen}{HTML}{117733}       % Paul Tol muted - strings
+\definecolor{codeblue}{HTML}{4477AA}        % Paul Tol bright - built-ins
+\definecolor{coderose}{HTML}{CC6677}        % Paul Tol muted - operators
+\definecolor{codegray}{HTML}{666666}        % neutral gray - comments
+\definecolor{codeteal}{HTML}{44AA99}        % Paul Tol muted - secondary
+
+% –– Base style for all listings ––
+\lstset{
+  backgroundcolor=\color{codebg},
+  basicstyle=\ttfamily\small,
+  numbers=left,
+  numberstyle=\tiny\color{UMAgray},
+  stepnumber=1,
+  numbersep=8pt,
+  frame=single,
+  framerule=0.3pt,
+  rulecolor=\color{coderule},
+  breaklines=true,
+  breakatwhitespace=false,
+  columns=flexible,
+  captionpos=b,
+  tabsize=4,
+  showstringspaces=false,
+  showspaces=false,
+  showtabs=false,
+  keywordstyle=\color{codeindigo}\bfseries,
+  commentstyle=\color{codegray}\itshape,
+  stringstyle=\color{codegreen},
+  emphstyle=\color{coderose},
+  xleftmargin=2em,
+  framexleftmargin=1.5em,
+}
+
+% –– Python ––
+\lstdefinestyle{python}{
+  language=Python,
+  morekeywords={self,True,False,None,as,with,yield,async,await},
+  keywordstyle=\color{codeindigo}\bfseries,
+  keywordstyle=[2]\color{codeblue},
+  morekeywords=[2]{print,range,len,str,int,float,list,dict,set,tuple,open,type,isinstance,hasattr,getattr,setattr},
+  stringstyle=\color{codegreen},
+  commentstyle=\color{codegray}\itshape,
+  morecomment=[l]{\#},
+  morestring=[b]",
+  morestring=[b]',
+  morestring=[s]{"""}{"""},
+  morestring=[s]{'''}{'''},
+  literate={->}{{\textcolor{coderose}{->}}}2
+           {=>}{{\textcolor{coderose}{=>}}}2,
+}
+
+% –– Java ––
+\lstdefinestyle{java}{
+  language=Java,
+  morekeywords={abstract,assert,boolean,break,byte,case,catch,char,class,const,continue,default,do,double,else,enum,extends,final,finally,float,for,goto,if,implements,import,instanceof,int,interface,long,native,new,package,private,protected,public,return,short,static,strictfp,super,switch,synchronized,this,throw,throws,transient,try,void,volatile,while,true,false,null,var,record,sealed,permits,yield},
+  keywordstyle=\color{codeindigo}\bfseries,
+  keywordstyle=[2]\color{codeblue},
+  morekeywords=[2]{String,System,Object,Integer,Double,Boolean,List,ArrayList,Map,HashMap,Set,HashSet,Optional,Stream},
+  stringstyle=\color{codegreen},
+  commentstyle=\color{codegray}\itshape,
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]",
+}
+
+% –– C ––
+\lstdefinestyle{c}{
+  language=C,
+  morekeywords={auto,break,case,char,const,continue,default,do,double,else,enum,extern,float,for,goto,if,inline,int,long,register,restrict,return,short,signed,sizeof,static,struct,switch,typedef,union,unsigned,void,volatile,while,_Alignas,_Alignof,_Atomic,_Bool,_Complex,_Generic,_Imaginary,_Noreturn,_Static_assert,_Thread_local,size_t,NULL},
+  keywordstyle=\color{codeindigo}\bfseries,
+  keywordstyle=[2]\color{codeblue},
+  morekeywords=[2]{printf,scanf,malloc,free,calloc,realloc,strlen,strcpy,strcmp,memcpy,memset,fopen,fclose,fprintf,fscanf},
+  stringstyle=\color{codegreen},
+  commentstyle=\color{codegray}\itshape,
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]",
+  morestring=[b]',
+}
+
+% –– C++ ––
+\lstdefinestyle{cpp}{
+  language=C++,
+  morekeywords={alignas,alignof,and,and_eq,asm,auto,bitand,bitor,bool,break,case,catch,char,char8_t,char16_t,char32_t,class,compl,concept,const,consteval,constexpr,constinit,const_cast,continue,co_await,co_return,co_yield,decltype,default,delete,do,double,dynamic_cast,else,enum,explicit,export,extern,false,float,for,friend,goto,if,inline,int,long,mutable,namespace,new,noexcept,not,not_eq,nullptr,operator,or,or_eq,private,protected,public,register,reinterpret_cast,requires,return,short,signed,sizeof,static,static_assert,static_cast,struct,switch,template,this,thread_local,throw,true,try,typedef,typeid,typename,union,unsigned,using,virtual,void,volatile,wchar_t,while,xor,xor_eq},
+  keywordstyle=\color{codeindigo}\bfseries,
+  keywordstyle=[2]\color{codeblue},
+  morekeywords=[2]{std,cout,cin,endl,vector,string,map,set,pair,unique_ptr,shared_ptr,make_unique,make_shared,move,forward},
+  stringstyle=\color{codegreen},
+  commentstyle=\color{codegray}\itshape,
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]",
+  morestring=[b]',
+}
+
+% –– R ––
+\lstdefinestyle{r}{
+  language=R,
+  morekeywords={if,else,repeat,while,function,for,in,next,break,return,TRUE,FALSE,NULL,NA,NaN,Inf},
+  keywordstyle=\color{codeindigo}\bfseries,
+  keywordstyle=[2]\color{codeblue},
+  morekeywords=[2]{library,require,install.packages,data.frame,matrix,vector,list,c,mean,sum,sd,var,min,max,length,nrow,ncol,head,tail,print,cat,paste,read.csv,write.csv,ggplot,aes,geom_point,geom_line},
+  stringstyle=\color{codegreen},
+  commentstyle=\color{codegray}\itshape,
+  morecomment=[l]{\#},
+  morestring=[b]",
+  morestring=[b]',
+  literate={<-}{{\textcolor{coderose}{<-}}}2
+           {->}{{\textcolor{coderose}{->}}}2
+           {\%>\%}{{\textcolor{coderose}{\%>\%}}}3,
+}
+
+% –– MATLAB ––
+\lstdefinestyle{matlab}{
+  language=Matlab,
+  morekeywords={break,case,catch,classdef,continue,else,elseif,end,for,function,global,if,otherwise,parfor,persistent,return,spmd,switch,try,while,true,false},
+  keywordstyle=\color{codeindigo}\bfseries,
+  keywordstyle=[2]\color{codeblue},
+  morekeywords=[2]{plot,subplot,figure,hold,xlabel,ylabel,title,legend,grid,zeros,ones,eye,rand,randn,linspace,size,length,disp,fprintf,sprintf},
+  stringstyle=\color{codegreen},
+  commentstyle=\color{codegray}\itshape,
+  morecomment=[l]{\%},
+  morestring=[b]',
+}
+
+% –– JavaScript ––
+\lstdefinestyle{javascript}{
+  morekeywords={break,case,catch,continue,debugger,default,delete,do,else,finally,for,function,if,in,instanceof,new,return,switch,this,throw,try,typeof,var,void,while,with,class,const,enum,export,extends,import,super,implements,interface,let,package,private,protected,public,static,yield,async,await,of},
+  keywordstyle=\color{codeindigo}\bfseries,
+  keywordstyle=[2]\color{codeblue},
+  morekeywords=[2]{console,document,window,Array,Object,String,Number,Boolean,Promise,Map,Set,JSON,Math,Date,RegExp,Error,undefined,null,true,false,NaN,Infinity},
+  stringstyle=\color{codegreen},
+  commentstyle=\color{codegray}\itshape,
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]",
+  morestring=[b]',
+  morestring=[b]`,
+  sensitive=true,
+  literate={=>}{{\textcolor{coderose}{=>}}}2,
+}
+
+% –– SQL ––
+\lstdefinestyle{sql}{
+  morekeywords={SELECT,FROM,WHERE,INSERT,INTO,VALUES,UPDATE,SET,DELETE,CREATE,TABLE,DROP,ALTER,ADD,INDEX,JOIN,INNER,LEFT,RIGHT,OUTER,ON,AND,OR,NOT,NULL,IS,IN,BETWEEN,LIKE,ORDER,BY,GROUP,HAVING,UNION,ALL,DISTINCT,AS,LIMIT,OFFSET,PRIMARY,KEY,FOREIGN,REFERENCES,CASCADE,DEFAULT,CHECK,UNIQUE,CONSTRAINT},
+  keywordstyle=\color{codeindigo}\bfseries,
+  keywordstyle=[2]\color{codeblue},
+  morekeywords=[2]{INT,INTEGER,VARCHAR,TEXT,CHAR,BOOLEAN,DATE,DATETIME,TIMESTAMP,FLOAT,DOUBLE,DECIMAL,BLOB},
+  stringstyle=\color{codegreen},
+  commentstyle=\color{codegray}\itshape,
+  morecomment=[l]{--},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]',
+  morestring=[b]",
+  sensitive=false,
+}
+
+% –– Bash/Shell ––
+\lstdefinestyle{bash}{
+  morekeywords={if,then,else,elif,fi,case,esac,for,while,do,done,in,function,select,until,time,coproc},
+  keywordstyle=\color{codeindigo}\bfseries,
+  keywordstyle=[2]\color{codeblue},
+  morekeywords=[2]{echo,cd,ls,pwd,mkdir,rm,cp,mv,cat,grep,sed,awk,find,chmod,chown,sudo,apt,yum,pip,npm,git,docker,make,curl,wget},
+  stringstyle=\color{codegreen},
+  commentstyle=\color{codegray}\itshape,
+  morecomment=[l]{\#},
+  morestring=[b]",
+  morestring=[b]',
+}
+
+
+% ╔═══════════════════════════════════════════════════════════════════════════╗
+% ║ 13 · Theorem‑like environments (boxed with tcolorbox)                     ║
+% ╚═══════════════════════════════════════════════════════════════════════════╝
+\RequirePackage{amsthm,amsmath,amssymb}
+\RequirePackage[most]{tcolorbox}
+\tcbuselibrary{theorems,skins,breakable}
+
+% –– Color palette for math environments (Paul Tol colorblind-friendly) ––
+% Professional palette based on Paul Tol's muted scheme + UMA corporate colors
+% Light backgrounds are 10-15% tints of the border colors
+\definecolor{theorembg}{HTML}{E8EEF5}       % Light tint of UMA blue
+\definecolor{theoremborder}{HTML}{002E5D}   % UMA corporate blue
+\definecolor{definitionbg}{HTML}{E6F2E6}    % Light tint of Paul Tol green
+\definecolor{definitionborder}{HTML}{117733}% Paul Tol muted green
+\definecolor{lemmabg}{HTML}{F5F2E6}         % Light tint of Paul Tol sand
+\definecolor{lemmaborder}{HTML}{999933}     % Paul Tol muted olive
+\definecolor{corollarybg}{HTML}{F0E6F0}     % Light tint of Paul Tol purple
+\definecolor{corollaryborder}{HTML}{882255} % Paul Tol muted wine
+\definecolor{propositionbg}{HTML}{E6F5F2}   % Light tint of Paul Tol teal
+\definecolor{propositionborder}{HTML}{44AA99}% Paul Tol muted teal
+\definecolor{remarkbg}{HTML}{F5F5F5}        % Neutral light gray
+\definecolor{remarkborder}{HTML}{666666}    % Neutral gray
+\definecolor{examplebg}{HTML}{EEF6FA}       % Light tint of Paul Tol cyan
+\definecolor{exampleborder}{HTML}{4477AA}   % Paul Tol bright blue
+\definecolor{proofbg}{HTML}{FAFAFA}         % Near white
+\definecolor{proofborder}{HTML}{888888}     % Medium gray
+
+% –– Counter for theorems ––
+\newcounter{umatheorem}[chapter]
+\renewcommand{\theumatheorem}{\thechapter.\arabic{umatheorem}}
+
+% –– Theorem box style ––
+\newtcolorbox[use counter=umatheorem,number within=chapter]{theorem}[2][]{%
+  enhanced,
+  breakable,
+  colback=theorembg,
+  colframe=theoremborder,
+  coltitle=white,
+  fonttitle=\MalacitanaRoman\bfseries,
+  title={Theorem~\theumatheorem\ifstrempty{#2}{}{ (#2)}},
+  attach boxed title to top left={yshift=-2mm,xshift=4mm},
+  boxed title style={colback=theoremborder,sharp corners},
+  sharp corners,
+  boxrule=1pt,
+  left=8pt,right=8pt,top=6pt,bottom=6pt,
+  before skip=12pt,after skip=12pt,
+  #1
+}
+
+% –– Definition box style ––
+\newtcolorbox[use counter=umatheorem]{definition}[2][]{%
+  enhanced,
+  breakable,
+  colback=definitionbg,
+  colframe=definitionborder,
+  coltitle=white,
+  fonttitle=\MalacitanaRoman\bfseries,
+  title={Definition~\theumatheorem\ifstrempty{#2}{}{ (#2)}},
+  attach boxed title to top left={yshift=-2mm,xshift=4mm},
+  boxed title style={colback=definitionborder,sharp corners},
+  sharp corners,
+  boxrule=1pt,
+  left=8pt,right=8pt,top=6pt,bottom=6pt,
+  before skip=12pt,after skip=12pt,
+  #1
+}
+
+% –– Lemma box style ––
+\newtcolorbox[use counter=umatheorem]{lemma}[2][]{%
+  enhanced,
+  breakable,
+  colback=lemmabg,
+  colframe=lemmaborder,
+  coltitle=white,
+  fonttitle=\MalacitanaRoman\bfseries,
+  title={Lemma~\theumatheorem\ifstrempty{#2}{}{ (#2)}},
+  attach boxed title to top left={yshift=-2mm,xshift=4mm},
+  boxed title style={colback=lemmaborder,sharp corners},
+  sharp corners,
+  boxrule=1pt,
+  left=8pt,right=8pt,top=6pt,bottom=6pt,
+  before skip=12pt,after skip=12pt,
+  #1
+}
+
+% –– Corollary box style ––
+\newtcolorbox[use counter=umatheorem]{corollary}[2][]{%
+  enhanced,
+  breakable,
+  colback=corollarybg,
+  colframe=corollaryborder,
+  coltitle=white,
+  fonttitle=\MalacitanaRoman\bfseries,
+  title={Corollary~\theumatheorem\ifstrempty{#2}{}{ (#2)}},
+  attach boxed title to top left={yshift=-2mm,xshift=4mm},
+  boxed title style={colback=corollaryborder,sharp corners},
+  sharp corners,
+  boxrule=1pt,
+  left=8pt,right=8pt,top=6pt,bottom=6pt,
+  before skip=12pt,after skip=12pt,
+  #1
+}
+
+% –– Proposition box style ––
+\newtcolorbox[use counter=umatheorem]{proposition}[2][]{%
+  enhanced,
+  breakable,
+  colback=propositionbg,
+  colframe=propositionborder,
+  coltitle=white,
+  fonttitle=\MalacitanaRoman\bfseries,
+  title={Proposition~\theumatheorem\ifstrempty{#2}{}{ (#2)}},
+  attach boxed title to top left={yshift=-2mm,xshift=4mm},
+  boxed title style={colback=propositionborder,sharp corners},
+  sharp corners,
+  boxrule=1pt,
+  left=8pt,right=8pt,top=6pt,bottom=6pt,
+  before skip=12pt,after skip=12pt,
+  #1
+}
+
+% –– Cleveref names for tcolorbox internal counters ––
+% These tcb@cnt@* counters are created by tcolorbox when using [use counter=...]
+\AtBeginDocument{%
+  \crefname{tcb@cnt@theorem}{Theorem}{Theorems}%
+  \Crefname{tcb@cnt@theorem}{Theorem}{Theorems}%
+  \crefformat{tcb@cnt@theorem}{Theorem~##2##1##3}%
+  \crefname{tcb@cnt@definition}{Definition}{Definitions}%
+  \Crefname{tcb@cnt@definition}{Definition}{Definitions}%
+  \crefformat{tcb@cnt@definition}{Definition~##2##1##3}%
+  \crefname{tcb@cnt@lemma}{Lemma}{Lemmas}%
+  \Crefname{tcb@cnt@lemma}{Lemma}{Lemmas}%
+  \crefformat{tcb@cnt@lemma}{Lemma~##2##1##3}%
+  \crefname{tcb@cnt@corollary}{Corollary}{Corollaries}%
+  \Crefname{tcb@cnt@corollary}{Corollary}{Corollaries}%
+  \crefformat{tcb@cnt@corollary}{Corollary~##2##1##3}%
+  \crefname{tcb@cnt@proposition}{Proposition}{Propositions}%
+  \Crefname{tcb@cnt@proposition}{Proposition}{Propositions}%
+  \crefformat{tcb@cnt@proposition}{Proposition~##2##1##3}%
+}
+
+% –– Remark box style (lighter, left border only) ––
+\newtcolorbox{remark}[1][]{%
+  enhanced,
+  breakable,
+  colback=remarkbg,
+  colframe=remarkborder,
+  fonttitle=\MalacitanaRoman\bfseries,
+  title={Remark},
+  coltitle=remarkborder,
+  attach boxed title to top left={yshift=-2mm,xshift=4mm},
+  boxed title style={colback=remarkbg,sharp corners,boxrule=0pt},
+  sharp corners,
+  boxrule=0pt,
+  leftrule=3pt,
+  left=8pt,right=8pt,top=6pt,bottom=6pt,
+  before skip=10pt,after skip=10pt,
+  #1
+}
+
+% –– Example box style ––
+\newtcolorbox{example}[1][]{%
+  enhanced,
+  breakable,
+  colback=examplebg,
+  colframe=exampleborder,
+  fonttitle=\MalacitanaRoman\bfseries,
+  title={Example},
+  coltitle=exampleborder,
+  attach boxed title to top left={yshift=-2mm,xshift=4mm},
+  boxed title style={colback=examplebg,sharp corners,boxrule=0pt},
+  sharp corners,
+  boxrule=0pt,
+  leftrule=3pt,
+  left=8pt,right=8pt,top=6pt,bottom=6pt,
+  before skip=10pt,after skip=10pt,
+  #1
+}
+
+% –– Proof environment (clean style with QED) ––
+\renewenvironment{proof}[1][\proofname]{%
+  \begin{tcolorbox}[
+    enhanced,
+    breakable,
+    colback=proofbg,
+    colframe=proofborder,
+    boxrule=0pt,
+    leftrule=3pt,
+    sharp corners,
+    left=8pt,right=8pt,top=6pt,bottom=6pt,
+    before skip=10pt,after skip=10pt,
+    title={},
+    fontupper=\small,
+  ]
+  \textit{#1.}\hspace{0.5em}%
+}{%
+  \hfill$\square$
+  \end{tcolorbox}
+}
+
+% –– Note environment (additional helper) ––
+\newtcolorbox{note}[1][]{%
+  enhanced,
+  breakable,
+  colback=white,
+  colframe=UMAblue,
+  boxrule=0pt,
+  leftrule=4pt,
+  sharp corners,
+  left=8pt,right=8pt,top=6pt,bottom=6pt,
+  before skip=10pt,after skip=10pt,
+  fonttitle=\MalacitanaRoman\bfseries\color{UMAblue},
+  title={Note},
+  coltitle=UMAblue,
+  attach boxed title to top left={yshift=-2mm,xshift=4mm},
+  boxed title style={colback=white,sharp corners,boxrule=0pt},
+  #1
+}
+
+% ╔═══════════════════════════════════════════════════════════════════════════╗
+% ║ 14 · Nomenclature, algorithms, cleveref                                   ║
+% ╚═══════════════════════════════════════════════════════════════════════════╝
+\RequirePackage{nomencl}\makenomenclature
+\RequirePackage{algorithm,algpseudocode}
+\algrenewcommand\algorithmicindent{1em}
+\RequirePackage{cleveref}
+
+% –– Standard LaTeX counters ––
+\crefname{lstlisting}{Listing}{Listings}
+\Crefname{lstlisting}{Listing}{Listings}
+\crefname{chapter}{Chapter}{Chapters}
+\Crefname{chapter}{Chapter}{Chapters}
+\crefname{section}{Section}{Sections}
+\Crefname{section}{Section}{Sections}
+\crefname{figure}{Fig.}{Figs.}
+\Crefname{figure}{Figure}{Figures}
+\crefname{table}{Table}{Tables}
+\Crefname{table}{Table}{Tables}
+\crefname{equation}{Eq.}{Eqs.}
+\Crefname{equation}{Equation}{Equations}
+\crefname{algorithm}{Algorithm}{Algorithms}
+\Crefname{algorithm}{Algorithm}{Algorithms}
+
+% –– Theorem-like environments (tcolorbox) ––
+% These use the shared umatheorem counter
+\crefname{umatheorem}{Theorem}{Theorems}
+\Crefname{umatheorem}{Theorem}{Theorems}
+\crefformat{umatheorem}{Theorem~#2#1#3}
+
+% Named environment types (for semantic labeling)
+\crefname{theorem}{Theorem}{Theorems}
+\Crefname{theorem}{Theorem}{Theorems}
+\crefname{definition}{Definition}{Definitions}
+\Crefname{definition}{Definition}{Definitions}
+\crefname{lemma}{Lemma}{Lemmas}
+\Crefname{lemma}{Lemma}{Lemmas}
+\crefname{corollary}{Corollary}{Corollaries}
+\Crefname{corollary}{Corollary}{Corollaries}
+\crefname{proposition}{Proposition}{Propositions}
+\Crefname{proposition}{Proposition}{Propositions}
+\crefname{example}{Example}{Examples}
+\Crefname{example}{Example}{Examples}
+\crefname{remark}{Remark}{Remarks}
+\Crefname{remark}{Remark}{Remarks}
+
+% –– crefformat for custom display ––
+\crefformat{lstlisting}{Listing~#2#1#3}
+\crefformat{chapter}{Chapter~#2#1#3}
+\crefformat{section}{Section~#2#1#3}
+\crefformat{figure}{Fig.~#2#1#3}
+\crefformat{table}{Table~#2#1#3}
+\crefformat{equation}{Eq.~#2#1#3}
+\crefformat{algorithm}{Algorithm~#2#1#3}
+\crefformat{theorem}{Theorem~#2#1#3}
+\crefformat{definition}{Definition~#2#1#3}
+\crefformat{lemma}{Lemma~#2#1#3}
+\crefformat{corollary}{Corollary~#2#1#3}
+\crefformat{proposition}{Proposition~#2#1#3}
+\crefformat{example}{Example~#2#1#3}
+\crefformat{remark}{Remark~#2#1#3}
+\captionsetup{font={rm,it}, labelfont={rm,bf}}
+
+
+% ╔═══════════════════════════════════════════════════════════════════════════╗
+% ║ 15 · Acknowledgements environment                                         ║
+% ╚═══════════════════════════════════════════════════════════════════════════╝
+\makeatletter
+\newcommand*\uma@ackname{Agradecimientos}
+\newcommand*\SetAcknowledgmentsName[1]{\renewcommand\uma@ackname{#1}}
+\newenvironment{umaacknowledgments}
+  {\cleardoublepage\phantomsection\chapter*{\uma@ackname}%
+   \addcontentsline{toc}{chapter}{\uma@ackname}\thispagestyle{plain}%
+   \begingroup\setlength{\parindent}{0pt}\setlength{\parskip}{0.6\baselineskip}}
+  {\endgroup\cleardoublepage}
+\makeatother
+
+% ╔═══════════════════════════════════════════════════════════════════════════╗
+% ║ 16 · Front / main / back matter helpers (book + fall-backs)              ║
+% ╚═══════════════════════════════════════════════════════════════════════════╝
+\makeatletter
+\@ifclassloaded{book}{%
+  % --- BOOK CLASS -----------------------------------------------------------
+  % Front matter: arabic numbers, start at 1, no openright (no blank pages).
+  % Also switches from empty page style (used for covers) to fancy.
+  \renewcommand{\frontmatter}{%
+    \clearpage
+    \@mainmatterfalse
+    \@openrightfalse
+    \pagestyle{fancy}%            % Enable page numbers from now on
+    \pagenumbering{arabic}%
+    \setcounter{page}{1}%
+  }%
+  % Main matter: keep arabic, but enable openright (blank pages for chapters).
+  \renewcommand{\mainmatter}{%
+    \cleardoublepage
+    \@mainmattertrue
+    \@openrighttrue
+  }%
+  % Back matter: same numbering, but mark as “not main matter”.
+  \renewcommand{\backmatter}{%
+    \cleardoublepage
+    \@mainmatterfalse
+  }%
+}{%
+  % --- ARTICLE / REPORT: no-ops so code still compiles ----------------------
+  \providecommand{\frontmatter}{}%
+  \providecommand{\mainmatter}{}%
+  \providecommand{\backmatter}{}%
+}
+\makeatother
+
+
+
+% ─────────────────────────────────────────────────────────────────────────────
+%  End of file
+% ─────────────────────────────────────────────────────────────────────────────
+

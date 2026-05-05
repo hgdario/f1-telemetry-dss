@@ -1,0 +1,26 @@
+\contentsline {chapter}{Resumen}{1}{chapter*.1}%
+\contentsline {chapter}{Abstract}{3}{chapter*.2}%
+\contentsline {chapter}{Agradecimientos}{5}{chapter*.4}%
+\contentsline {chapter}{Índice General}{7}{chapter*.6}%
+\contentsline {chapter}{Índice de Figuras}{9}{chapter*.8}%
+\contentsline {chapter}{Índice de Tablas}{11}{chapter*.10}%
+\contentsline {chapter}{\numberline {1}Introduction}{13}{chapter.1}%
+\contentsline {chapter}{\numberline {2}Fundamentals}{15}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Imaging model and objectives}{15}{section.2.1}%
+\contentsline {section}{\numberline {2.2}Metrics}{15}{section.2.2}%
+\contentsline {chapter}{\numberline {3}Methods}{17}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Network design}{17}{section.3.1}%
+\contentsline {section}{\numberline {3.2}Mathematical foundations}{18}{section.3.2}%
+\contentsline {section}{\numberline {3.3}Reference implementation (PyTorch)}{19}{section.3.3}%
+\contentsline {chapter}{\numberline {4}Results}{23}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Quantitative metrics}{23}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Qualitative examples}{23}{section.4.2}%
+\contentsline {chapter}{\numberline {5}Discussion}{25}{chapter.5}%
+\contentsline {chapter}{Apéndice~A.\ Data splits and preprocessing}{27}{uma@appendix.1}%
+\contentsline {section}{\numberline {A.1}Preprocessing}{27}{section.5.1}%
+\contentsline {chapter}{Apéndice~B.\ Additional code snippets}{29}{uma@appendix.2}%
+\contentsline {section}{\numberline {B.1}Evaluation script (Python)}{29}{section.5.1}%
+\contentsline {section}{\numberline {B.2}R quick-look plot}{29}{section.5.2}%
+\contentsline {section}{\numberline {B.3}C++ performance-critical kernels}{30}{section.5.3}%
+\contentsline {section}{\numberline {B.4}SQL data pipeline}{31}{section.5.4}%
+\contentsline {section}{\numberline {B.5}Bash automation}{32}{section.5.5}%

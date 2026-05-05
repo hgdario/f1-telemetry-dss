@@ -1,0 +1,91 @@
+% uma-bindmode.sty  —  Modo "imprimir y encuadernar"
+% Activa márgenes interior/exterior, offset de encuadernación y apertura en página impar
+% Requisitos: la clase debe compilar en modo twoside (tus plantillas ya lo hacen)
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{template/sty_files/uma-bindmode}[2025/11/10 Bind-print mode for UMA templates]
+
+% ------------------------ Opciones ------------------------
+\RequirePackage{kvoptions}
+\SetupKeyvalOptions{family=umabind,prefix=umabind@}
+
+% Dimensiones por defecto; se pueden ajustar desde fuera con \PassOptionsToPackage
+\DeclareStringOption[30mm]{inner}
+\DeclareStringOption[20mm]{outer}
+\DeclareStringOption[25mm]{top}
+\DeclareStringOption[25mm]{bottom}
+\DeclareStringOption[5mm]{bindingoffset}
+
+% Forzados a página impar
+\DeclareBoolOption[true]{forceoddcovers}      % portadas, resumen, abstract
+\DeclareBoolOption[true]{forceoddchapters}    % capítulos/apéndices
+\DeclareBoolOption[true]{forceoddfrontmatter} % TOC/LoF/LoT, bibliografía, índice
+
+\ProcessKeyvalOptions*
+
+% ------------------------ Geometría ------------------------
+\RequirePackage{geometry}
+% Necesitamos márgenes espejados; la clase ya va en twoside, pero insistimos
+\geometry{
+  twoside,
+  inner=\umabind@inner,
+  outer=\umabind@outer,
+  top=\umabind@top,
+  bottom=\umabind@bottom,
+  bindingoffset=\umabind@bindingoffset
+}
+
+% ------------------------ Utilidades ------------------------
+\RequirePackage{etoolbox}
+\makeatletter
+\newcommand{\umabind@forceodd}{\cleardoublepage} % en modo encuadernar siempre impar
+
+% ------------------------ Portadas, Resumen, Abstract ------------------------
+\ifumabind@forceoddcovers
+  \AtBeginDocument{%
+    % Tras \maketitle
+    \apptocmd{\maketitle}{\umabind@forceodd}{}{}
+    % Portadas posibles (usa todas las variantes conocidas; si no existen, no hacen nada)
+    \@ifundefined{umaBlueCover}{}{\apptocmd{\umaBlueCover}{\umabind@forceodd}{}{}}
+    \@ifundefined{umaWhiteCover}{}{\apptocmd{\umaWhiteCover}{\umabind@forceodd}{}{}}
+    \@ifundefined{umaPortadaAzul}{}{\apptocmd{\umaPortadaAzul}{\umabind@forceodd}{}{}}
+    \@ifundefined{umaPortadaBlanca}{}{\apptocmd{\umaPortadaBlanca}{\umabind@forceodd}{}{}}
+    % Resumen / Abstract
+    \@ifundefined{umaResumen}{}{\apptocmd{\umaResumen}{\umabind@forceodd}{}{}}
+    \@ifundefined{umaAbstract}{}{\apptocmd{\umaAbstract}{\umabind@forceodd}{}{}}
+    \@ifundefined{umaResumenES}{}{\apptocmd{\umaResumenES}{\umabind@forceodd}{}{}}
+    \@ifundefined{umaAbstractEN}{}{\apptocmd{\umaAbstractEN}{\umabind@forceodd}{}{}}
+  }%
+\fi
+
+% ------------------------ Capítulos y apéndices ------------------------
+\ifumabind@forceoddchapters
+  % Abrir capítulos y apéndices en página impar
+  \pretocmd{\chapter}{\cleardoublepage}{}{}
+  % Si se usa un comando de inicio de bloque de apéndices, refuérzalo
+  \@ifundefined{appendix}{}{%
+    \pretocmd{\appendix}{\cleardoublepage}{}{}%
+  }%
+\fi
+
+% ------------------------ TOC/LoF/LoT, bibliografía, índice ------------------------
+\ifumabind@forceoddfrontmatter
+  \AtBeginDocument{%
+    % TOC y listas
+    \pretocmd{\tableofcontents}{\cleardoublepage}{}{}
+    \@ifundefined{listoffigures}{}{\pretocmd{\listoffigures}{\cleardoublepage}{}{}}%
+    \@ifundefined{listoftables}{}{\pretocmd{\listoftables}{\cleardoublepage}{}{}}%
+    % Bibliografía (BibTeX clásico)
+    \pretocmd{\thebibliography}{\cleardoublepage}{}{}
+    % Bibliografía (biblatex)
+    \@ifundefined{printbibliography}{}{%
+      \pretocmd{\printbibliography}{\cleardoublepage}{}{}%
+    }%
+    % Índice (makeidx)
+    \@ifundefined{printindex}{}{%
+      \pretocmd{\printindex}{\cleardoublepage}{}{}%
+    }%
+  }%
+\fi
+
+\makeatother
+% ------------------------ Fin del paquete ------------------------

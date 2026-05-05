@@ -3,17 +3,23 @@ import streamlit as st
 import plotly.graph_objects as go
 import fastf1
 
-# ─── CONFIGURACIÓN MAESTRA DE ESTADOS ───
+import ui_assets
+
+
+# ─── PALETA SEMÁNTICA DE TRACK STATUS ─────────────────────────────────────────
+# Colores desaturados alineados con el tema global (acento rose-600 + zinc).
 STATUS_MAP = {
-    '1': {'label': 'PISTA LIMPIA', 'color': '#2ECC71', 'desc': 'Sesión reanudada.'},
-    '2': {'label': 'BANDERA AMARILLA', 'color': '#F1C40F', 'desc': 'Peligro en pista.'},
-    '3': {'label': 'AMARILLA SECTOR', 'color': '#F39C12', 'desc': 'Peligro localizado.'},
-    '4': {'label': 'SAFETY CAR', 'color': '#E67E22', 'desc': 'Coche de Seguridad.'},
-    '5': {'label': 'BANDERA ROJA', 'color': '#E74C3C', 'desc': 'SESIÓN SUSPENDIDA.'},
-    '6': {'label': 'VSC', 'color': '#9B59B6', 'desc': 'Virtual Safety Car.'},
-    '7': {'label': 'VSC TERMINANDO', 'color': '#00A86B', 'desc': 'Pista lista para verde.'},
-    '8': {'label': 'BANDERA AZUL', 'color': '#3498DB', 'desc': 'Aviso de doblado.'},
+    '1': {'label': 'PISTA LIMPIA',     'color': '#6FA86F', 'desc': 'Sesión reanudada.'},
+    '2': {'label': 'BANDERA AMARILLA', 'color': '#D4A574', 'desc': 'Peligro en pista.'},
+    '3': {'label': 'AMARILLA SECTOR',  'color': '#C2734D', 'desc': 'Peligro localizado.'},
+    '4': {'label': 'SAFETY CAR',       'color': '#B85F3F', 'desc': 'Coche de Seguridad.'},
+    '5': {'label': 'BANDERA ROJA',     'color': '#E8002D', 'desc': 'Sesión suspendida.'},
+    '6': {'label': 'VSC',              'color': '#6E5BA8', 'desc': 'Virtual Safety Car.'},
+    '7': {'label': 'VSC TERMINANDO',   'color': '#6FA86F', 'desc': 'Pista lista para verde.'},
+    '8': {'label': 'BANDERA AZUL',     'color': '#3D6A9C', 'desc': 'Aviso de doblado.'},
 }
+
+
 def _get_involved_drivers(session, timestamp, event_type):
     """Radio FIA completa, mostrando todo el historial del incidente sin recortes."""
     try:
@@ -21,7 +27,7 @@ def _get_involved_drivers(session, timestamp, event_type):
             return "Canal FIA no disponible."
 
         rcm = session.race_control_messages.copy()
-        
+
         # 1. Alinear relojes
         if pd.api.types.is_datetime64_any_dtype(rcm['Time']) and hasattr(session, 't0_date'):
             rcm['Time'] = rcm['Time'] - session.t0_date
@@ -32,28 +38,34 @@ def _get_involved_drivers(session, timestamp, event_type):
 
         if mensajes.empty:
             return "Sin mensajes oficiales."
-            
+
         # 3. Limpiar mensajes genéricos
         relevantes = mensajes[~mensajes['Message'].str.contains("DRS|CLEAR|GREEN|LIMITS", case=False, na=False)]
-        
+
         # 4. Coger TODOS los mensajes y unirlos
         if relevantes.empty:
             textos = mensajes['Message'].dropna().unique().tolist()
         else:
             textos = relevantes['Message'].dropna().unique().tolist()
-        
-        # Usamos comillas simples de escape por si la FIA usa dobles comillas en su texto
-        mensaje_final = "📻 " + " | ".join(textos)
-        # Limpiamos las comillas dobles para que no rompan el HTML del atributo title luego
+
+        mensaje_final = " · ".join(textos)
         return mensaje_final.replace('"', "'")
-        
+
     except Exception:
         return "Error de lectura."
 
 
 def render_timeline(session: fastf1.core.Session):
-    st.subheader("🏁 Panel de Control de Carrera (Race Control)")
-    
+    st.markdown(ui_assets.CSS_TIMELINE, unsafe_allow_html=True)
+
+    st.markdown("""
+    <div class="tlo-tl-header">
+      <span class="tlo-tl-pip"></span>
+      <span class="tlo-tl-title">Panel de Control de Carrera</span>
+      <span class="tlo-tl-subtitle">Race Control</span>
+    </div>
+    """, unsafe_allow_html=True)
+
     try:
         # ── ALGORITMO "LIGHTS OUT" GLOBAL ──
         # 1. Calculamos el inicio real (aprox 1.5 mins antes de que el líder acabe la Vuelta 1)
@@ -65,13 +77,13 @@ def render_timeline(session: fastf1.core.Session):
             start_time = pd.Timedelta(seconds=0)
 
         ts = session.track_status.copy()
-        
+
         # 2. Filtramos para borrar toda la hora previa de mecánicos en parrilla
         ts = ts[ts['Time'] >= start_time].copy()
-        
+
         # 3. Recalculamos los minutos para que arranquen en 0
         ts['Minuto'] = (ts['Time'] - start_time).dt.total_seconds() / 60.0
-        
+
         # 4. Aseguramos que el primer registro empiece exactamente en 0.0
         if not ts.empty and ts.iloc[0]['Minuto'] > 0:
             first = ts.iloc[0].copy()
@@ -82,7 +94,7 @@ def render_timeline(session: fastf1.core.Session):
         max_time = (session.laps['Time'].max() - start_time).total_seconds() / 60.0
         ts['Minuto_Fin'] = ts['Minuto'].shift(-1).fillna(max_time)
         ts['Duracion'] = ts['Minuto_Fin'] - ts['Minuto']
-        
+
     except Exception as e:
         st.error(f"Error al procesar la telemetría: {e}")
         return
@@ -91,14 +103,14 @@ def render_timeline(session: fastf1.core.Session):
     fig = go.Figure()
     fig.add_trace(go.Bar(
         x=[max_time], y=["STATUS"], orientation='h',
-        marker=dict(color='rgba(255,255,255,0.05)'),
+        marker=dict(color='rgba(255,255,255,0.04)'),
         showlegend=False, hoverinfo='skip'
     ))
 
     estados_presentes = sorted(ts['Status'].unique(), key=int)
     for s_code in estados_presentes:
         df_group = ts[ts['Status'] == s_code]
-        info = STATUS_MAP.get(str(s_code), {'label': f'ST {s_code}', 'color': '#555'})
+        info = STATUS_MAP.get(str(s_code), {'label': f'ST {s_code}', 'color': '#4A4D5E'})
         fig.add_trace(go.Bar(
             name=info['label'], x=df_group['Duracion'], y=["STATUS"] * len(df_group),
             base=df_group['Minuto'], orientation='h',
@@ -106,58 +118,97 @@ def render_timeline(session: fastf1.core.Session):
         ))
 
     fig.update_layout(
-        height=180, margin=dict(t=10, b=80, l=10, r=10),
-        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", barmode='overlay',
-        legend=dict(orientation="h", yanchor="bottom", y=1.1, xanchor="center", x=0.5, font=dict(size=10, color="#888")),
-        xaxis=dict(title=dict(text="Minutos de Carrera", standoff=25, font=dict(size=12, color="#555")), range=[0, max_time], color="#888", dtick=5),
-        yaxis=dict(showgrid=False, showticklabels=False, fixedrange=True)
+        height=200,
+        margin=dict(t=10, b=90, l=10, r=10),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        barmode='overlay',
+        font=dict(family="Geist, system-ui, sans-serif", color="#7A7D8F"),
+        legend=dict(
+            orientation="h",
+            yanchor="bottom", y=1.14,
+            xanchor="center",  x=0.5,
+            bgcolor="rgba(0,0,0,0)",
+            borderwidth=0,
+            font=dict(size=9, color="#6B7280",
+                      family="Geist Mono, monospace"),
+        ),
+        xaxis=dict(
+            title=dict(
+                text="MINUTOS DE CARRERA",
+                standoff=18,
+                font=dict(size=10, color="#4A4D5E",
+                          family="Geist Mono, monospace"),
+            ),
+            range=[0, max_time],
+            color="#6B7280",
+            gridcolor="rgba(255,255,255,0.07)",
+            linecolor="rgba(255,255,255,0.08)",
+            tickfont=dict(size=9, family="Geist Mono, monospace", color="#6B7280"),
+            dtick=5,
+            tick0=0,
+        ),
+        yaxis=dict(showgrid=False, showticklabels=False, fixedrange=True),
     )
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
     # ── 2. PESTAÑAS DE ANÁLISIS DE CARRERA ──
-    tab_inc, tab_pit, tab_ovt = st.tabs(["🚦 Incidentes y Banderas", "🔧 Estrategia y Pit Stops", "⚔️ Adelantamientos"])
+    tab_inc, tab_pit, tab_ovt = st.tabs([
+        "Incidentes y Banderas",
+        "Estrategia y Pit Stops",
+        "Adelantamientos",
+    ])
 
     # --- PESTAÑA 1: INCIDENTES ---
     with tab_inc:
         eventos = ts[ts['Status'] != '1'].copy()
         if eventos.empty:
-            st.success("Sesión limpia.")
+            st.markdown(
+                '<div class="tlo-note">Sesión limpia · sin incidentes registrados.</div>',
+                unsafe_allow_html=True,
+            )
         else:
-            # CSS ARREGLADO: Fuera los recortes del 'td', blindaje 'nowrap' solo en el 'status-pill'
-            style = """<style>
-                .pit-table { width: 100%; border-collapse: collapse; font-family: 'Titillium Web', sans-serif; color: #E0E0E0; margin-top: 10px; } 
-                .pit-table th { text-align: left; padding: 12px; border-bottom: 2px solid #333; color: #888; font-size: 12px; } 
-                .pit-table td { padding: 12px; border-bottom: 1px solid #222; font-size: 14px; line-height: 1.5; } 
-                .status-pill { padding: 4px 8px; border-radius: 3px; font-weight: bold; font-size: 11px; white-space: nowrap; display: inline-block; }
-            </style>"""
-            
             rows = ""
             for _, row in eventos.iterrows():
-                info = STATUS_MAP.get(str(row['Status']), {'label': 'EVENTO', 'color': '#FFF', 'desc': '-'})
+                info = STATUS_MAP.get(str(row['Status']), {'label': 'EVENTO', 'color': '#7A7D8F', 'desc': '-'})
                 sospechosos = _get_involved_drivers(session, row['Time'], str(row['Status']))
-                
-                rows += f'<tr>'
-                rows += f'<td style="width: 10%;"><span style="color:#888;">{row["Minuto"]:.1f} min</span></td>'
-                rows += f'<td style="width: 15%;"><span class="status-pill" style="background:{info["color"]}33; color:{info["color"]}; border:1px solid {info["color"]}66;">{info["label"]}</span></td>'
-                rows += f'<td style="width: 20%;">{info["desc"]}</td>'
-                # Aquí entra el mensaje crudo y completo de la FIA. Al no tener límites, saltará de línea naturalmente.
-                rows += f'<td style="width: 55%; font-style:italic; color:#777;">{sospechosos}</td>'
-                rows += f'</tr>'
-            
-            st.markdown(f'{style}<table class="pit-table"><thead><tr><th>TIEMPO</th><th>ESTADO</th><th>DESCRIPCIÓN</th><th>RADIO DIRECCIÓN DE CARRERA</th></tr></thead><tbody>{rows}</tbody></table>', unsafe_allow_html=True)
-    
-# --- PESTAÑA 2: ESTRATEGIA Y BOXES ---
+                color = info["color"]
+
+                rows += "<tr>"
+                rows += f'<td style="width:10%;"><span class="tlo-mono">{row["Minuto"]:.1f} min</span></td>'
+                rows += (
+                    f'<td style="width:15%;">'
+                    f'<span class="tlo-pill" style="color:{color};border-color:{color}59;background:{color}1A;">'
+                    f'{info["label"]}</span></td>'
+                )
+                rows += f'<td style="width:20%;">{info["desc"]}</td>'
+                rows += f'<td style="width:55%;color:#7A7D8F;font-size:0.78rem;line-height:1.5;">{sospechosos}</td>'
+                rows += "</tr>"
+
+            st.markdown(
+                f'<table class="tlo-table">'
+                f'<thead><tr>'
+                f'<th>Tiempo</th><th>Estado</th><th>Descripción</th>'
+                f'<th>Radio Dirección de Carrera</th>'
+                f'</tr></thead><tbody>{rows}</tbody></table>',
+                unsafe_allow_html=True,
+            )
+
+    # --- PESTAÑA 2: ESTRATEGIA Y BOXES ---
     with tab_pit:
         laps = session.laps.copy()
-        
-        # 1. LA MAGIA MATEMÁTICA: Traemos el 'PitInTime' de la vuelta anterior
+
+        # Traemos el 'PitInTime' de la vuelta anterior
         laps['PitIn_Prev'] = laps.groupby('Driver')['PitInTime'].shift(1)
-        
+
         # Filtramos solo cuando salen de boxes
         pits = laps[pd.notnull(laps['PitOutTime'])].copy()
-        
+
         if pits.empty:
-            st.info("No hay datos de Pit Stops registrados.")
+            st.markdown(
+                '<div class="tlo-note">No hay datos de Pit Stops registrados.</div>',
+                unsafe_allow_html=True,
+            )
         else:
             try:
                 start_time = laps[laps['LapNumber'] == 1]['Time'].min() - pd.Timedelta(seconds=90)
@@ -166,132 +217,144 @@ def render_timeline(session: fastf1.core.Session):
 
             # Calculamos la duración real (Salida actual - Entrada de la vuelta anterior)
             pits['Duration'] = (pits['PitOutTime'] - pits['PitIn_Prev']).dt.total_seconds()
-            
-            # Limpiamos locuras: Un tiempo de pitlane en F1 dura entre 15 y 40 segundos. 
-            # Si dura más (ej. bandera roja) o es NaN (salida desde el pitlane en la V1), lo ignoramos.
-            pits['Duration'] = pits['Duration'].apply(lambda x: x if pd.notnull(x) and 10 < x < 100 else None)
-            
-            # Buscamos al campeón de los mecánicos
+
+            # Limpiamos: F1 pitlane dura entre 15 y 40 segundos. Fuera de [10, 100] = no válido.
+            pits['Duration'] = pits['Duration'].apply(
+                lambda x: x if pd.notnull(x) and 10 < x < 100 else None
+            )
+
             fastest_pit = pits['Duration'].min()
-            
-            # Ordenamos Cronológicamente
+
             pits['Minuto_Relativo'] = (pits['Time'] - start_time).dt.total_seconds() / 60.0
             pits = pits.sort_values(by='Minuto_Relativo')
 
+            # Colores de neumático desaturados
             TIRE_COLORS = {
-                'HYPERSOFT': '#FFB3C1', 'ULTRASOFT': '#B34FB3', 'SUPERSOFT': '#F20000',
-                'SOFT': '#FF3333' if session.event.year > 2018 else '#FFD300',
-                'MEDIUM': '#FFD300' if session.event.year > 2018 else '#F0F0F0',
-                'HARD': '#F0F0F0' if session.event.year > 2018 else '#00D2FF',
-                'INTERMEDIATE': '#43B02A', 'WET': '#0067B9'
+                'HYPERSOFT':    '#E89AAA',
+                'ULTRASOFT':    '#A56AAB',
+                'SUPERSOFT':    '#D03131',
+                'SOFT':         '#E11D48' if session.event.year > 2018 else '#D4A574',
+                'MEDIUM':       '#D4A574' if session.event.year > 2018 else '#D8D8D8',
+                'HARD':         '#D8D8D8' if session.event.year > 2018 else '#3D8FB0',
+                'INTERMEDIATE': '#5A8F4E',
+                'WET':          '#3D6A9C',
             }
-
-            style = """<style>
-                .f1-table { width: 100%; border-collapse: collapse; font-family: 'Titillium Web', sans-serif; }
-                .f1-table th { text-align: left; padding: 12px; border-bottom: 2px solid #333; color: #888; font-size: 11px; text-transform: uppercase; }
-                .f1-table td { padding: 12px; border-bottom: 1px solid #222; font-size: 14px; color: #EEE; }
-                .status-pill { padding: 4px 10px; border-radius: 3px; font-weight: bold; font-size: 11px; white-space: nowrap; display: inline-block; }
-            </style>"""
 
             rows = ""
             for _, p in pits.iterrows():
                 comp = str(p['Compound']).upper()
-                color = TIRE_COLORS.get(comp, '#555')
-                pill = f'<span class="status-pill" style="background:{color}33; color:{color}; border:1px solid {color}66;">{comp}</span>'
-                
-                # Lógica del tiempo: Destacamos el récord y ocultamos los inválidos (N/A)
+                color = TIRE_COLORS.get(comp, '#4A4D5E')
+                pill = (
+                    f'<span class="tlo-tyre" '
+                    f'style="color:{color};border-color:{color}66;background:{color}1A;">{comp}</span>'
+                )
+
                 dur_val = p['Duration']
                 if pd.notnull(dur_val):
                     if dur_val == fastest_pit:
-                        # Récord absoluto: Corona y dorado
-                        dur_str = f"👑 <span style='color:#F1C40F;'>{dur_val:.1f} s</span>"
+                        dur_str = f'<span class="tlo-fastest">{dur_val:.1f} s · best</span>'
                     else:
-                        dur_str = f"{dur_val:.1f} s"
+                        dur_str = f'<span class="tlo-mono" style="color:#E8E9EF;">{dur_val:.1f} s</span>'
                 else:
-                    dur_str = "<span style='color:#666;'>N/A</span>"
+                    dur_str = '<span class="tlo-mono" style="color:#4A4D5E;">N/A</span>'
 
-                rows += f"<tr>"
-                rows += f"<td><b>{p['Driver']}</b></td>"
-                rows += f"<td>{int(p['LapNumber'])}</td>"
-                rows += f"<td>{pill}</td>"
-                rows += f"<td style='color:#2ECC71; font-family:monospace; font-weight:bold;'>{dur_str}</td>"
-                rows += f"<td style='color:#666;'>{p['Minuto_Relativo']:.1f} min</td>"
-                rows += f"</tr>"
+                rows += "<tr>"
+                rows += f'<td><b>{p["Driver"]}</b></td>'
+                rows += f'<td><span class="tlo-mono">{int(p["LapNumber"])}</span></td>'
+                rows += f'<td>{pill}</td>'
+                rows += f'<td>{dur_str}</td>'
+                rows += f'<td><span class="tlo-mono" style="color:#4A4D5E;">{p["Minuto_Relativo"]:.1f} min</span></td>'
+                rows += "</tr>"
 
-            st.markdown(f'{style}<table class="f1-table"><thead><tr><th>Piloto</th><th>Vuelta</th><th>Neumático</th><th>Tiempo Pitlane</th><th>Reloj</th></tr></thead><tbody>{rows}</tbody></table>', unsafe_allow_html=True)
-            st.caption("""
-            ⏱️ **Nota técnica sobre telemetría de Pit Lane:** Los tiempos **N/A** corresponden a situaciones donde no existe un delta válido de tránsito: 
-            (1) Salidas desde el **Pit Lane** (vueltas iniciales sin entrada previa), 
-            (2) Periodos de **Bandera Roja** (donde el tiempo de permanencia excede los límites lógicos de competición), 
-            o (3) **Retiradas** al finalizar la sesión.  
-            La corona 👑 destaca el **La parada en boxes más rápida contando el tiempo desde que entra hasta que sale.** (récord de la sesión).
-        """)
+            st.markdown(
+                f'<table class="tlo-table">'
+                f'<thead><tr>'
+                f'<th>Piloto</th><th>Vuelta</th><th>Neumático</th>'
+                f'<th>Tiempo Pitlane</th><th>Reloj</th>'
+                f'</tr></thead><tbody>{rows}</tbody></table>',
+                unsafe_allow_html=True,
+            )
+
+            st.markdown(
+                '<div class="tlo-note">'
+                'Los tiempos <b>N/A</b> corresponden a casos sin delta válido de tránsito: '
+                'salidas desde pit lane (vueltas iniciales sin entrada previa), '
+                'periodos de bandera roja (tiempo de permanencia fuera de los límites de competición), '
+                'o retiradas al finalizar la sesión. '
+                'El marcador <b>best</b> destaca la parada más rápida de la sesión '
+                '(tiempo entrada → salida).'
+                '</div>',
+                unsafe_allow_html=True,
+            )
 
     # --- PESTAÑA 3: ADELANTAMIENTOS Y POSICIONES ---
     with tab_ovt:
-        st.markdown("#### 📈 Evolución de Posiciones")
-        
+        st.markdown(
+            '<div class="tlo-tl-header" style="margin-top:0.4rem;">'
+            '<span class="tlo-tl-pip"></span>'
+            '<span class="tlo-tl-title" style="font-size:1rem;">Evolución de Posiciones</span>'
+            '<span class="tlo-tl-subtitle">Grid → Resultado</span>'
+            '</div>',
+            unsafe_allow_html=True,
+        )
+
         try:
             # 1. Obtenemos los resultados y forzamos la limpieza de datos
             res = session.results[['Abbreviation', 'GridPosition', 'ClassifiedPosition', 'Status']].copy()
-            
+
             # Convertimos a número (los DNF/R se vuelven NaN)
             res['PosFinal'] = pd.to_numeric(res['ClassifiedPosition'], errors='coerce')
-            
-            # Si es un abandono, le asignamos la última posición disponible para que el cálculo sea lógico
-            res['PosFinal'] = res['PosFinal'].fillna(len(res)).astype(int)
-            
-            # GridPosition 0 es Pit Lane, lo ponemos como 20
-            res['GridFixed'] = res['GridPosition'].replace(0, 20).astype(int)
-            
-            # Calculamos la diferencia
-            res['Diff'] = res['GridFixed'] - res['PosFinal']
-            
-            # Ordenamos por los que más han remontado
-            remontadas = res.sort_values(by='Diff', ascending=False)
 
-            style_ovt = """<style>
-                .ovt-table { width: 100%; border-collapse: collapse; font-family: 'Titillium Web', sans-serif; }
-                .ovt-table th { text-align: left; padding: 12px; border-bottom: 2px solid #333; color: #888; font-size: 11px; }
-                .ovt-table td { padding: 12px; border-bottom: 1px solid #222; font-size: 14px; }
-                .pos-badge { padding: 2px 8px; border-radius: 3px; font-weight: bold; font-size: 12px; display: inline-block; min-width: 35px; text-align: center; }
-            </style>"""
+            # Si es un abandono, le asignamos la última posición disponible
+            res['PosFinal'] = res['PosFinal'].fillna(len(res)).astype(int)
+
+            # GridPosition 0 es Pit Lane → 20
+            res['GridFixed'] = res['GridPosition'].replace(0, 20).astype(int)
+
+            res['Diff'] = res['GridFixed'] - res['PosFinal']
+            remontadas = res.sort_values(by='Diff', ascending=False)
 
             rows = ""
             for _, r in remontadas.iterrows():
-                # Forzamos conversión a tipos básicos para evitar errores de concatenación
-                nombre = str(r['Abbreviation'])
-                grid = int(r['GridFixed'])
+                nombre  = str(r['Abbreviation'])
+                grid    = int(r['GridFixed'])
                 p_final = int(r['PosFinal'])
-                diff = int(r['Diff'])
-                status = str(r['Status'])
-                
-                # Definimos el balance visual
+                diff    = int(r['Diff'])
+                status  = str(r['Status'])
+
                 if diff > 0:
-                    diff_html = f'<span style="color:#2ECC71;">▲ {diff}</span>'
-                    bg_color = "#2ECC711A" # Verde muy suave para los que remontan
+                    diff_html = f'<span class="tlo-diff-up">▲ {diff}</span>'
                 elif diff < 0:
-                    diff_html = f'<span style="color:#E74C3C;">▼ {abs(diff)}</span>'
-                    bg_color = "transparent"
+                    diff_html = f'<span class="tlo-diff-down">▼ {abs(diff)}</span>'
                 else:
-                    diff_html = '<span style="color:#888;">=</span>'
-                    bg_color = "transparent"
+                    diff_html = '<span class="tlo-diff-eq">=</span>'
 
-                # Color para el podio o resto
-                color_f = "#F1C40F" if p_final == 1 else "#EEE"
-                
-                # Construcción de la fila con f-strings (evita el error de concatenación)
-                rows += f'<tr style="background:{bg_color};">'
-                rows += f'<td style="font-weight:bold; font-size:16px;">{nombre}</td>'
-                rows += f'<td>Salida: <b>{grid}º</b></td>'
-                rows += f'<td>Final: <span class="pos-badge" style="border:1px solid {color_f}66; color:{color_f};">{p_final}º</span></td>'
-                rows += f'<td style="font-size:16px; font-weight:bold;">{diff_html}</td>'
-                rows += f'<td style="font-size:12px; color:#666;">{status}</td>'
-                rows += f'</tr>'
+                pos_cls = "tlo-pos p1" if p_final == 1 else "tlo-pos"
 
-            st.markdown(f'{style_ovt}<table class="ovt-table"><thead><tr><th>PILOTO</th><th>PARRILLA</th><th>RESULTADO</th><th>BALANCE</th><th>ESTADO</th></tr></thead><tbody>{rows}</tbody></table>', unsafe_allow_html=True)
-            
-            st.caption("🔄 **Balance:** Diferencia entre la posición de salida (Grid) y la posición final en la clasificación oficial.")
+                rows += "<tr>"
+                rows += f'<td style="font-weight:600;font-size:0.95rem;">{nombre}</td>'
+                rows += f'<td><span class="tlo-mono" style="color:#7A7D8F;">Salida</span> <b>{grid}º</b></td>'
+                rows += f'<td><span class="tlo-mono" style="color:#7A7D8F;">Final</span> <span class="{pos_cls}">{p_final}º</span></td>'
+                rows += f'<td>{diff_html}</td>'
+                rows += f'<td><span class="tlo-mono" style="color:#4A4D5E;">{status}</span></td>'
+                rows += "</tr>"
+
+            st.markdown(
+                f'<table class="tlo-table">'
+                f'<thead><tr>'
+                f'<th>Piloto</th><th>Parrilla</th><th>Resultado</th>'
+                f'<th>Balance</th><th>Estado</th>'
+                f'</tr></thead><tbody>{rows}</tbody></table>',
+                unsafe_allow_html=True,
+            )
+
+            st.markdown(
+                '<div class="tlo-note">'
+                '<b>Balance:</b> diferencia entre la posición de salida (Grid) '
+                'y la posición final en la clasificación oficial.'
+                '</div>',
+                unsafe_allow_html=True,
+            )
 
         except Exception as e:
             st.error(f"Error al procesar posiciones: {e}")

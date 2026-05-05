@@ -1,0 +1,126 @@
+% ======================================================================
+%  UMA – ETSI Informática · Thesis Cover Macros · white-background version
+%  coverwhiteuma.sty v1.3 (2026-02-04)
+%  Author: Mario Pascual González  <mpascual@uma.es>
+%
+%  v1.3: Custom page handling to avoid blank pages in twoside mode
+% ======================================================================
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{template/sty_files/cotutor_cover-whiteuma}[2026/02/04 v1.3 UMA white-background thesis cover]
+
+% ---------- Dependencies ----------
+\RequirePackage{tikz}
+\RequirePackage{xcolor}
+\RequirePackage{graphicx}
+\RequirePackage{pgfkeys}
+\RequirePackage{iftex}
+\RequirePackage{pagecolor}
+\RequirePackage{etoolbox}
+
+% ---------- Corporate palette ----------
+\definecolor{UMAblue}{HTML}{002E5D}
+\definecolor{UMAgray}{HTML}{63666A}
+
+% ---------- Key–value interface (white cover namespace) ---------------
+\makeatletter
+\pgfkeys{/umaWhite/.is family, /umaWhite,
+  degree/.store in      = \umaW@degree,
+  mencion/.store in     = \umaW@mencion,
+  titleES/.store in     = \umaW@titleES,
+  titleEN/.store in     = \umaW@titleEN,
+  author/.store in      = \umaW@author,
+  tutor/.store in       = \umaW@tutor,
+  cotutor/.store in     = \umaW@cotutor,
+  dept/.store in        = \umaW@dept,
+  cityDate/.store in    = \umaW@cityDate,
+  defenseDate/.store in = \umaW@defenseDate,
+  logoLeft/.store in    = \umaW@logoL,
+  logoRight/.store in   = \umaW@logoR,
+  % defaults
+  mencion     = {},
+  cotutor     = {},
+  defenseDate = {},
+  logoLeft    = template/logos/POS-uma-logo.png,
+  logoRight   = template/logos/POS-etsi-logo.png,
+}
+\makeatother
+
+% ----------------------------------------------------------------------
+%  \MakeWhiteUMACover{<key=value,...>}
+%  Uses custom page handling to avoid blank pages in twoside mode.
+% ----------------------------------------------------------------------
+\makeatletter
+\newcommand*\MakeWhiteUMACover[1]{%
+  \pgfkeys{/umaWhite,#1}% parse user keys
+  \clearpage
+  \thispagestyle{empty}%
+  \begingroup
+    % Set font for covers
+    \setmainfont[
+      Path = {template/fonts/Malacitana/},
+      UprightFont    = *-Regular.otf,
+      BoldFont       = *-Bold.otf,
+      ItalicFont     = *-Italic.otf,
+      BoldItalicFont = *-BoldItalic.otf
+    ]{Malacitana}%
+    \color{black}%
+    %
+    \noindent
+    \begin{tikzpicture}[remember picture,overlay]
+      \node[anchor=north west,xshift=3cm,yshift=-0.25cm]
+            at (current page.north west)
+            {\includegraphics[width=4.5cm]{\umaW@logoL}};
+      \node[anchor=north east,xshift=-1.8cm,yshift=-0.25cm]
+            at (current page.north east)
+            {\includegraphics[width=9cm]{\umaW@logoR}};
+      % Defense date in bottom-right corner
+      \ifdefempty{\umaW@defenseDate}{}{%
+        \node[anchor=south east,xshift=-2cm,yshift=1cm]
+          at (current page.south east)
+          {\large Fecha defensa: \umaW@defenseDate};
+      }%
+    \end{tikzpicture}%
+    %
+    \vspace*{0.5cm}%
+    \begin{center}
+      {\fontsize{16pt}{18pt}\selectfont ESCUELA TÉCNICA SUPERIOR DE INGENIERÍA INFORMÁTICA\par}%
+      \vspace{0.2cm}%
+      {\fontsize{16pt}{18pt}\selectfont \MakeUppercase{\umaW@degree}\par}%
+      %
+      \ifdefempty{\umaW@mencion}{}{%
+        \vspace{0.1cm}%
+        {\Large \textit{\umaW@mencion}\par}%
+      }%
+      %
+      \vspace{0.8cm}%
+      {\bfseries\fontsize{20pt}{22pt}\selectfont \umaW@titleES\par}%
+      \vspace{0.5cm}%
+      {\bfseries\fontsize{20pt}{22pt}\selectfont \umaW@titleEN\par}%
+      %
+      \vspace{0.8cm}%
+      {\Large Realizado por\par}%
+      {\bfseries \Large \umaW@author\par}%
+      %
+      \vspace{0.5cm}%
+      {\Large\textit{Tutorizado por}\par}%
+      {\bfseries \Large \umaW@tutor\par}%
+      %
+      \ifdefempty{\umaW@cotutor}{}{%
+        \vspace{0.1cm}%
+        {\Large\textit{Co-tutorizado por}\par}%
+        {\bfseries \Large \umaW@cotutor\par}%
+      }%
+      %
+      \vspace{0.5cm}%
+      {\Large\textit{Departamento}\par}%
+      {\bfseries \Large \umaW@dept\par}%
+      %
+      \vfill
+      {\large UNIVERSIDAD DE MÁLAGA\par}%
+      {\large \MakeUppercase{\umaW@cityDate}\par}%
+      \vspace*{1cm}%
+    \end{center}
+  \endgroup
+  \newpage
+}
+\makeatother

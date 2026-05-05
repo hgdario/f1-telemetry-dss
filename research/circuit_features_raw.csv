@@ -1,0 +1,93 @@
+year,circuito,n_vueltas,g_lat_mean,g_lon_mean,g_total_mean,cambios_marcha_km,longitud_km
+2022,Bahrain Grand Prix,420,0.94,0.713,1.356,8.9,5.352
+2022,Saudi Arabian Grand Prix,368,1.34,0.564,1.628,6.98,6.079
+2022,Australian Grand Prix,397,1.165,0.59,1.488,7.25,5.231
+2022,Emilia Romagna Grand Prix,380,0.911,0.682,1.329,9.07,4.865
+2022,Miami Grand Prix,401,1.264,0.612,1.578,6.76,5.314
+2022,Spanish Grand Prix,420,1.283,0.671,1.609,7.64,4.605
+2022,Monaco Grand Prix,415,0.927,0.639,1.284,11.97,3.267
+2022,Azerbaijan Grand Prix,398,0.813,0.739,1.325,9.14,5.925
+2022,Canadian Grand Prix,397,0.891,0.732,1.327,9.8,4.309
+2022,British Grand Prix,352,1.463,0.544,1.666,5.84,5.813
+2022,Austrian Grand Prix,419,1.044,0.718,1.46,8.09,4.282
+2022,French Grand Prix,406,1.234,0.581,1.504,7.34,5.738
+2022,Hungarian Grand Prix,420,1.301,0.752,1.664,8.89,4.313
+2022,Belgian Grand Prix,378,1.226,0.569,1.539,5.93,6.929
+2022,Dutch Grand Prix,420,1.633,0.646,1.924,7.66,4.219
+2022,Italian Grand Prix,406,0.878,0.597,1.231,6.17,5.739
+2022,Singapore Grand Prix,380,0.784,0.696,1.198,10.68,4.988
+2022,Japanese Grand Prix,378,1.102,0.519,1.362,7.03,5.795
+2022,United States Grand Prix,388,1.124,0.616,1.459,8.83,5.432
+2022,Mexico City Grand Prix,420,0.967,0.696,1.353,7.77,4.227
+2022,São Paulo Grand Prix,378,1.292,0.626,1.586,8.1,4.238
+2022,Abu Dhabi Grand Prix,420,1.209,0.65,1.574,7.82,5.197
+2023,Bahrain Grand Prix,408,0.963,0.721,1.384,8.67,5.364
+2023,Saudi Arabian Grand Prix,412,1.416,0.588,1.719,6.65,6.099
+2023,Australian Grand Prix,374,1.214,0.577,1.529,7.24,5.231
+2023,Azerbaijan Grand Prix,405,0.821,0.745,1.338,9.32,5.932
+2023,Miami Grand Prix,420,1.275,0.627,1.601,6.82,5.33
+2023,Monaco Grand Prix,420,1.304,0.807,1.737,12.27,3.281
+2023,Spanish Grand Prix,420,1.462,0.646,1.76,6.87,4.626
+2023,Canadian Grand Prix,402,0.857,0.73,1.299,10.12,4.315
+2023,Austrian Grand Prix,408,1.022,0.717,1.445,8.35,4.292
+2023,British Grand Prix,404,1.519,0.547,1.725,5.61,5.803
+2023,Hungarian Grand Prix,378,1.307,0.746,1.667,8.79,4.335
+2023,Belgian Grand Prix,397,1.25,0.571,1.562,5.81,6.925
+2023,Dutch Grand Prix,410,1.327,0.606,1.626,8.6,4.239
+2023,Italian Grand Prix,399,0.888,0.611,1.251,6.05,5.749
+2023,Singapore Grand Prix,378,0.933,0.763,1.386,10.33,4.876
+2023,Japanese Grand Prix,384,1.401,0.572,1.667,6.51,5.791
+2023,Qatar Grand Prix,378,1.469,0.619,1.756,6.35,5.377
+2023,United States Grand Prix,386,1.356,0.693,1.721,7.95,5.431
+2023,Mexico City Grand Prix,399,0.95,0.697,1.338,7.88,4.238
+2023,São Paulo Grand Prix,354,1.396,0.654,1.697,7.53,4.254
+2023,Las Vegas Grand Prix,399,0.944,0.637,1.338,7.08,6.154
+2023,Abu Dhabi Grand Prix,420,1.251,0.67,1.627,7.93,5.224
+2024,Bahrain Grand Prix,420,0.996,0.729,1.418,8.7,5.352
+2024,Saudi Arabian Grand Prix,380,1.429,0.598,1.737,6.69,6.101
+2024,Australian Grand Prix,369,1.368,0.601,1.683,6.48,5.237
+2024,Japanese Grand Prix,365,1.464,0.587,1.732,6.5,5.772
+2024,Chinese Grand Prix,415,1.131,0.624,1.451,8.54,5.39
+2024,Miami Grand Prix,420,1.252,0.631,1.583,6.87,5.339
+2024,Emilia Romagna Grand Prix,420,1.111,0.704,1.522,7.93,4.87
+2024,Monaco Grand Prix,336,1.25,0.761,1.658,11.94,3.281
+2024,Canadian Grand Prix,419,0.725,0.698,1.165,10.0,4.327
+2024,Spanish Grand Prix,420,1.458,0.656,1.762,6.85,4.619
+2024,Austrian Grand Prix,420,1.039,0.715,1.457,7.91,4.291
+2024,British Grand Prix,399,1.49,0.554,1.701,5.87,5.816
+2024,Hungarian Grand Prix,420,1.313,0.759,1.682,8.96,4.332
+2024,Belgian Grand Prix,400,1.345,0.574,1.649,5.65,6.93
+2024,Dutch Grand Prix,420,1.678,0.656,1.966,7.54,4.229
+2024,Italian Grand Prix,402,0.933,0.622,1.295,6.18,5.745
+2024,Azerbaijan Grand Prix,409,0.84,0.764,1.371,8.96,5.921
+2024,Singapore Grand Prix,410,1.023,0.811,1.494,9.9,4.877
+2024,United States Grand Prix,399,1.367,0.706,1.74,8.18,5.441
+2024,Mexico City Grand Prix,368,0.967,0.695,1.352,7.93,4.264
+2024,São Paulo Grand Prix,378,1.123,0.611,1.427,7.86,4.241
+2024,Las Vegas Grand Prix,410,0.997,0.655,1.397,6.67,6.149
+2024,Qatar Grand Prix,361,1.6,0.596,1.859,6.26,5.391
+2024,Abu Dhabi Grand Prix,399,1.284,0.669,1.655,7.71,5.204
+2025,Australian Grand Prix,357,1.025,0.627,1.391,7.34,5.257
+2025,Chinese Grand Prix,399,1.301,0.68,1.637,7.97,5.371
+2025,Japanese Grand Prix,420,1.616,0.586,1.874,6.2,5.781
+2025,Bahrain Grand Prix,420,0.971,0.742,1.402,8.54,5.36
+2025,Saudi Arabian Grand Prix,378,1.542,0.615,1.854,6.21,6.103
+2025,Miami Grand Prix,399,1.286,0.642,1.62,6.67,5.344
+2025,Emilia Romagna Grand Prix,420,1.12,0.712,1.536,8.07,4.872
+2025,Monaco Grand Prix,403,1.333,0.797,1.755,11.99,3.298
+2025,Spanish Grand Prix,399,1.441,0.654,1.744,6.57,4.633
+2025,Canadian Grand Prix,420,1.006,0.789,1.465,9.24,4.314
+2025,Austrian Grand Prix,347,1.042,0.728,1.471,7.96,4.303
+2025,British Grand Prix,348,0.904,0.533,1.175,7.71,5.846
+2025,Belgian Grand Prix,420,1.26,0.571,1.572,5.88,6.977
+2025,Hungarian Grand Prix,420,1.395,0.764,1.756,8.85,4.35
+2025,Dutch Grand Prix,418,1.596,0.64,1.887,7.52,4.24
+2025,Italian Grand Prix,398,0.953,0.614,1.308,5.88,5.749
+2025,Azerbaijan Grand Prix,399,0.884,0.782,1.423,8.68,5.957
+2025,Singapore Grand Prix,420,1.056,0.815,1.526,9.91,4.865
+2025,United States Grand Prix,401,1.378,0.695,1.744,7.85,5.446
+2025,Mexico City Grand Prix,400,0.989,0.706,1.376,7.42,4.242
+2025,São Paulo Grand Prix,380,1.332,0.651,1.639,7.94,4.255
+2025,Las Vegas Grand Prix,378,1.043,0.652,1.439,6.39,6.141
+2025,Qatar Grand Prix,402,1.441,0.609,1.73,6.83,5.367
+2025,Abu Dhabi Grand Prix,420,1.293,0.676,1.67,7.73,5.22

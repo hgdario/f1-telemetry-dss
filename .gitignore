@@ -6,5 +6,12 @@ venv/
 AnteproyectosPDFEjemplos/
 Cache/
 *.sqlite
-docs/
 .claude
+*.log
+*.aux
+*.toc
+*.out
+*.run.xml
+*.bcf
+*.pdf
+.f1_cache

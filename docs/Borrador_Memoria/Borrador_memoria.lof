@@ -1,0 +1,7 @@
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {1.1}{\ignorespaces Pipeline: LR MRI \(\rightarrow \) SR reconstruction \(\rightarrow \) segmentation. Training uses multi-task losses and shared augmentations.}}{13}{figure.caption.11}%
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {4.1}{\ignorespaces Axial slices: LR input, SR output, and segmentation overlay.}}{23}{figure.caption.13}%
+\addvspace {10\p@ }

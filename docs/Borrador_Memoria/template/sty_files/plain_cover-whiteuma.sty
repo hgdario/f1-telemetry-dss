@@ -1,0 +1,124 @@
+% ======================================================================
+%  UMA – ETSI Informática · Thesis Cover Macros · white-background version
+%  coverwhiteuma.sty v1.1 (2025-06-24)
+%  Author: Mario Pascual González  <mpascual@uma.es>
+% ======================================================================
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{template/sty_files/plain_cover-whiteuma}[2025/06/24 v1.1 UMA white-background thesis cover]
+
+% ---------- Dependencies ----------
+\RequirePackage{tikz}
+\RequirePackage{xcolor}
+\RequirePackage{graphicx}
+\RequirePackage{pgfkeys}
+\RequirePackage{iftex}
+\RequirePackage{pagecolor}
+
+% ---------- Corporate palette ----------
+\definecolor{UMAblue}{HTML}{002E5D}
+\definecolor{UMAgray}{HTML}{63666A}
+
+% ---------- Key–value interface --------------------------------------
+\pgfkeys{/umaCover/.is family, /umaCover,
+  degree/.store in      = \uma@degree,
+  mencion/.store in     = \uma@mencion,
+  titleES/.store in     = \uma@titleES,
+  titleEN/.store in     = \uma@titleEN,
+  author/.store in      = \uma@author,
+  tutor/.store in       = \uma@tutor,
+  cotutor/.store in     = \uma@cotutor,
+  dept/.store in        = \uma@dept,
+  cityDate/.store in    = \uma@cityDate,
+  defenseDate/.store in = \uma@defenseDate,  % ← new
+  logoLeft/.store in    = \uma@logoL,
+  logoRight/.store in   = \uma@logoR,
+  % defaults
+  mencion     = {},
+  defenseDate = {},
+  logoLeft    = template/logos/POS-uma-logo.png,
+  logoRight   = template/logos/POS-etsi-logo.png,
+}
+
+% ----------------------------------------------------------------------
+%  User tuning guide:
+%
+%   • To adjust vertical spacing between blocks, change the \vspace* and
+%     \vspace commands inside \MakeWhiteUMACover.
+%
+%   • To adjust font sizes, alter the \fontsize{<size>}{<baseline>}
+%     calls (e.g.\ \fontsize{20pt}{22pt}) and then re-run \selectfont.
+% ----------------------------------------------------------------------
+
+% ----------------------------------------------------------------------
+%  \MakeWhiteUMACover{<key=value,...>}
+% ----------------------------------------------------------------------
+\newcommand*\MakePlainWhiteUMACover[1]{%
+  \pgfkeys{/umaCover,#1}% parse user keys
+  \begingroup
+    \setmainfont[
+      Path = {template/fonts/Malacitana/},
+      UprightFont    = *-Regular.otf,
+      BoldFont       = *-Bold.otf,
+      ItalicFont     = *-Italic.otf,
+      BoldItalicFont = *-BoldItalic.otf
+    ]{Malacitana}
+    \color{black}% all text in black
+
+    \begin{titlepage}
+      \thispagestyle{empty}
+      \centering
+
+      % ----- logos (overlay) -----
+      \begin{tikzpicture}[remember picture,overlay]
+        \node[anchor=north west,xshift=3cm,yshift=-0.25cm]
+              at (current page.north west)
+              {\includegraphics[width=4.5cm]{\uma@logoL}};
+        \node[anchor=north east,xshift=-1.8cm,yshift=-0.25cm]
+              at (current page.north east)
+              {\includegraphics[width=9cm]{\uma@logoR}};
+      \end{tikzpicture}
+
+      % ----- static header -----
+      \vspace*{0.5cm}
+      {\fontsize{16pt}{18pt}\selectfont ESCUELA TÉCNICA SUPERIOR DE INGENIERÍA INFORMÁTICA\par}
+      \vspace{0.2cm}
+      {\fontsize{16pt}{18pt}\selectfont \MakeUppercase{\uma@degree}\par}
+
+      % Optional “Mención”
+      \if\relax\detokenize{\uma@mencion}\relax\else
+         \vspace{0.1cm}
+        {\Large \textit{\uma@mencion}\par}
+      \fi
+
+      \vspace{0.8cm}
+      {\bfseries\fontsize{20pt}{22pt}\selectfont \uma@titleES\par}
+      \vspace{0.5cm}
+      {\bfseries\fontsize{20pt}{22pt}\selectfont \uma@titleEN\par}
+
+      \vspace{0.8cm}
+      {\Large Realizado por\par}
+      {\bfseries \Large \uma@author\par}
+
+      \vspace{0.5cm}
+      {\Large\textit{Tutorizado por}\par}
+      {\bfseries \Large \uma@tutor\par}
+
+      \vspace{0.5cm}
+      {\Large\textit{Departamento}\par}
+      {\bfseries \Large \uma@dept\par}
+
+      % ----- footer -----
+      \vfill
+      {\large UNIVERSIDAD DE MÁLAGA\par}
+      {\large \MakeUppercase{\uma@cityDate}\par}
+
+      % lower-right: defense date
+      \begin{tikzpicture}[remember picture,overlay]
+        \node[anchor=south east,xshift=-2cm,yshift=1cm]
+          at (current page.south east)
+          {\large Fecha defensa: \uma@defenseDate};
+      \end{tikzpicture}
+    \end{titlepage}
+
+  \endgroup
+}

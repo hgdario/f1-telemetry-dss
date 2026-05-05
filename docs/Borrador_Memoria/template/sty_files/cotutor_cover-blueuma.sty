@@ -1,0 +1,119 @@
+% ======================================================================
+%  UMA – ETSI Informática · Thesis Cover Macros · v1.4 (2026-02-04)
+%  Author: Mario Pascual González  <mpascual@uma.es>
+%
+%  v1.4: Custom cover page environment to avoid blank pages in twoside mode
+% ======================================================================
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{template/sty_files/cotutor_cover-blueuma}[2026/02/04 v1.4 UMA bachelor thesis cover]
+
+% ---------- Dependencies ----------
+\RequirePackage{tikz}
+\RequirePackage{xcolor}
+\RequirePackage{graphicx}
+\RequirePackage{pgfkeys}
+\RequirePackage{iftex}
+\RequirePackage{pagecolor}
+\RequirePackage{etoolbox}
+
+% ---------- Corporate palette ----------
+\definecolor{UMAblue}{HTML}{002E5D}
+\definecolor{UMAgray}{HTML}{63666A}
+
+% ---------- Key–value interface (blue cover namespace) ----------------
+\makeatletter
+\pgfkeys{/umaBlue/.is family, /umaBlue,
+  degree/.store in     = \umaB@degree,
+  mencion/.store in    = \umaB@mencion,
+  titleES/.store in    = \umaB@titleES,
+  titleEN/.store in    = \umaB@titleEN,
+  author/.store in     = \umaB@author,
+  tutor/.store in      = \umaB@tutor,
+  cotutor/.store in    = \umaB@cotutor,
+  dept/.store in       = \umaB@dept,
+  cityDate/.store in   = \umaB@cityDate,
+  logoLeft/.store in   = \umaB@logoL,
+  logoRight/.store in  = \umaB@logoR,
+  % default values:
+  mencion   = {},
+  cotutor   = {},
+  logoLeft  = template/logos/NEG-uma-logo.png,
+  logoRight = template/logos/NEG-etsi-logo.png,
+}
+\makeatother
+
+% ----------------------------------------------------------------------
+%  \MakeBlueUMACover{<key=value,...>}
+%  Uses custom page handling to avoid blank pages in twoside mode.
+% ----------------------------------------------------------------------
+\makeatletter
+\newcommand*\MakeBlueUMACover[1]{%
+  \pgfkeys{/umaBlue,#1}%  parse user keys
+  \clearpage
+  \thispagestyle{empty}%
+  % Blue background using TikZ (more reliable than \pagecolor)
+  \begin{tikzpicture}[remember picture,overlay]
+    \fill[UMAblue] (current page.south west) rectangle (current page.north east);
+    \node[anchor=north west,xshift=1.5cm,yshift=-1.5cm]
+          at (current page.north west)
+          {\includegraphics[width=4.5cm]{\umaB@logoL}};
+    \node[anchor=north east,xshift=-1.5cm,yshift=-1.5cm]
+          at (current page.north east)
+          {\includegraphics[width=9cm]{\umaB@logoR}};
+  \end{tikzpicture}%
+  %
+  \begingroup
+    % Set font for covers
+    \setmainfont[
+      Path = {template/fonts/Malacitana/},
+      UprightFont    = *-Regular.otf,
+      BoldFont       = *-Bold.otf,
+      ItalicFont     = *-Italic.otf,
+      BoldItalicFont = *-BoldItalic.otf
+    ]{Malacitana}%
+    \color{UMAgray}%
+    %
+    \vspace*{2.5cm}%
+    \begin{center}
+      {\color{white}\fontsize{16pt}{18pt}\selectfont \umaB@degree\par}%
+      %
+      \ifdefempty{\umaB@mencion}{}{%
+        \vspace{0.15cm}%
+        {\fontsize{14pt}{16pt}\selectfont \textit{\umaB@mencion}\par}%
+      }%
+      %
+      \vspace{0.8cm}%
+      %
+      {\color{white}\bfseries\fontsize{20pt}{22pt}\selectfont \umaB@titleES\par}%
+      \vspace{0.4cm}%
+      {\color{white}\bfseries\fontsize{20pt}{22pt}\selectfont \umaB@titleEN\par}%
+      %
+      \vspace{0.8cm}%
+      %
+      {\Large\textit{Realizado por}\par}%
+      {\color{white}\Large \umaB@author\par}%
+      %
+      \vspace{0.15cm}%
+      %
+      {\Large\textit{Tutorizado por}\par}%
+      {\color{white}\Large \umaB@tutor\par}%
+      %
+      \ifdefempty{\umaB@cotutor}{}{%
+        \vspace{0.1cm}%
+        {\Large\textit{Co-tutorizado por}\par}%
+        {\color{white}\Large \umaB@cotutor\par}%
+      }%
+      %
+      \vspace{0.15cm}%
+      %
+      {\Large\textit{Departamento}\par}%
+      {\color{white}\Large \umaB@dept\par}%
+      %
+      \vfill
+      {\Large \umaB@cityDate\par}%
+    \end{center}
+    \vspace*{0.5cm}%
+  \endgroup
+  \cleardoublepage
+}
+\makeatother

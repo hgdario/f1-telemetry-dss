@@ -395,17 +395,12 @@ def _build_animated_figure(tel: pd.DataFrame, lap_time_seg: float) -> go.Figure:
 
     # ── Posiciones de las ruedas en el espacio del eje x2/y2 ─────────────────
     # La imagen es 894×1264 px, con el coche centrado.
-    # Mapeamos a x∈[-4,4], y∈[-5.5,5.5] (0,0 = centro de la imagen).
-    # Ruedas delanteras (arriba en imagen): y ≈ +2.1
-    # Ruedas traseras   (abajo en imagen):  y ≈ -2.3
-    # Ruedas izquierdas (izq vista cenital): x ≈ -1.6
-    # Ruedas derechas:                       x ≈ +2.7
     TH = 1.25   # alto del neumático
     TYRES = {
-        "fl": (-2.2,  2.5),
-        "fr": ( 0.7,  2.5),
-        "rl": (-2.29, -3.1),
-        "rr": ( 0.74, -3.1),
+        "fl": (-1.99,  2.5),
+        "fr": ( 0.9,  2.5),
+        "rl": (-2.06, -3.1),
+        "rr": ( 0.99, -3.1),
     }
     # Posiciones de los círculos de progreso (más separados que la rueda)
     GAUGE_R  = 0.72   # radio del arco
@@ -696,10 +691,14 @@ def _build_animated_figure(tel: pd.DataFrame, lap_time_seg: float) -> go.Figure:
             range=[x_min - mx, x_max + mx],
             showgrid=False, zeroline=False, visible=False,
             scaleanchor="y", scaleratio=1,
+            constrain="domain",
+            constraintoward="center",
         ),
         yaxis=dict(
             range=[y_min - my, y_max + my],
             showgrid=False, zeroline=False, visible=False,
+            constrain="domain",
+            constraintoward="center",
         ),
         xaxis2=dict(range=[-4, 4], showgrid=False, zeroline=False, visible=False, fixedrange=True),
         yaxis2=dict(range=[-5.5, 5.5], showgrid=False, zeroline=False, visible=False,

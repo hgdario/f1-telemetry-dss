@@ -1,0 +1,64 @@
+% ======================================================================
+%  UMA – ETSI Informática · Static Back Cover
+%  backcover-uma.sty v1.0 (2025-06-24)
+%  Author: Mario Pascual González <mpascual@uma.es>
+%  Licence: LPPL 1.3c
+% ======================================================================
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{template/sty_files/backcover-uma}[2025/06/24 v1.0 UMA static back cover]
+
+% ---------- Dependencies ----------
+\RequirePackage{tikz}
+\RequirePackage{xcolor}
+\RequirePackage{graphicx}
+\RequirePackage{iftex}
+\RequirePackage{pagecolor}
+
+% ---------- Corporate palette ----------
+\definecolor{UMAblue}{HTML}{002E5D}
+\definecolor{UMAwhite}{HTML}{FFFFFF}
+\usetikzlibrary{calc}
+
+% ----------------------------------------------------------------------
+%  \MakeUMABackCover
+% ----------------------------------------------------------------------
+\newcommand*\MakeUMABackCover{%
+  \clearpage
+  \thispagestyle{empty}%
+  \begingroup
+    \setmainfont[
+      Path = {template/fonts/Malacitana/},
+      UprightFont    = *-Regular.otf,
+      BoldFont       = *-Bold.otf,
+      ItalicFont     = *-Italic.otf,
+      BoldItalicFont = *-BoldItalic.otf
+    ]{Malacitana}
+    % draw a stripe at the bottom
+    \begin{tikzpicture}[remember picture,overlay]
+      % full-width blue rectangle of height 4cm
+      \fill[UMAblue]
+        (current page.south west) rectangle ++(\paperwidth,4cm);
+
+      % left logos
+      \node[anchor=south west, yshift=0.7cm, xshift=1cm]
+        at (current page.south west)
+        {\includegraphics[height=2.3cm]{template/logos/NEG-logo-umaes.png}};
+
+      % vertical separator line
+      \draw[white, line width=1.5pt]
+        ($(current page.south west)+(14cm,0.67cm)$) -- ++(0,2.5cm);
+
+
+
+      % right address block
+      \node[anchor=south east, text=white, align=left, font=\normalsize]
+        at ($(current page.south east)+(-1cm,0.5cm)$)
+        {%
+          E.T.S.\ de Ingeniería Informática\\
+          Bulevar Louis Pasteur, 35\\
+          Campus de Teatinos\\
+          29071 Málaga%
+        };
+    \end{tikzpicture}
+  \endgroup
+}
