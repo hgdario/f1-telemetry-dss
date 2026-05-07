@@ -42,7 +42,9 @@ Conceptos clave
         la frecuencia de muestreo estimada de la telemetría.
 """
 
+
 from __future__ import annotations
+import ui_assets
 
 import numpy as np
 import pandas as pd
@@ -234,11 +236,6 @@ def _calculate_g_forces(tel: pd.DataFrame) -> pd.DataFrame:
 
     return tel
 
-def _hex_to_rgb_tuple(hex_color: str) -> tuple[int, int, int]:
-    """Convierte un hex '#RRGGBB' a tupla (R, G, B)."""
-    hex_color = hex_color.lstrip("#")
-    return int(hex_color[0:2], 16), int(hex_color[2:4], 16), int(hex_color[4:6], 16)
-
 def _g_to_color(val: float, cmin: float, cmax: float, colorscale: list) -> str:
     """Interpola un valor dentro del colorscale de Plotly."""
     t = (val - cmin) / (cmax - cmin) if cmax > cmin else 0
@@ -249,8 +246,8 @@ def _g_to_color(val: float, cmin: float, cmax: float, colorscale: list) -> str:
         t1, c1 = colorscale[i + 1]
         if t0 <= t <= t1:
             f = (t - t0) / (t1 - t0) if t1 > t0 else 0
-            r0, g0, b0 = _hex_to_rgb_tuple(c0)
-            r1, g1, b1 = _hex_to_rgb_tuple(c1)
+            r0, g0, b0 = ui_assets.hex_to_rgb_tuple(c0)
+            r1, g1, b1 = ui_assets.hex_to_rgb_tuple(c1)
             
             r = int(r0 + f * (r1 - r0))
             g = int(g0 + f * (g1 - g0))
@@ -258,7 +255,7 @@ def _g_to_color(val: float, cmin: float, cmax: float, colorscale: list) -> str:
             return f'rgb({r},{g},{b})'
             
     # Fallback al último color
-    r, g, b = _hex_to_rgb_tuple(colorscale[-1][1])
+    r, g, b = ui_assets.hex_to_rgb_tuple(colorscale[-1][1])
     return f'rgb({r},{g},{b})'
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -645,7 +642,7 @@ def _build_g_vs_distance(tel: pd.DataFrame, team_color: str = F1_RED) -> go.Figu
         mode="lines",
         line=dict(color=team_color, width=1.5),
         fill="tozeroy",
-        fillcolor=f"rgba({_hex_to_rgba(team_color)},0.10)",
+        fillcolor=f"rgba({ui_assets.hex_rgb(team_color)},0.10)",
         hovertemplate="<b>%{y:.2f} G total</b><extra></extra>",
         showlegend=False,
     ), row=3, col=1)
@@ -897,13 +894,6 @@ def _add_peak_annotations(
             row=row, col=1,
             ax=0, ay=-25,
         )
-
-
-def _hex_to_rgba(hex_color: str) -> str:
-    """Convierte un color hex a string 'R,G,B' para usar en rgba()."""
-    hex_color = hex_color.lstrip("#")
-    r, g, b = int(hex_color[0:2], 16), int(hex_color[2:4], 16), int(hex_color[4:6], 16)
-    return f"{r},{g},{b}"
 
 
 def _attach_circuit_info(tel: pd.DataFrame, session: Session) -> pd.DataFrame:

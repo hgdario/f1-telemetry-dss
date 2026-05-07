@@ -38,6 +38,8 @@ from plotly.subplots import make_subplots
 from scipy.signal import savgol_filter
 from scipy.stats import linregress, t as t_dist
 from typing import Optional
+
+import ui_assets
 from fastf1.core import Session
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -405,11 +407,6 @@ def _compute_curvature(tel: pd.DataFrame) -> np.ndarray:
 # HELPERS DE LAYOUT
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _hex_rgb(h: str) -> str:
-    h = h.lstrip("#")
-    return f"{int(h[0:2],16)},{int(h[2:4],16)},{int(h[4:6],16)}"
-
-
 def _apply_dark(fig: go.Figure, height: int = 420) -> None:
     fig.update_layout(
         height=height,
@@ -475,7 +472,7 @@ def _fig_envelope_regression(
     fig.add_trace(go.Scatter(
         x=v_fit_hi, y=g_fit_band,
         fill="toself",
-        fillcolor=f"rgba({_hex_rgb(team_color)},0.10)",
+        fillcolor=f"rgba({ui_assets.hex_rgb(team_color)},0.10)",
         line=dict(width=0),
         hoverinfo="skip", showlegend=False, name="_ci",
     ))
@@ -634,7 +631,7 @@ def _fig_sensitivity(sens_df: pd.DataFrame, team_color: str) -> go.Figure:
             type="data",
             array=valid["ci95_beta"].tolist(),
             visible=True,
-            color=f"rgba({_hex_rgb(team_color)},0.4)",
+            color=f"rgba({ui_assets.hex_rgb(team_color)},0.4)",
             thickness=1.2,
         ),
         name="β",

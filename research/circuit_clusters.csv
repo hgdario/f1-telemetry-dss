@@ -1,0 +1,26 @@
+circuito,g_lat_mean,g_lon_mean,cambios_marcha_km,n_vueltas,longitud_km,n_años,cluster,label
+Abu Dhabi Grand Prix,1.25925,0.66625,7.7975,414.75,5.21125,4,3,Balanced Chassis
+Australian Grand Prix,1.193,0.59875,7.077500000000001,374.25,5.239,4,2,Aero Efficiency
+Austrian Grand Prix,1.03675,0.7195,8.0775,398.5,4.292,4,1,Stop-and-Go
+Azerbaijan Grand Prix,0.8394999999999999,0.7575000000000001,9.025,402.75,5.93375,4,1,Stop-and-Go
+Bahrain Grand Prix,0.9675,0.72625,8.7025,417.0,5.357,4,1,Stop-and-Go
+Belgian Grand Prix,1.2702499999999999,0.5712499999999999,5.8175,398.75,6.94025,4,2,Aero Efficiency
+British Grand Prix,1.344,0.5445,6.2575,375.75,5.8195,4,2,Aero Efficiency
+Canadian Grand Prix,0.86975,0.73725,9.79,409.5,4.31625,4,1,Stop-and-Go
+Chinese Grand Prix,1.216,0.652,8.254999999999999,407.0,5.3805,2,3,Balanced Chassis
+Dutch Grand Prix,1.5585,0.637,7.83,417.0,4.23175,4,3,Balanced Chassis
+Emilia Romagna Grand Prix,1.0473333333333334,0.6993333333333333,8.356666666666667,406.6666666666667,4.869,3,1,Stop-and-Go
+French Grand Prix,1.234,0.581,7.34,406.0,5.738,1,2,Aero Efficiency
+Hungarian Grand Prix,1.329,0.75525,8.8725,409.5,4.3325,4,3,Balanced Chassis
+Italian Grand Prix,0.913,0.611,6.07,401.25,5.7455,4,0,Low Drag
+Japanese Grand Prix,1.39575,0.566,6.5600000000000005,386.75,5.78475,4,2,Aero Efficiency
+Las Vegas Grand Prix,0.9946666666666667,0.648,6.713333333333334,395.6666666666667,6.148,3,0,Low Drag
+Mexico City Grand Prix,0.9682499999999999,0.6984999999999999,7.75,396.75,4.24275,4,1,Stop-and-Go
+Miami Grand Prix,1.26925,0.628,6.78,410.0,5.33175,4,2,Aero Efficiency
+Monaco Grand Prix,1.2035,0.751,12.0425,393.5,3.28175,4,4,Monaco
+Qatar Grand Prix,1.5033333333333332,0.608,6.4799999999999995,380.3333333333333,5.378333333333333,3,2,Aero Efficiency
+Saudi Arabian Grand Prix,1.43175,0.5912499999999999,6.6325,384.5,6.0954999999999995,4,2,Aero Efficiency
+Singapore Grand Prix,0.9490000000000001,0.77125,10.205,397.0,4.9015,4,1,Stop-and-Go
+Spanish Grand Prix,1.411,0.6567500000000001,6.9825,414.75,4.62075,4,3,Balanced Chassis
+São Paulo Grand Prix,1.28575,0.6355,7.8575,372.5,4.247,4,3,Balanced Chassis
+United States Grand Prix,1.30625,0.6775,8.2025,393.5,5.4375,4,3,Balanced Chassis

@@ -1255,3 +1255,915 @@ def build_world_map(events_df: pd.DataFrame) -> go.Figure:
     )
 
     return fig
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PALETA DE COLORES GLOBAL Y UTILIDADES
+# ─────────────────────────────────────────────────────────────────────────────
+
+COLOR_PALETTE = {
+    # Track Status
+    'track_clean': '#3FBF7F',        # Verde - Pista limpia
+    'yellow': '#F2C14E',               # Amarillo - Bandera amarilla
+    'yellow_sector': '#E89B3C',        # Amarillo oscuro - Amarilla sector
+    'safety_car': '#FF7A29',           # Naranja - Safety car
+    'red': '#E8002D',                  # Rojo brillante - Bandera roja
+    'vsc': '#B138DD',                  # Morado - Virtual Safety Car
+    'vsc_ending': '#7FD8B8',           # Cyan - VSC terminando
+    'blue': '#3B82F6',                 # Azul - Bandera azul
+
+    # Tire Compounds (2018+)
+    'soft': '#E8002D',                 # Rojo
+    'medium': '#F2C14E',               # Amarillo
+    'hard': '#E8E9EF',                 # Blanco
+    'intermediate': '#3FBF7F',         # Verde
+    'wet': '#3B82F6',                  # Azul
+
+    # Tire Compounds (solo 2018)
+    'hypersoft': '#FF80B5',            # Rosa
+    'ultrasoft': '#B138DD',            # Morado
+    'supersoft': '#E8002D',            # Rojo
+
+    # UI Neutral
+    'text_primary': '#E8E9EF',
+    'text_secondary': '#8A8D9E',
+    'text_tertiary': '#555870',
+    'text_disabled': '#4A4D5E',
+}
+
+# Tire compound to color mapping (handles year-based logic)
+TIRE_COLORS_BY_YEAR = {
+    'pre_2019': {
+        'HYPERSOFT': COLOR_PALETTE['hypersoft'],
+        'ULTRASOFT': COLOR_PALETTE['ultrasoft'],
+        'SUPERSOFT': COLOR_PALETTE['supersoft'],
+        'SOFT': COLOR_PALETTE['yellow'],
+        'MEDIUM': COLOR_PALETTE['text_primary'],
+        'HARD': COLOR_PALETTE['vsc_ending'],
+        'INTERMEDIATE': COLOR_PALETTE['intermediate'],
+        'WET': COLOR_PALETTE['blue'],
+    },
+    'post_2019': {
+        'HYPERSOFT': COLOR_PALETTE['hypersoft'],
+        'ULTRASOFT': COLOR_PALETTE['ultrasoft'],
+        'SUPERSOFT': COLOR_PALETTE['supersoft'],
+        'SOFT': COLOR_PALETTE['soft'],
+        'MEDIUM': COLOR_PALETTE['medium'],
+        'HARD': COLOR_PALETTE['hard'],
+        'INTERMEDIATE': COLOR_PALETTE['intermediate'],
+        'WET': COLOR_PALETTE['blue'],
+    }
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# COLOR UTILITIES (Shared across all modules)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def hex_rgb(hex_color: str) -> str:
+    """Convierte hex '#RRGGBB' a 'R,G,B' para Plotly RGB."""
+    hex_color = hex_color.lstrip("#")
+    return f"{int(hex_color[0:2], 16)},{int(hex_color[2:4], 16)},{int(hex_color[4:6], 16)}"
+
+
+def hex_to_rgba(hex_color: str, alpha: float = 0.2) -> str:
+    """Convierte hex '#RRGGBB' a 'rgba(R,G,B,A)'."""
+    hex_color = hex_color.lstrip("#")
+    if len(hex_color) != 6:
+        return f"rgba(255,255,255,{alpha})"
+    r = int(hex_color[0:2], 16)
+    g = int(hex_color[2:4], 16)
+    b = int(hex_color[4:6], 16)
+    return f"rgba({r},{g},{b},{alpha})"
+
+
+def hex_to_rgb_tuple(hex_color: str) -> tuple[int, int, int]:
+    """Convierte hex '#RRGGBB' a tupla (R, G, B)."""
+    hex_color = hex_color.lstrip("#")
+    return int(hex_color[0:2], 16), int(hex_color[2:4], 16), int(hex_color[4:6], 16)
+
+
+def get_tire_colors(event_year: int) -> dict:
+    """Retorna el mapa de colores de neumáticos según el año de la temporada."""
+    return (
+        TIRE_COLORS_BY_YEAR['pre_2019']
+        if event_year <= 2018
+        else TIRE_COLORS_BY_YEAR['post_2019']
+    )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CSS · TIMELINE / RACE CONTROL
+# Estilos para SessionTimeLine.render_timeline()
+# ─────────────────────────────────────────────────────────────────────────────
+
+CSS_TIMELINE = """
+<style>
+/* ── Header del panel · estilo broadcast ── */
+.tlo-tl-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    margin: 0.4rem 0 0.6rem 0;
+    background:
+        linear-gradient(90deg, rgba(232,0,45,0.06) 0%, rgba(232,0,45,0.00) 35%, transparent 100%),
+        rgba(255,255,255,0.025);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-left: 3px solid #E8002D;
+    border-radius: 0 6px 6px 0;
+    position: relative;
+    overflow: hidden;
+}
+.tlo-tl-header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        repeating-linear-gradient(45deg,  transparent 0 2px, rgba(255,255,255,0.012) 2px 3px),
+        repeating-linear-gradient(-45deg, transparent 0 2px, rgba(255,255,255,0.010) 2px 3px);
+    pointer-events: none;
+}
+.tlo-tl-header::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 22px; height: 22px;
+    background: linear-gradient(225deg, rgba(232,0,45,0.35) 0%, rgba(232,0,45,0.35) 50%, transparent 50%);
+    pointer-events: none;
+}
+.tlo-tl-pip {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: #E8002D;
+    box-shadow:
+        0 0 0 3px rgba(232,0,45,0.18),
+        0 0 12px rgba(232,0,45,0.7);
+    flex-shrink: 0;
+    animation: tlo-pulse 1.6s ease-in-out infinite;
+    position: relative;
+    z-index: 1;
+}
+@keyframes tlo-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: 0.55; transform: scale(0.78); }
+}
+.tlo-tl-title {
+    font-family: 'Titillium Web', 'Inter', sans-serif;
+    font-style: italic;
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: #fff;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+    line-height: 1;
+    position: relative;
+    z-index: 1;
+}
+.tlo-tl-subtitle {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.66rem;
+    font-weight: 600;
+    color: #9497A8;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-left: auto;
+    padding: 4px 10px;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 3px;
+    background: rgba(0,0,0,0.25);
+    position: relative;
+    z-index: 1;
+}
+
+/* ── Contenedor del gráfico Plotly: HUD frame ── */
+[data-testid="stPlotlyChart"]:has(+ * [data-testid="stTabs"]),
+.tlo-plot-frame {
+    background:
+        linear-gradient(180deg, rgba(255,255,255,0.012) 0%, transparent 100%),
+        rgba(13,13,18,0.55);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 6px;
+    padding: 4px 6px 0 6px;
+    margin-bottom: 1.4rem;
+    position: relative;
+}
+
+/* ── Tabs del timeline ── */
+.tlo-tl-header + div [data-testid="stTabs"] [data-testid="stTab"],
+[data-testid="stTabs"] [data-testid="stTab"] {
+    font-family: 'Titillium Web', 'Inter', sans-serif !important;
+    font-style: italic !important;
+}
+
+/* ── Tabla base · estilo timing tower ── */
+.tlo-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 0.4rem;
+    background: rgba(255,255,255,0.018);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 6px;
+    overflow: hidden;
+    font-family: 'Inter', system-ui, sans-serif;
+}
+.tlo-table thead tr {
+    background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.015) 100%);
+}
+.tlo-table thead th {
+    color: #9497A8;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    text-align: left;
+    padding: 11px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    position: relative;
+}
+.tlo-table thead th:first-child {
+    border-left: 2px solid #E8002D;
+}
+.tlo-table tbody td {
+    color: #E8E9EF;
+    font-size: 0.84rem;
+    padding: 11px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    vertical-align: middle;
+    line-height: 1.4;
+}
+.tlo-table tbody tr {
+    transition: background 0.14s ease;
+}
+.tlo-table tbody tr:hover {
+    background: rgba(232,0,45,0.035);
+}
+.tlo-table tbody tr:hover td:first-child {
+    box-shadow: inset 2px 0 0 0 #E8002D;
+}
+.tlo-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* ── Tipografía mono compartida ── */
+.tlo-mono {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-feature-settings: 'tnum' 1;
+    font-size: 0.78rem;
+    letter-spacing: -0.01em;
+    color: #B8BACA;
+}
+
+/* ── Pills genéricos (incidente / estado) ── */
+.tlo-pill {
+    display: inline-flex;
+    align-items: center;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    padding: 4px 9px;
+    border: 1px solid;
+    border-radius: 3px;
+    line-height: 1;
+    white-space: nowrap;
+    position: relative;
+}
+.tlo-pill::before {
+    content: '';
+    display: inline-block;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+    margin-right: 7px;
+    box-shadow: 0 0 6px currentColor;
+}
+
+/* ── Pills de neumático ── */
+.tlo-tyre {
+    display: inline-flex;
+    align-items: center;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 4px 10px 4px 8px;
+    border: 1px solid;
+    border-radius: 999px;
+    line-height: 1;
+    white-space: nowrap;
+}
+.tlo-tyre::before {
+    content: '';
+    display: inline-block;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+    margin-right: 7px;
+    box-shadow: 0 0 4px currentColor, inset 0 0 0 1px rgba(0,0,0,0.35);
+}
+
+/* ── Marcador "best lap" · purple sector style ── */
+.tlo-fastest {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 7px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #B138DD;
+    padding: 2px 9px;
+    border: 1px solid rgba(177,56,221,0.45);
+    border-radius: 3px;
+    background: rgba(177,56,221,0.08);
+    letter-spacing: -0.01em;
+    box-shadow: 0 0 12px rgba(177,56,221,0.18);
+}
+
+/* ── Posiciones (Final) ── */
+.tlo-pos {
+    display: inline-block;
+    font-family: 'Titillium Web', 'Inter', sans-serif;
+    font-style: italic;
+    font-weight: 900;
+    font-size: 0.95rem;
+    color: #E8E9EF;
+    min-width: 1.5ch;
+}
+.tlo-pos.p1 {
+    color: #FFD24A;
+    text-shadow:
+        0 0 14px rgba(255,210,74,0.5),
+        0 0 2px rgba(255,210,74,0.8);
+}
+
+/* ── Diferenciales (▲ ▼ =) ── */
+.tlo-diff-up,
+.tlo-diff-down,
+.tlo-diff-eq {
+    display: inline-flex;
+    align-items: center;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    padding: 3px 9px;
+    border-radius: 3px;
+    border: 1px solid;
+    line-height: 1;
+}
+.tlo-diff-up {
+    color: #4ADE80;
+    border-color: rgba(74,222,128,0.35);
+    background: rgba(74,222,128,0.08);
+}
+.tlo-diff-down {
+    color: #F87171;
+    border-color: rgba(248,113,113,0.35);
+    background: rgba(248,113,113,0.08);
+}
+.tlo-diff-eq {
+    color: #6B7280;
+    border-color: rgba(107,114,128,0.30);
+    background: rgba(107,114,128,0.05);
+}
+
+/* ── Notas / footers ── */
+.tlo-note {
+    margin-top: 14px;
+    padding: 12px 16px 12px 18px;
+    background: rgba(255,255,255,0.018);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-left: 2px solid rgba(232,0,45,0.45);
+    border-radius: 0 4px 4px 0;
+    color: #8A8D9E;
+    font-size: 0.76rem;
+    line-height: 1.65;
+    font-family: 'Inter', system-ui, sans-serif;
+}
+.tlo-note b {
+    color: #C8CAD8;
+    font-weight: 700;
+}
+
+/* ── Utility text classes ── */
+.tlo-text-tertiary {
+    color: #7A7D8F;
+}
+.tlo-text-disabled {
+    color: #4A4D5E;
+}
+
+/* ── Ajustes finos a la leyenda Plotly ── */
+.js-plotly-plot .legend .traces .legendtoggle {
+    cursor: pointer;
+}
+.js-plotly-plot .legend .bg {
+    fill: rgba(0,0,0,0) !important;
+}
+</style>
+"""
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CSS · SESSION SUMMARY (hero + bloques HUD + tabla resultados)
+# Inyectado por SessionSummary.py al renderizar.
+# ─────────────────────────────────────────────────────────────────────────────
+
+CSS_SESSION_SUMMARY = """
+<style>
+/* ── Hero ───────────────────────────────────────────────────────────── */
+.ss-hero {
+    margin: 0.4rem 0 1.8rem 0;
+    padding: 28px 32px 26px 32px;
+    background:
+        linear-gradient(135deg, rgba(232,0,45,0.08) 0%, rgba(232,0,45,0.00) 38%, transparent 100%),
+        rgba(255,255,255,0.018);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-left: 3px solid #E8002D;
+    border-radius: 0 6px 6px 0;
+    position: relative;
+    overflow: hidden;
+}
+.ss-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        repeating-linear-gradient(45deg,  transparent 0 2px, rgba(255,255,255,0.014) 2px 3px),
+        repeating-linear-gradient(-45deg, transparent 0 2px, rgba(255,255,255,0.012) 2px 3px);
+    pointer-events: none;
+}
+.ss-hero::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 38px; height: 38px;
+    background: linear-gradient(225deg, rgba(232,0,45,0.45) 0%, rgba(232,0,45,0.45) 50%, transparent 50%);
+    pointer-events: none;
+}
+.ss-hero-pill {
+    display: inline-block;
+    background: rgba(232,0,45,0.12);
+    border: 1px solid rgba(232,0,45,0.32);
+    color: #E8002D;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.20em;
+    padding: 5px 12px;
+    border-radius: 3px;
+    margin-bottom: 14px;
+    position: relative; z-index: 1;
+}
+.ss-hero-name {
+    font-family: 'Titillium Web', 'Inter', sans-serif;
+    font-style: italic;
+    font-weight: 900;
+    font-size: 2.6rem;
+    line-height: 0.98;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+    color: #fff;
+    text-shadow: 0 2px 28px rgba(232,0,45,0.18);
+    margin-bottom: 10px;
+    position: relative; z-index: 1;
+}
+.ss-hero-meta {
+    color: #9497A8;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 0.84rem;
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    position: relative; z-index: 1;
+}
+.ss-hero-meta .sep { color: #2D2D44; font-size: 1rem; }
+.ss-hero-meta b { color: #E8E9EF; font-weight: 600; }
+
+/* ── Encabezado de sección ─────────────────────────────────────────── */
+.ss-sect {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 2.1rem 0 1.1rem 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.ss-sect-pip {
+    width: 4px; height: 22px;
+    background: #E8002D;
+    border-radius: 2px;
+    box-shadow: 0 0 12px rgba(232,0,45,0.55);
+    flex-shrink: 0;
+}
+.ss-sect-title {
+    font-family: 'Titillium Web', 'Inter', sans-serif;
+    font-style: italic;
+    font-weight: 800;
+    font-size: 1.05rem;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: -0.005em;
+    line-height: 1;
+}
+.ss-sect-eyebrow {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: #555870;
+    letter-spacing: 0.18em;
+    margin-left: auto;
+    padding: 4px 9px;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 3px;
+    background: rgba(0,0,0,0.18);
+}
+
+/* ── Stats sin cajas (hairlines) ──────────────────────────────────── */
+.ss-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    background: rgba(255,255,255,0.018);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 6px;
+    overflow: hidden;
+}
+.ss-stat {
+    padding: 18px 22px;
+    border-right: 1px solid rgba(255,255,255,0.05);
+    position: relative;
+}
+.ss-stat:last-child { border-right: none; }
+.ss-stat::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 24px; height: 2px;
+    background: #E8002D;
+    opacity: 0.65;
+}
+.ss-stat-label {
+    color: #9497A8;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+.ss-stat-value {
+    color: #fff;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 1.7rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    font-feature-settings: 'tnum' 1;
+}
+.ss-stat-unit {
+    color: #555870;
+    font-size: 0.78rem;
+    font-weight: 500;
+    margin-left: 4px;
+}
+
+/* ── Strip de clima · cockpit bars ────────────────────────────────── */
+.ss-weather-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+}
+.ss-wbar {
+    padding: 16px 20px 14px 20px;
+    background: rgba(255,255,255,0.018);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 6px;
+    position: relative;
+    overflow: hidden;
+}
+.ss-wbar::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: var(--wbar-color);
+    opacity: 0.7;
+}
+.ss-wbar-row {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 10px;
+}
+.ss-wbar-name {
+    color: #B8BACA;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+.ss-wbar-value {
+    color: #fff;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 1.65rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+}
+.ss-wbar-unit {
+    color: var(--wbar-color);
+    font-size: 0.75rem;
+    margin-left: 3px;
+    font-weight: 500;
+}
+.ss-wbar-track {
+    width: 100%;
+    height: 4px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+.ss-wbar-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: var(--wbar-color);
+    box-shadow: 0 0 9px var(--wbar-color);
+    transition: width 0.6s cubic-bezier(0.16,1,0.3,1);
+}
+.ss-wbar-meta {
+    display: flex; justify-content: space-between;
+    color: #555870;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.6rem;
+}
+
+/* ── Tabla de resultados ──────────────────────────────────────────── */
+.ss-results {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: rgba(255,255,255,0.018);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 6px;
+    overflow: hidden;
+    font-family: 'Inter', system-ui, sans-serif;
+}
+.ss-results thead tr {
+    background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.015) 100%);
+}
+.ss-results thead th {
+    color: #9497A8;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    text-align: left;
+    padding: 11px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.ss-results thead th:first-child { border-left: 2px solid #E8002D; }
+.ss-results thead th.num { text-align: right; }
+.ss-results tbody td {
+    color: #E8E9EF;
+    font-size: 0.86rem;
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    vertical-align: middle;
+}
+.ss-results tbody td.num {
+    text-align: right;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-feature-settings: 'tnum' 1;
+}
+.ss-results tbody tr:last-child td { border-bottom: none; }
+.ss-results tbody tr:hover {
+    background: rgba(232,0,45,0.025);
+}
+.ss-pos {
+    display: inline-block;
+    width: 28px;
+    font-family: 'Titillium Web', 'Inter', sans-serif;
+    font-style: italic;
+    font-weight: 900;
+    font-size: 1rem;
+    text-align: center;
+}
+.ss-pos.p1 { color: #FFD24A; text-shadow: 0 0 12px rgba(255,210,74,0.45); }
+.ss-pos.p2 { color: #C9CCD8; }
+.ss-pos.p3 { color: #CD7F32; }
+.ss-results tbody tr.podium-1 { background: linear-gradient(90deg, rgba(255,210,74,0.06) 0%, transparent 60%); }
+.ss-results tbody tr.podium-2 { background: linear-gradient(90deg, rgba(201,204,216,0.04) 0%, transparent 60%); }
+.ss-results tbody tr.podium-3 { background: linear-gradient(90deg, rgba(205,127,50,0.04) 0%, transparent 60%); }
+.ss-driver {
+    color: #fff;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.86rem;
+}
+.ss-team { color: #9497A8; font-size: 0.78rem; }
+.ss-status {
+    display: inline-flex;
+    align-items: center;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border: 1px solid;
+    border-radius: 3px;
+    line-height: 1;
+}
+.ss-status.ok  { color: #4ADE80; border-color: rgba(74,222,128,0.30);  background: rgba(74,222,128,0.06); }
+.ss-status.lap { color: #F2C14E; border-color: rgba(242,193,78,0.30);  background: rgba(242,193,78,0.06); }
+.ss-status.dnf { color: #F87171; border-color: rgba(248,113,113,0.30); background: rgba(248,113,113,0.06); }
+.ss-grid-delta {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    margin-left: 6px;
+}
+.ss-grid-delta.up   { color: #4ADE80; }
+.ss-grid-delta.down { color: #F87171; }
+.ss-grid-delta.eq   { color: #6B7280; }
+
+/* ── Mapa del trazado ─────────────────────────────────────────────── */
+.ss-circuit-frame {
+    background: rgba(13,13,18,0.55);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 6px;
+    padding: 8px 10px 4px 10px;
+}
+.ss-sector-legend {
+    display: flex; gap: 18px;
+    margin-top: 0.4rem;
+    flex-wrap: wrap;
+}
+.ss-sector-leg {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #B8BACA;
+    letter-spacing: 0.06em;
+}
+.ss-sector-dot {
+    width: 10px; height: 10px;
+    border-radius: 2px;
+    box-shadow: 0 0 8px currentColor;
+}
+
+/* ── Estados vacíos ───────────────────────────────────────────────── */
+.ss-empty {
+    padding: 22px 24px;
+    background: rgba(255,255,255,0.018);
+    border: 1px dashed rgba(255,255,255,0.10);
+    border-radius: 6px;
+    color: #7A7D8F;
+    font-size: 0.82rem;
+    font-family: 'Inter', system-ui, sans-serif;
+}
+.ss-empty b { color: #C8CAD8; }
+</style>
+"""
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CSS · CIRCUIT DNA (clasificación K-means en SessionSummary)
+# Inyectado por CircuitClassifier.render_circuit_dna().
+# ─────────────────────────────────────────────────────────────────────────────
+
+CSS_CIRCUIT_DNA = """
+<style>
+/* ── Línea-cabecera compacta · cluster + tagline + confianza ──────── */
+.dna-line {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    padding: 14px 18px;
+    background: rgba(255,255,255,0.018);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-left: 3px solid var(--dna-color, #E8002D);
+    border-radius: 0 6px 6px 0;
+    margin-bottom: 1.1rem;
+    flex-wrap: wrap;
+}
+.dna-line-name {
+    color: #fff;
+    font-family: 'Titillium Web', 'Inter', sans-serif;
+    font-style: italic;
+    font-weight: 900;
+    font-size: 1.4rem;
+    letter-spacing: -0.015em;
+    text-transform: uppercase;
+    line-height: 1;
+}
+.dna-line-tag {
+    color: #9497A8;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 0.82rem;
+    font-weight: 400;
+    line-height: 1.3;
+    flex: 1;
+    min-width: 200px;
+}
+.dna-line-conf {
+    color: var(--dna-color, #E8002D);
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    padding: 4px 10px;
+    border: 1px solid var(--dna-color, #E8002D);
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--dna-color, #E8002D) 8%, transparent);
+    line-height: 1;
+    white-space: nowrap;
+}
+.dna-line-conf-label {
+    color: rgba(255,255,255,0.5);
+    font-size: 0.6rem;
+    letter-spacing: 0.18em;
+    margin-right: 6px;
+    font-weight: 500;
+}
+
+/* ── Bloque inferior: 3 stats + insight ───────────────────────────── */
+.dna-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 14px;
+}
+.dna-stat {
+    padding: 14px 16px 12px 16px;
+    background: rgba(255,255,255,0.018);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-top: 1px solid var(--dna-color, #E8002D);
+    border-radius: 0 0 6px 6px;
+    position: relative;
+}
+.dna-stat-name {
+    color: #9497A8;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+}
+.dna-stat-value {
+    color: #fff;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 1.55rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    font-feature-settings: 'tnum' 1;
+}
+.dna-stat-unit {
+    color: #555870;
+    font-size: 0.72rem;
+    font-weight: 500;
+    margin-left: 3px;
+}
+.dna-stat-z {
+    color: #6B7280;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.65rem;
+    margin-top: 4px;
+    letter-spacing: 0.04em;
+}
+.dna-stat-z.hi { color: #4ADE80; }
+.dna-stat-z.lo { color: #F87171; }
+
+/* ── Insight (texto breve) ───────────────────────────────────────── */
+.dna-insight {
+    padding: 16px 20px;
+    background: rgba(255,255,255,0.018);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-left: 2px solid rgba(232,0,45,0.50);
+    border-radius: 0 6px 6px 0;
+}
+.dna-insight p {
+    color: #C8CAD8;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    margin: 0;
+    max-width: 78ch;
+}
+.dna-insight p + p { margin-top: 10px; }
+.dna-insight b { color: #fff; font-weight: 600; }
+.dna-insight .meta {
+    color: #6B7280;
+    font-size: 0.72rem;
+    font-style: italic;
+}
+</style>
+"""

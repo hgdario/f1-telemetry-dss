@@ -3,22 +3,16 @@ import plotly.graph_objects as go
 import pandas as pd
 import fastf1
 
+import ui_assets
+
 
 def render_strategy_dashboard(session):
     st.title(f"Informe de Sesión: {session.event['EventName']} {session.event.year}")
 
     laps = session.laps.copy()
 
-    # =====================
-    # COLORES OFICIALES
-    # =====================
-    TIRE_COLORS = {
-        'HYPERSOFT': '#FFB3C1', 'ULTRASOFT': '#B34FB3', 'SUPERSOFT': '#F20000',
-        'SOFT': '#FF3333' if session.event.year > 2018 else '#FFD300',
-        'MEDIUM': '#FFD300' if session.event.year > 2018 else '#F0F0F0',
-        'HARD': '#F0F0F0' if session.event.year > 2018 else '#00D2FF',
-        'INTERMEDIATE': '#43B02A', 'WET': '#0067B9'
-    }
+    # Usar paleta centralizada de colores de neumáticos
+    tire_colors = ui_assets.get_tire_colors(session.event.year)
 
     COMPOUND_ORDER = [
         'HYPERSOFT', 'ULTRASOFT', 'SUPERSOFT',
@@ -64,7 +58,7 @@ def render_strategy_dashboard(session):
             values=usage['Laps'],
             hole=0.5,
             marker=dict(
-                colors=[TIRE_COLORS.get(str(c).upper(), '#AAA') for c in usage['Compound']]
+                colors=[tire_colors.get(str(c).upper(), '#AAA') for c in usage['Compound']]
             )
         )])
 
@@ -113,7 +107,7 @@ def render_strategy_dashboard(session):
                 comp = comp.upper()
                 cols_strat[i].markdown(
                     f"<div style='text-align:center; padding:10px; border-radius:8px; "
-                    f"background-color:{TIRE_COLORS.get(comp, '#444')}; color:black;'>"
+                    f"background-color:{tire_colors.get(comp, '#444')}; color:black;'>"
                     f"<b>{comp}</b></div>",
                     unsafe_allow_html=True
                 )
@@ -190,7 +184,7 @@ def render_strategy_dashboard(session):
                 base=row['Start'] - 1,
                 orientation='h',
                 marker=dict(
-                    color=TIRE_COLORS.get(comp, '#888'),
+                    color=tire_colors.get(comp, '#888'),
                     line=dict(color='#111', width=1)
                 ),
                 showlegend=False
@@ -205,7 +199,7 @@ def render_strategy_dashboard(session):
     for comp in used_compounds:
         fig.add_trace(go.Bar(
             y=[None], x=[None],
-            marker=dict(color=TIRE_COLORS.get(comp, '#AAA')),
+            marker=dict(color=tire_colors.get(comp, '#AAA')),
             name=comp,
             showlegend=True
         ))
@@ -246,7 +240,7 @@ def render_strategy_dashboard(session):
             y=grouped['LapTime'].dt.total_seconds(),
             mode='lines',
             name=comp,
-            line=dict(color=TIRE_COLORS.get(comp, '#AAA'), width=2)
+            line=dict(color=tire_colors.get(comp, '#AAA'), width=2)
         ))
 
     fig_deg.update_layout(

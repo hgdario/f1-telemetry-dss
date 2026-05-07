@@ -51,7 +51,9 @@ Conexión al router (appResearch.py):
              il.render_ideal_lap(st.session_state["f1_session"], corners=corners)
 """
 
+
 from __future__ import annotations
+import ui_assets
 
 import numpy as np
 import pandas as pd
@@ -89,11 +91,6 @@ def _fmt_time(seconds: float) -> str:
     s  = int(seconds % 60)
     ms = int(round((seconds % 1) * 1000))
     return f"{m}:{s:02d}.{ms:03d}"
-
-
-def _hex_rgb(hex_color: str) -> str:
-    h = hex_color.lstrip("#")
-    return f"{int(h[0:2],16)},{int(h[2:4],16)},{int(h[4:6],16)}"
 
 
 def _get_team_color(sesion: Session, driver_code: str) -> str:

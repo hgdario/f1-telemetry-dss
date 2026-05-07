@@ -30,7 +30,9 @@ Conexión al router (appResearch.py):
            lo.render_lap_overlay(st.session_state["f1_session"], corners=corners)
 """
 
+
 from __future__ import annotations
+import ui_assets
 
 import numpy as np
 import pandas as pd
@@ -85,11 +87,6 @@ def _fmt_time(seconds: float) -> str:
 def _fmt_delta(delta_s: float) -> str:
     sign = "+" if delta_s > 0 else ""
     return f"{sign}{delta_s:.3f}s"
-
-
-def _hex_rgb(hex_color: str) -> str:
-    h = hex_color.lstrip("#")
-    return f"{int(h[0:2],16)},{int(h[2:4],16)},{int(h[4:6],16)}"
 
 
 def _get_team_color(sesion: Session, driver: str) -> str:
@@ -446,14 +443,14 @@ def _build_delta_and_dominance(
         x=dist_grid, y=np.where(delta >= 0, delta, 0),
         fill="tozeroy", mode="lines",
         line=dict(color=color_b, width=0),
-        fillcolor=f"rgba({_hex_rgb(color_b)},0.25)",
+        fillcolor=f"rgba({ui_assets.hex_rgb(color_b)},0.25)",
         hoverinfo="skip", showlegend=False,
     ), row=1, col=1)
     fig.add_trace(go.Scatter(
         x=dist_grid, y=np.where(delta <= 0, delta, 0),
         fill="tozeroy", mode="lines",
         line=dict(color=color_a, width=0),
-        fillcolor=f"rgba({_hex_rgb(color_a)},0.25)",
+        fillcolor=f"rgba({ui_assets.hex_rgb(color_a)},0.25)",
         hoverinfo="skip", showlegend=False,
     ), row=1, col=1)
     fig.add_trace(go.Scatter(

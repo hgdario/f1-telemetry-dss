@@ -1,4 +1,5 @@
 from __future__ import annotations
+import ui_assets
 
 import numpy as np
 import pandas as pd
@@ -91,11 +92,6 @@ def _is_qualifying(sesion: Session) -> bool:
         return any(k in name for k in ("qualifying", "sprint qualifying"))
     except Exception:
         return False
-
-def _hex_rgb(hex_color: str) -> str:
-    h = hex_color.lstrip("#")
-    r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
-    return f"{r},{g},{b}"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # CONSTRUCCIÓN DE LA FIGURA PLOTLY CON FRAMES

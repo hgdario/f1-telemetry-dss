@@ -11,7 +11,9 @@ Determinista (random_state fijo) y 100 % validable:
   · Reproducible       →  cualquier ejecución sobre la misma sesión
                           devuelve los mismos clusters
 """
+
 from __future__ import annotations
+import ui_assets
 
 import numpy as np
 import pandas as pd
@@ -285,15 +287,6 @@ def _fig_pca_scatter(df: pd.DataFrame, Xp, labels, cluster_names) -> go.Figure:
     return fig
 
 
-def _hex_to_rgba(hex_color: str, alpha: float = 0.2) -> str:
-    """Convierte #RRGGBB a rgba(r,g,b,a)."""
-    h = hex_color.lstrip("#")
-    if len(h) != 6:
-        return f"rgba(255,255,255,{alpha})"
-    r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
-    return f"rgba({r},{g},{b},{alpha})"
-
-
 def _fig_radar_clusters(df: pd.DataFrame, labels, feature_cols, cluster_names) -> go.Figure:
     """Radar normalizado (0-100) con un trazo por cluster."""
     fig = go.Figure()
@@ -315,7 +308,7 @@ def _fig_radar_clusters(df: pd.DataFrame, labels, feature_cols, cluster_names) -
             r=means_loop, theta=cats_loop,
             fill='toself', name=f"{cluster_names[cl]}",
             line=dict(color=color, width=2),
-            fillcolor=_hex_to_rgba(color, 0.18),
+            fillcolor=ui_assets.hex_to_rgba(color, 0.18),
         ))
     fig.update_layout(
         height=480, paper_bgcolor=PANEL, plot_bgcolor=PANEL,

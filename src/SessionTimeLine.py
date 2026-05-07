@@ -7,16 +7,17 @@ import ui_assets
 
 
 # ─── PALETA SEMÁNTICA DE TRACK STATUS ─────────────────────────────────────────
-# Colores desaturados alineados con el tema global (acento rose-600 + zinc).
+# Colores alineados con el tema F1 broadcast (acento rojo + amarillos cálidos +
+# purple sector + blue).
 STATUS_MAP = {
-    '1': {'label': 'PISTA LIMPIA',     'color': '#6FA86F', 'desc': 'Sesión reanudada.'},
-    '2': {'label': 'BANDERA AMARILLA', 'color': '#D4A574', 'desc': 'Peligro en pista.'},
-    '3': {'label': 'AMARILLA SECTOR',  'color': '#C2734D', 'desc': 'Peligro localizado.'},
-    '4': {'label': 'SAFETY CAR',       'color': '#B85F3F', 'desc': 'Coche de Seguridad.'},
+    '1': {'label': 'PISTA LIMPIA',     'color': '#3FBF7F', 'desc': 'Sesión reanudada.'},
+    '2': {'label': 'BANDERA AMARILLA', 'color': '#F2C14E', 'desc': 'Peligro en pista.'},
+    '3': {'label': 'AMARILLA SECTOR',  'color': '#E89B3C', 'desc': 'Peligro localizado.'},
+    '4': {'label': 'SAFETY CAR',       'color': '#FF7A29', 'desc': 'Coche de Seguridad.'},
     '5': {'label': 'BANDERA ROJA',     'color': '#E8002D', 'desc': 'Sesión suspendida.'},
-    '6': {'label': 'VSC',              'color': '#6E5BA8', 'desc': 'Virtual Safety Car.'},
-    '7': {'label': 'VSC TERMINANDO',   'color': '#6FA86F', 'desc': 'Pista lista para verde.'},
-    '8': {'label': 'BANDERA AZUL',     'color': '#3D6A9C', 'desc': 'Aviso de doblado.'},
+    '6': {'label': 'VSC',              'color': '#B138DD', 'desc': 'Virtual Safety Car.'},
+    '7': {'label': 'VSC TERMINANDO',   'color': '#7FD8B8', 'desc': 'Pista lista para verde.'},
+    '8': {'label': 'BANDERA AZUL',     'color': '#3B82F6', 'desc': 'Aviso de doblado.'},
 }
 
 
@@ -101,10 +102,15 @@ def render_timeline(session: fastf1.core.Session):
 
     # ── 1. BARRA DE TIEMPO ──
     fig = go.Figure()
+
+    # Track rail (fondo) · da peso visual y delimita la sesión
     fig.add_trace(go.Bar(
         x=[max_time], y=["STATUS"], orientation='h',
-        marker=dict(color='rgba(255,255,255,0.04)'),
-        showlegend=False, hoverinfo='skip'
+        marker=dict(
+            color='rgba(255,255,255,0.025)',
+            line=dict(color='rgba(255,255,255,0.06)', width=1),
+        ),
+        showlegend=False, hoverinfo='skip',
     ))
 
     estados_presentes = sorted(ts['Status'].unique(), key=int)
@@ -112,43 +118,96 @@ def render_timeline(session: fastf1.core.Session):
         df_group = ts[ts['Status'] == s_code]
         info = STATUS_MAP.get(str(s_code), {'label': f'ST {s_code}', 'color': '#4A4D5E'})
         fig.add_trace(go.Bar(
-            name=info['label'], x=df_group['Duracion'], y=["STATUS"] * len(df_group),
+            name=info['label'],
+            x=df_group['Duracion'], y=["STATUS"] * len(df_group),
             base=df_group['Minuto'], orientation='h',
-            marker=dict(color=info['color'], line=dict(width=0)), showlegend=True
+            marker=dict(
+                color=info['color'],
+                line=dict(width=0),
+                opacity=0.92,
+            ),
+            showlegend=True,
+            hovertemplate=(
+                f"<b style='color:{info['color']};'>{info['label']}</b><br>"
+                "<span style='color:#9497A8;'>Inicio:</span> %{base:.1f} min<br>"
+                "<span style='color:#9497A8;'>Duración:</span> %{x:.1f} min"
+                "<extra></extra>"
+            ),
         ))
 
+    # Marcadores de inicio y fin (LIGHTS OUT / CHEQUERED)
+    fig.add_shape(
+        type="line", x0=0, x1=0, y0=-0.45, y1=0.45,
+        line=dict(color="#E8002D", width=2),
+        layer="above",
+    )
+    fig.add_shape(
+        type="line", x0=max_time, x1=max_time, y0=-0.45, y1=0.45,
+        line=dict(color="rgba(255,255,255,0.4)", width=2, dash="dot"),
+        layer="above",
+    )
+    fig.add_annotation(
+        x=0, y=-0.62, yref="paper", xanchor="left",
+        text="<b>LIGHTS OUT</b>",
+        showarrow=False,
+        font=dict(size=8, family="JetBrains Mono, monospace", color="#E8002D"),
+    )
+    fig.add_annotation(
+        x=max_time, y=-0.62, yref="paper", xanchor="right",
+        text="<b>CHEQUERED</b>",
+        showarrow=False,
+        font=dict(size=8, family="JetBrains Mono, monospace", color="#9497A8"),
+    )
+
     fig.update_layout(
-        height=200,
-        margin=dict(t=10, b=90, l=10, r=10),
+        height=210,
+        margin=dict(t=64, b=64, l=14, r=14),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         barmode='overlay',
-        font=dict(family="Geist, system-ui, sans-serif", color="#7A7D8F"),
+        bargap=0.55,
+        font=dict(family="Inter, system-ui, sans-serif", color="#9497A8"),
         legend=dict(
             orientation="h",
-            yanchor="bottom", y=1.14,
+            yanchor="bottom", y=1.18,
             xanchor="center",  x=0.5,
             bgcolor="rgba(0,0,0,0)",
             borderwidth=0,
-            font=dict(size=9, color="#6B7280",
-                      family="Geist Mono, monospace"),
+            font=dict(size=10, color="#B8BACA",
+                      family="JetBrains Mono, monospace"),
+            itemsizing="constant",
+            itemwidth=30,
+            tracegroupgap=8,
         ),
         xaxis=dict(
             title=dict(
                 text="MINUTOS DE CARRERA",
-                standoff=18,
-                font=dict(size=10, color="#4A4D5E",
-                          family="Geist Mono, monospace"),
+                standoff=16,
+                font=dict(size=9, color="#555870",
+                          family="JetBrains Mono, monospace"),
             ),
-            range=[0, max_time],
-            color="#6B7280",
-            gridcolor="rgba(255,255,255,0.07)",
-            linecolor="rgba(255,255,255,0.08)",
-            tickfont=dict(size=9, family="Geist Mono, monospace", color="#6B7280"),
+            range=[-max_time * 0.005, max_time * 1.005],
+            color="#9497A8",
+            gridcolor="rgba(255,255,255,0.04)",
+            linecolor="rgba(255,255,255,0.10)",
+            tickfont=dict(size=9, family="JetBrains Mono, monospace", color="#8A8D9E"),
             dtick=5,
             tick0=0,
+            ticks="outside",
+            ticklen=4,
+            tickcolor="rgba(255,255,255,0.15)",
+            zeroline=False,
+            showspikes=False,
         ),
-        yaxis=dict(showgrid=False, showticklabels=False, fixedrange=True),
+        yaxis=dict(showgrid=False, showticklabels=False, fixedrange=True,
+                   range=[-0.6, 0.6]),
+        hoverlabel=dict(
+            bgcolor="#15151E",
+            bordercolor="rgba(232,0,45,0.5)",
+            font=dict(family="Inter, system-ui, sans-serif",
+                      color="#E8E9EF", size=11),
+            align="left",
+        ),
     )
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
@@ -230,14 +289,14 @@ def render_timeline(session: fastf1.core.Session):
 
             # Colores de neumático desaturados
             TIRE_COLORS = {
-                'HYPERSOFT':    '#E89AAA',
-                'ULTRASOFT':    '#A56AAB',
-                'SUPERSOFT':    '#D03131',
-                'SOFT':         '#E11D48' if session.event.year > 2018 else '#D4A574',
-                'MEDIUM':       '#D4A574' if session.event.year > 2018 else '#D8D8D8',
-                'HARD':         '#D8D8D8' if session.event.year > 2018 else '#3D8FB0',
-                'INTERMEDIATE': '#5A8F4E',
-                'WET':          '#3D6A9C',
+                'HYPERSOFT':    '#FF80B5', # Rosa (solo 2018)
+                'ULTRASOFT':    '#B138DD', # Morado (solo 2018)
+                'SUPERSOFT':    '#E8002D', # Rojo (solo 2018)
+                'SOFT':         '#E8002D' if session.event.year > 2018 else '#F2C14E', # Rojo (>2018) | Amarillo (2018)
+                'MEDIUM':       '#F2C14E' if session.event.year > 2018 else '#E8E9EF', # Amarillo (>2018) | Blanco (2018)
+                'HARD':         '#E8E9EF' if session.event.year > 2018 else '#4DB8D6', # Blanco (>2018) | Azul Hielo (2018)
+                'INTERMEDIATE': '#3FBF7F', # Verde
+                'WET':          '#3B82F6', # Azul
             }
 
             rows = ""

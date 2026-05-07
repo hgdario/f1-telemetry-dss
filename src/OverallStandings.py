@@ -7,6 +7,7 @@ vueltas individuales hasta el contexto de campeonato en la fecha de la sesión.
 
 from __future__ import annotations
 
+import ui_assets
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -58,11 +59,6 @@ def _td_to_s(td) -> float:
         return float(td.total_seconds())
     except Exception:
         return np.nan
-
-
-def _hex_rgb(hex_color: str) -> str:
-    h = hex_color.lstrip("#")
-    return f"{int(h[0:2],16)},{int(h[2:4],16)},{int(h[4:6],16)}"
 
 
 def _get_driver_color(sesion: Session, drv: str) -> str:
@@ -232,7 +228,7 @@ def _render_tab_laps(sesion: Session) -> None:
             fig.add_trace(go.Scatter(
                 x=dist_grid, y=y_b,
                 mode="lines",
-                line=dict(color=f"rgba({_hex_rgb(color)},0.45)", width=1.0, dash=dash),
+                line=dict(color=f"rgba({ui_assets.hex_rgb(color)},0.45)", width=1.0, dash=dash),
                 showlegend=False, hoverinfo="skip", name=f"_brk_{i}",
             ), row=2, col=1)
 

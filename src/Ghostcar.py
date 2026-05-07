@@ -1,4 +1,5 @@
 from __future__ import annotations
+import ui_assets
 
 import numpy as np
 import pandas as pd
@@ -64,12 +65,6 @@ def _fmt_delta(delta_s: float) -> str:
         return "±0.000s"
     sign = "+" if delta_s > 0 else ""
     return f"{sign}{delta_s:.3f}s"
-
-
-def _hex_rgb(hex_color: str) -> str:
-    h = hex_color.lstrip("#")
-    r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
-    return f"{r},{g},{b}"
 
 
 def _get_team_color(sesion: Session, driver_code: str) -> str:
@@ -289,7 +284,7 @@ def _build_ghost_figure(
     fig.add_trace(go.Scatter(
         x=dist_grid, y=data_a["throttle"],
         mode="lines", line=dict(color=color_a, width=1.5),
-        fill="tozeroy", fillcolor=f"rgba({_hex_rgb(color_a)},0.20)",
+        fill="tozeroy", fillcolor=f"rgba({ui_assets.hex_rgb(color_a)},0.20)",
         opacity=0.85, hoverinfo="skip", showlegend=False, name=f"_thr_{label_a}",
     ), row=2, col=1)
 
@@ -297,7 +292,7 @@ def _build_ghost_figure(
     fig.add_trace(go.Scatter(
         x=dist_grid, y=data_b["throttle"],
         mode="lines", line=dict(color=color_b, width=1.5, dash="dot"),
-        fill="tozeroy", fillcolor=f"rgba({_hex_rgb(color_b)},0.10)",
+        fill="tozeroy", fillcolor=f"rgba({ui_assets.hex_rgb(color_b)},0.10)",
         opacity=0.85, hoverinfo="skip", showlegend=False, name=f"_thr_{label_b}",
     ), row=2, col=1)
 
@@ -312,7 +307,7 @@ def _build_ghost_figure(
     fig.add_trace(go.Scatter(
         x=dist_grid, y=data_a["brake"],
         mode="lines", line=dict(color=color_a, width=1.5),
-        fill="tozeroy", fillcolor=f"rgba({_hex_rgb(color_a)},0.20)",
+        fill="tozeroy", fillcolor=f"rgba({ui_assets.hex_rgb(color_a)},0.20)",
         opacity=0.85, hoverinfo="skip", showlegend=False, name=f"_brk_{label_a}",
     ), row=2, col=2)
 
@@ -320,7 +315,7 @@ def _build_ghost_figure(
     fig.add_trace(go.Scatter(
         x=dist_grid, y=data_b["brake"],
         mode="lines", line=dict(color=color_b, width=1.5, dash="dot"),
-        fill="tozeroy", fillcolor=f"rgba({_hex_rgb(color_b)},0.10)",
+        fill="tozeroy", fillcolor=f"rgba({ui_assets.hex_rgb(color_b)},0.10)",
         opacity=0.85, hoverinfo="skip", showlegend=False, name=f"_brk_{label_b}",
     ), row=2, col=2)
 
@@ -546,7 +541,7 @@ def _build_delta_chart(
         mode="lines",
         line=dict(color=color_b, width=0),
         fill="tozeroy",
-        fillcolor=f"rgba({_hex_rgb(color_b)},0.25)",
+        fillcolor=f"rgba({ui_assets.hex_rgb(color_b)},0.25)",
         hoverinfo="skip",
         showlegend=False,
         name="_delta_pos",
@@ -558,7 +553,7 @@ def _build_delta_chart(
         mode="lines",
         line=dict(color=color_a, width=0),
         fill="tozeroy",
-        fillcolor=f"rgba({_hex_rgb(color_a)},0.25)",
+        fillcolor=f"rgba({ui_assets.hex_rgb(color_a)},0.25)",
         hoverinfo="skip",
         showlegend=False,
         name="_delta_neg",
