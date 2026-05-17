@@ -1,0 +1,5 @@
+cluster,label,n_drivers,drivers,p_full_mean,p_part_mean,p_coast_mean,p_brk_mean,decel_p10_mean,shifts_per_km_mean,throttle_avg_mean,coast_avg_len_mean
+0,Modulador,3,"LEC,SAI,VET",1.068,4.13,-1.627,0.719,-0.185,0.293,-5.141,-0.105
+1,Smooth,8,"ALB,HAM,LAT,MAG,MSC,NOR,OCO,PIA",-1.437,0.976,-0.101,0.326,0.881,-0.072,-0.305,-0.001
+2,Reactivo,7,"DEV,GAS,LAW,RIC,RUS,TSU,VER",-0.113,-2.146,1.195,-0.678,0.094,-0.375,2.759,0.053
+3,Late breaker,7,"ALO,BOT,HUL,PER,SAR,STR,ZHO",0.729,-1.185,-0.077,0.256,-1.122,0.284,0.139,0.007

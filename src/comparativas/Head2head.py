@@ -1,33 +1,6 @@
 """
 LapOverlay.py — TALOS F1 Superposición de Vueltas H2H
-=======================================================
-Head-to-head entre dos pilotos (o el mismo piloto en vueltas distintas).
-El circuito se colorea zona a zona según quién es más veloz en cada punto.
 
-Diferencia con IdealLap
-────────────────────────
-  IdealLap compara TODOS los pilotos para encontrar el mejor absoluto.
-  LapOverlay compara exactamente DOS vueltas seleccionadas por el usuario
-  y construye un análisis H2H completo: mapa de dominio, delta acumulado,
-  comparativa de canales de telemetría, sectores oficiales y mini-resumen.
-
-Técnica de coloreo por zona
-─────────────────────────────
-  Se interpolan ambas vueltas en una rejilla de distancia común (igual que
-  GhostCar). En cada punto i, quien tiene mayor Speed[i] gana esa zona.
-  Para evitar parpadeo entre zonas muy cortas se aplica un suavizado por
-  ventana deslizante de ±5 puntos antes de asignar colores: si los 5
-  puntos alrededor de i también coinciden en el mismo ganador, se confirma
-  la zona; si hay disputa se pinta en gris neutro.
-
-Conexión al router (appResearch.py):
-  1. import LapOverlay as lo
-  2. Reemplazar placeholder "Superposición de Deltas":
-       elif active == "Superposición de Deltas":
-           if not require_session(): st.stop()
-           st.header("Superposición H2H · Mapa de Dominio")
-           st.divider()
-           lo.render_lap_overlay(st.session_state["f1_session"], corners=corners)
 """
 
 
@@ -532,10 +505,6 @@ def _render_h2h_kpis(
     vmax_a = float(da["speed"].max())
     vmax_b = float(db["speed"].max())
 
-    # Diferencia de velocidad media
-    vmean_a = float(da["speed"].mean())
-    vmean_b = float(db["speed"].mean())
-
     st.markdown(
         f"""
         <div style="
@@ -612,16 +581,8 @@ def _lap_selector(sesion: Session, prefix: str, label: str,
 # PUNTO DE ENTRADA PÚBLICO
 # ─────────────────────────────────────────────────────────────────────────────
 
-# ─────────────────────────────────────────────────────────────────────────────
-# PUNTO DE ENTRADA PÚBLICO (SIN PESTAÑAS)
-# ─────────────────────────────────────────────────────────────────────────────
-
 def render_lap_overlay(sesion: Session, corners: bool = True) -> None:
-    """
-    Render principal del módulo LapOverlay.
-    Muestra de forma secuencial y sin pestañas: 
-    KPIs, Mapa H2H, Telemetría superpuesta, y Delta acumulado.
-    """
+
     st.markdown(
         "<p style='font-family:JetBrains Mono,monospace;font-size:11px;"
         "letter-spacing:2px;color:rgba(255,255,255,0.35);margin-bottom:8px;'>"

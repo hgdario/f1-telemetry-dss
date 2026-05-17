@@ -1,6 +1,4 @@
 from __future__ import annotations
-import ui_assets
-
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -21,10 +19,10 @@ GREY_TRACK = "#50506A"
 
 MONO_FONT  = "'JetBrains Mono', 'Courier New', monospace"
 
-# Animación: target de frames. 1000 es para máxima fluidez
+# Animación: target de frames
 TARGET_FRAMES = 1000
 
-# Ventana de scroll de los paneles de pedal (metros a cada lado del cursor)
+# Ventana de scroll de los paneles de pedal
 SCROLL_WINDOW_M = 900
 
 TYRE_COLORS = {
@@ -94,7 +92,7 @@ def _is_qualifying(sesion: Session) -> bool:
         return False
 
 # ─────────────────────────────────────────────────────────────────────────────
-# CONSTRUCCIÓN DE LA FIGURA PLOTLY CON FRAMES
+# CONSTRUCCIÓN DE LA FIGURA PLOTLY 
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _build_animated_figure(
@@ -257,7 +255,7 @@ def _build_animated_figure(
 
     delta_lap_str = format_delta_mono(lap_delta)
 
-    # ── ESTADO INICIAL (PARA LA CARGA ANTES DE DAR PLAY) ───────────────────
+    # ── ESTADO INICIAL  ───────────────────
     idx_init = frame_indices[0] if len(frame_indices) > 0 else 0
     t_init = t_sec[idx_init] if len(t_sec) > 0 else 0
     timer_init_str = f"{int(t_init // 60)}:{t_init % 60:06.3f}"
@@ -458,7 +456,7 @@ def render_interactive_sim(
             pole           = vueltas_piloto[vueltas_piloto["LapNumber"] == lap_number].iloc[0]
             telemetria     = pole.get_telemetry().add_distance()
         except Exception as e:
-            st.error(f"❌ No se pudo cargar la telemetría: {e}")
+            st.error(f"ERROR ❌: No se pudo cargar la telemetría: {e}")
             return
 
         driver       = str(pole["Driver"])

@@ -1,15 +1,6 @@
 """
 DriverSummary — Clustering de Estilos de Conducción
 ====================================================
-Extrae features de comportamiento de cada piloto en la sesión activa
-y los agrupa con K-Means.  Validación deportiva mediante correlación
-con la posición final.
-
-Determinista (random_state fijo) y 100 % validable:
-  · Silhouette score  →  cohesión/separación matemática
-  · Spearman rank      →  correlación cluster vs posición final
-  · Reproducible       →  cualquier ejecución sobre la misma sesión
-                          devuelve los mismos clusters
 """
 
 from __future__ import annotations

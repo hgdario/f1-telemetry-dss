@@ -3,58 +3,9 @@ IdealLap.py — TALOS F1 Vuelta Ideal por Microsectores
 =======================================================
 Divide el circuito en N microsectores y colorea cada uno con el color del
 equipo más veloz en él, construyendo la vuelta teórica ideal.
-
-Conceptos clave
-───────────────
-
-  MICROSECTOR
-    Segmento de distancia [d_inicio, d_fin] de longitud fija.
-    Se calcula la velocidad media de cada piloto dentro del microsector
-    usando su mejor vuelta (pick_fastest por piloto).
-    El piloto con mayor velocidad media gana el microsector.
-
-  ¿POR QUÉ VELOCIDAD MEDIA Y NO TIEMPO MÍNIMO?
-    El tiempo en un microsector depende de cuántas muestras caen dentro
-    del segmento, que varía según la frecuencia de muestreo. La velocidad
-    media es robusta: si un piloto tiene pocas muestras en un segmento
-    estrecho, la media sigue siendo representativa de su paso por ahí.
-    Además, velocidad media ≈ longitud_sector / tiempo_sector, así que
-    el piloto con mayor velocidad media es exactamente el que tarda menos.
-
-  VUELTA IDEAL (TIEMPO TEÓRICO)
-    Para cada microsector se toma el tiempo mínimo real registrado por
-    cualquier piloto (filtrado). La suma de todos esos mínimos es el tiempo
-    de la vuelta ideal teórica. Este tiempo es siempre inalcanzable en la
-    práctica porque:
-      · Los microsectores no son independientes (las curvas se encadenan).
-      · No existe físicamente un coche que sea el más rápido en todos los
-        sectores simultáneamente.
-    Es un lower bound técnico, no una predicción realista.
-
-  FILTRADO POR EQUIPOS
-    Permite comparar solo un subconjunto de equipos. Útil para:
-      · Comparativa intra-equipo (compañeros de equipo).
-      · Batallas del midfield aisladas del top-3.
-      · Análisis de fortalezas/debilidades relativas en distintas zonas.
-
-Uso desde el enrutador:
-    import IdealLap as il
-    il.render_ideal_lap(st.session_state["f1_session"], corners=corners)
-
-Conexión al router (appResearch.py):
-    1. Import: import IdealLap as il
-    2. Sustituir el placeholder "La Vuelta Ideal":
-         elif active == "La Vuelta Ideal":
-             if not require_session(): st.stop()
-             st.header("La Vuelta Ideal · Microsectores")
-             st.divider()
-             il.render_ideal_lap(st.session_state["f1_session"], corners=corners)
 """
 
-
 from __future__ import annotations
-import ui_assets
-
 import numpy as np
 import pandas as pd
 import streamlit as st

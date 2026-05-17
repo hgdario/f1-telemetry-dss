@@ -1,35 +1,18 @@
-"""
-CircuitClassifier.py — TALOS · Clasificador de ADN del Circuito
-================================================================
-
-NO es un módulo de la app (no se registra en NAV). Es una utilidad que
-SessionSummary.py llama para mostrar el "ADN" del circuito y un insight
-explicando por qué pertenece a su cluster.
-
-Clusters generados con K-means (k=5) sobre tres features:
-    g_lat_mean        — G lateral media (qué tan rápidas son sus curvas)
-    g_lon_mean        — G longitudinal media (intensidad de frenadas)
-    cambios_marcha_km — Cambios de marcha por km (tecnicidad del trazado)
-
-API pública:
-    classify_circuit(event_name, _session) → dict
-    render_circuit_dna(session)            → renderiza la sección
-"""
-
 from __future__ import annotations
 
 import numpy as np
 import streamlit as st
 import plotly.graph_objects as go
 
-from GGDiagram import _calculate_g_forces
+from dinamica_vehicular.GGDiagram import _calculate_g_forces
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# DATOS DEL MODELO ENTRENADO (K=5, 25 circuitos · 2022–2025)
+# DATOS DEL MODELO ENTRENADO (K=5, 25 circuitos con años 2022–2025)
 # ─────────────────────────────────────────────────────────────────────────────
 
 CLUSTER_LABELS: dict[int, str] = {
+   -1: "Atípico",
     0: "Low Drag",
     1: "Stop-and-Go",
     2: "Aero Efficiency",
@@ -38,6 +21,7 @@ CLUSTER_LABELS: dict[int, str] = {
 }
 
 CLUSTER_COLORS: dict[int, str] = {
+   -1: "#9497A8",   # gris neutro
     0: "#FF6B35",
     1: "#00D7B5",
     2: "#3B82F6",
@@ -46,34 +30,43 @@ CLUSTER_COLORS: dict[int, str] = {
 }
 
 CLUSTER_TAGLINES: dict[int, str] = {
-    0: "Velocidad punta · mínima carga aerodinámica",
+   -1: "Layout fuera de la distribución del calendario moderno",
+    0: "Velocidad punta con la mínima carga aerodinámica",
     1: "Acelerar, frenar fuerte, repetir",
-    2: "Curvas rápidas · downforce eficiente",
-    3: "Coche completo · sin debilidades",
-    4: "Atípico · clase propia",
+    2: "Curvas rápidas con un downforce eficiente",
+    3: "Coche completo y sin debilidades",
+    4: "Atípico con clase propia",
 }
 
 CLUSTER_EXPLAIN: dict[int, str] = {
+   -1: ("Las características de este circuito se desvían más de 2.5σ del centroide "
+        "más cercano, por lo que no se puede asignar a ninguno de los "
+        "5 clusters. Suele ocurrir con circuitos pre-2022, configuraciones alternativas "
+        "(p.ej. el circuito de Bahrain exterior en 2020) o circuitos no recurrentes."),
     0: ("Circuitos donde manda la potencia del motor. Largas rectas y mínimas G. "
-        "Los equipos retiran alerones para ganar velocidad punta."),
+        "Los equipos ponen alerones con una carga mínima para ganar velocidad punta."),
     1: ("Perfil 'recta + frenada fuerte + curva lenta'. Frenadas violentas y muchos cambios "
         "de marcha. La gestión térmica de frenos y la salida de curva son críticas."),
     2: ("Curvas rápidas y sostenidas (no de frenón fuerte). Importa más cuánto "
-        "downforce generas con poca pérdida (drag) que la frenada bruta."),
+        "downforce generas con poca pérdida aerodinámica que la frenada bruta."),
     3: ("Circuito mixto: curvas rápidas, lentas, cambios de elevación y frenadas variadas. "
         "Gana el coche más versátil, no el más especializado."),
-    4: ("Mónaco es matemáticamente único: el doble de cambios de marcha por km que "
-        "casi cualquier otro trazado, en menos de 3,3 km. K-means lo aísla en su "
-        "propio cluster — no es un error, es la realidad física."),
+    4: ("Mónaco es matemáticamente único: tiene el doble de cambios de marcha por km que "
+        "casi cualquier otro trazado, en menos de 3,3 km. El clasificador con K-means lo aísla en su "
+        "propio cluster"),
 }
 
 CLUSTER_EXAMPLES: dict[int, str] = {
+   -1: "Bahrain Outer (2020) · Mugello (2020) · Imola (2020)",
     0: "Monza · Las Vegas",
     1: "Baku · Singapore · Canadá",
     2: "Spa · Silverstone · Suzuka",
     3: "Hungaroring · Zandvoort · COTA",
     4: "Mónaco (sólo)",
 }
+
+# Umbral de outlier: si el circuito está a más de 2.5 σ del centroide más cercano lo clasificamos como anomalía
+OUTLIER_THRESHOLD_Z: float = 2.5
 
 # Centroides en espacio crudo (medias por cluster)
 CLUSTER_CENTROIDS: dict[int, np.ndarray] = {
@@ -119,7 +112,7 @@ CIRCUIT_FEATURES: dict[str, tuple[float, float, float, int]] = {
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# CÁLCULO LIVE (fallback cuando el circuito no está en CIRCUIT_FEATURES)
+# CÁLCULO LIVE (cuando el circuito no está en CIRCUIT_FEATURES)
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _compute_live_features(session) -> dict[str, float] | None:
@@ -156,9 +149,7 @@ def _compute_live_features(session) -> dict[str, float] | None:
 
 def _resolve_circuit_key(event_name: str) -> str | None:
     """
-    Busca el key de CIRCUIT_FEATURES que corresponde al nombre del evento.
-    Prueba en orden: exacto → case-insensitive → sin 'Grand Prix'.
-    Retorna el key encontrado o None si no hay match.
+    Busca el key de CIRCUIT_FEATURES que corresponde al nombre del evento. Retorna el nombre o None
     """
     # 1. Match exacto (camino feliz)
     if event_name in CIRCUIT_FEATURES:
@@ -212,10 +203,23 @@ def classify_circuit(event_name: str, _session=None) -> dict | None:
         cid: float(np.linalg.norm(z - (centroid - FEATURE_MEAN) / FEATURE_STD))
         for cid, centroid in CLUSTER_CENTROIDS.items()
     }
-    cid = min(distances, key=distances.get)
+    cid_best = min(distances, key=distances.get)
+    d_min    = distances[cid_best]
+
+    # Outlier check: si el circuito está demasiado lejos del centroide más cercano,
+    # marcarlo como Atípico en lugar de forzarlo a un cluster que no encaja
+    if d_min > OUTLIER_THRESHOLD_Z:
+        return {
+            "cluster_id": -1,
+            "label":      CLUSTER_LABELS[-1],
+            "method":     "live",
+            "features":   feats,
+            "distance":   d_min,  # diagnóstico: distancia al centroide más cercano
+        }
+
     return {
-        "cluster_id": cid,
-        "label":      CLUSTER_LABELS[cid],
+        "cluster_id": cid_best,
+        "label":      CLUSTER_LABELS[cid_best],
         "method":     "live",
         "features":   feats,
     }
@@ -299,11 +303,10 @@ def _build_radar(features: dict[str, float], cid: int) -> go.Figure:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# RENDER · UI MINIMAL (cabecera + 3 stats + insight + radar)
+# RENDER UI
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _render_html(html: str) -> None:
-    """Helper: usa st.html si está disponible (Streamlit ≥1.33), si no markdown."""
     if hasattr(st, "html"):
         st.html(html)
     else:
@@ -325,8 +328,14 @@ def render_circuit_dna(session) -> None:
     feats  = cls["features"]
     color  = CLUSTER_COLORS[cid]
     method = cls["method"]
+    is_outlier = (cid == -1)
 
-    badge_text  = "HISTÓRICO" if method == "lookup" else "EN VIVO"
+    if is_outlier:
+        badge_text = "ATÍPICO"
+    elif method == "lookup":
+        badge_text = "HISTÓRICO"
+    else:
+        badge_text = "EN VIVO"
 
     # z-scores (cuántas σ se desvía cada feature de la media global)
     z_lat = (feats["g_lat_mean"]        - FEATURE_MEAN[0]) / FEATURE_STD[0]
@@ -376,18 +385,26 @@ def render_circuit_dna(session) -> None:
         )
 
         # ── (3) Insight breve ─────────────────────────────────────────
-        method_note = ("Media histórica 2022–2025"
-                       if cls["method"] == "lookup"
-                       else "Estimado en vivo desde la vuelta más rápida")
+        if is_outlier:
+            method_note = f"Distancia al centroide más cercano: {cls.get('distance', 0):.2f}σ (umbral: {OUTLIER_THRESHOLD_Z}σ)"
+            examples_label = "Ejemplos de outliers conocidos"
+        else:
+            method_note = ("Media histórica 2022–2025"
+                           if cls["method"] == "lookup"
+                           else "Estimado en vivo desde la vuelta más rápida")
+            examples_label = "Ejemplos del mismo grupo"
+
         _render_html(
             f'<div class="dna-insight">'
             f'<p>{CLUSTER_EXPLAIN[cid]}</p>'
-            f'<p><b>Ejemplos del mismo grupo:</b> {CLUSTER_EXAMPLES[cid]} '
+            f'<p><b>{examples_label}:</b> {CLUSTER_EXAMPLES[cid]} '
             f'<span class="meta">· {method_note}</span></p>'
             f'</div>'
         )
 
     with col_radar:
-        st.plotly_chart(_build_radar(feats, cid),
-                        use_container_width=True,
-                        config={"displayModeBar": False})
+        # Para outliers no tiene sentido el radar (no hay cluster al que pertenezca)
+        if not is_outlier:
+            st.plotly_chart(_build_radar(feats, cid),
+                            use_container_width=True,
+                            config={"displayModeBar": False})

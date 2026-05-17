@@ -15,11 +15,9 @@ import streamlit as st
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from scipy.signal import savgol_filter
-from typing import Optional
 from fastf1.core import Session
-
-from GGDiagram import _calculate_g_forces
-from Aero import _filter_cornering, _compute_envelope, _fit_regression
+from .GGDiagram import _calculate_g_forces
+from .Aero import _filter_cornering, _compute_envelope, _fit_regression
 
 # ─────────────────────────────────────────────────────────────────────────────
 # CONSTANTES FÍSICAS Y DE DISEÑO

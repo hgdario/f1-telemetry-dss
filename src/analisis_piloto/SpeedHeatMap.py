@@ -120,10 +120,6 @@ def render_speed_heatmap(sesion, driver_code, show_corners, lap_number):
     ))
 
     # ── Gradiente de velocidad ────────────────────────────────────────────────
-    # Dividimos el rango de velocidad en N_BANDAS intervalos iguales.
-    # Cada banda agrupa los segmentos del trazado cuya velocidad cae en ese rango
-    # y los pinta con el color correspondiente de la escala Plasma.
-    # Usamos None como separador para cortar la línea entre segmentos discontinuos.
     N_BANDAS = 30
     bins = np.linspace(vmin, vmax, N_BANDAS + 1)
 
@@ -236,9 +232,6 @@ def render_speed_heatmap(sesion, driver_code, show_corners, lap_number):
         ))
 
     # ── Números de curva — lollypops ──────────────────────────────────────────
-    # Solo se pintan si el checkbox "Mostrar curvas" está activo.
-    # Usamos un único trace con mode='markers+text' para todos los números,
-    # en vez de un add_annotation por curva, lo que es mucho más eficiente.
     if show_corners:
         cx_list, cy_list, num_list = [], [], []
         for _, row in circuit_info.corners.iterrows():

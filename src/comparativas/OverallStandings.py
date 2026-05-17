@@ -13,7 +13,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from fastf1.core import Session
 from typing import Optional
-import comparativas.Head2head as h2h
+from . import Head2head as h2h
 
 # ─────────────────────────────────────────────────────────────────────────────
 # CONSTANTES

@@ -1,57 +1,16 @@
 """
 DemandMap.py — TALOS F1 Circuit Demand Map
-==========================================
-Módulo de visualización del mapa de exigencia del trazado.
-
-Colorea el circuito vuelta a vuelta según fuerzas G laterales, longitudinales
-y totales, permitiendo identificar las zonas más exigentes del trazado.
-
-Uso desde el enrutador principal:
-    from modules import DemandMap as dmap
-    dmap.render_demand_map(session, driver, lap_number)
-
-Conceptos clave
-───────────────
-  • G Lateral (g_lat):
-        Fuerza que empuja al piloto hacia los lados al tomar curvas.
-        Se calcula a partir del cambio de dirección del vector velocidad
-        en el plano XY del trazado:
-            heading θ = arctan2(dY/dt, dX/dt)
-            ω         = dθ/dt                        [rad/s]
-            a_lat     = v · ω                        [m/s²]
-            G_lat     = a_lat / 9.81
-        Positivo → curva a la izquierda (empuje a la derecha).
-        Negativo → curva a la derecha (empuje a la izquierda).
-
-  • G Longitudinal (g_lon):
-        Fuerza que empuja al piloto hacia adelante (frenada) o hacia atrás
-        (aceleración). Se calcula a partir del cambio de velocidad escalar:
-            a_lon     = dSpeed/dt                    [m/s²]
-            G_lon     = a_lon / 9.81
-        Positivo → aceleración.
-        Negativo → deceleración/frenada.
-
-  • G Total (g_total):
-        Magnitud vectorial de la fuerza resultante:
-            G_total   = √(G_lat² + G_lon²)
-        Útil para identificar las zonas de mayor exigencia física sobre el piloto.
-
-  • Suavizado:
-        Las derivadas de señales discretas son ruidosas. Se aplica un filtro
-        Savitzky-golay (scipy.ndimage.savgol_filter) con σ adaptativo según
-        la frecuencia de muestreo estimada de la telemetría.
 """
 
 
 from __future__ import annotations
 import ui_assets
-
 import numpy as np
 import pandas as pd
 import streamlit as st
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from typing import Optional, Literal
+from typing import Literal
 from fastf1.core import Session
 from scipy.signal import savgol_filter
 
@@ -139,12 +98,12 @@ def _estimate_sampling_sigma(tel: pd.DataFrame) -> float:
 def _calculate_g_forces(tel: pd.DataFrame) -> pd.DataFrame:
     """
     Calcula las fuerzas G laterales, longitudinales y totales a partir de la
-    telemetría enriquecida con coordenadas XY y velocidad.
+    telemetría
 
     Requiere que el DataFrame contenga: Time, X, Y, Speed.
     Devuelve el mismo DataFrame con columnas añadidas:
-        g_lat   → G lateral  (firmado: + izquierda, − derecha)
-        g_lon   → G longitudinal (firmado: + aceleración, − frenada)
+        g_lat   → G lateral  (Con signo: + izquierda, − derecha)
+        g_lon   → G longitudinal (Con signo: + aceleración, − frenada)
         g_total → G total (magnitud)
 
     Proceso paso a paso
@@ -408,11 +367,7 @@ def _annotate_corners_on_map(
     circuit_info,
 ) -> None:
     """
-    Añade etiquetas de curva (T1, T2…) al mapa de trazado, mapeando la distancia
-    de cada curva a sus coordenadas XY mediante interpolación lineal.
-
-    Técnica: interpolamos X(distancia) e Y(distancia) con np.interp para
-    encontrar la posición XY correspondiente a la distancia de cada curva.
+    Añade etiquetas de curva (T1, T2…) al mapa.
     """
     if "Distance" not in tel.columns:
         return
@@ -650,6 +605,21 @@ def _build_g_vs_distance(tel: pd.DataFrame, team_color: str = F1_RED) -> go.Figu
     # Marcar picos de G total (top 3)
     _add_peak_annotations(fig, dist, g_tot, row=3)
 
+    # ── Líneas verticales marcando las curvas (sin etiquetas) ─────────────
+    try:
+        circuit_info = tel.attrs.get("circuit_info", None)
+        if circuit_info is not None and hasattr(circuit_info, "corners"):
+            for _, corner in circuit_info.corners.iterrows():
+                fig.add_vline(
+                    x=corner['Distance'],
+                    line_width=1,
+                    line_dash="dash",
+                    line_color="rgba(255, 255, 255, 0.2)",
+                    layer="below",
+                )
+    except Exception:
+        pass
+
     _apply_dark_layout(fig, height=480)
     fig.update_layout(
         hovermode="x unified",
@@ -697,17 +667,6 @@ def _generate_demand_summary(tel: pd.DataFrame) -> str:
     """
     Genera un resumen en lenguaje natural del perfil de exigencia del trazado,
     basado en las fuerzas G calculadas.
-
-    Usa el mismo enfoque de scores fuzzy que _generate_driving_summary en
-    TelemetryTrace: sin thresholds fijos, con sigmoide para transiciones suaves.
-
-    Dimensiones analizadas:
-    ─────────────────────────────────────────────────────────
-    1. Exigencia lateral máx.  → cuánto corner speed hay
-    2. Exigencia de frenada    → agresividad de las deceleraciones
-    3. Exigencia de tracción   → G de aceleración en salida de curva
-    4. Carga total pico        → exigencia física sobre el piloto
-    5. Balance lat/lon         → ¿circuito de curvas rápidas o de frenadas?
     """
     g_lat   = tel["g_lat"].dropna()
     g_lon   = tel["g_lon"].dropna()
@@ -918,23 +877,7 @@ def render_demand_map(
     driver: str,
     lap_number: int,
 ) -> None:
-    """
-    Punto de entrada principal del módulo DemandMap.
 
-    Renders:
-        1. KPIs de fuerzas G (lat, lon, total).
-        2. Selector de modo: G Lateral / G Longitudinal / G Total.
-        3. Mapa del trazado coloreado por fuerzas G.
-        4. Gráfico G vs Distancia (3 canales).
-        5. Diagrama G-G con histogramas marginales.
-        6. Resumen de exigencia del trazado en lenguaje natural.
-
-    Parámetros
-    ──────────
-    session    : fastf1.core.Session ya cargada (con load_telemetry=True).
-    driver     : Abreviatura del piloto (ej. "VER", "HAM").
-    lap_number : Número de vuelta a analizar.
-    """
     with st.spinner(f"Calculando fuerzas G — {driver} · Vuelta {lap_number}"):
         # ── 1. Extraer telemetría ─────────────────────────────────────────
         try:
@@ -1032,28 +975,3 @@ def render_demand_map(
     )
     fig_gg = _build_g_distribution(tel)
     st.plotly_chart(fig_gg, use_container_width=True, config={"displayModeBar": False})
-
-    # ── 9. Resumen de exigencia ───────────────────────────────────────────
-    summary = _generate_demand_summary(tel)
-    st.markdown(
-        f"""
-        <div style="
-            background-color: {BG_PANEL};
-            padding: 15px;
-            border-left: 3px solid {ACCENT_PURPLE};
-            border-radius: 2px;
-            margin-top: 15px;
-        ">
-            <p style="font-family: 'Titillium Web', sans-serif; font-size: 14px;
-                      color: {F1_WHITE}; margin: 0;">
-                <span style="color: {ACCENT_PURPLE}; font-size: 16px;">
-                    📡 <b>EXIGENCIA DEL TRAZADO:</b>
-                </span><br>
-                <span style="color: rgba(255,255,255,0.8); line-height: 1.5;">
-                    {summary}
-                </span>
-            </p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )

@@ -748,15 +748,15 @@ def _fig_curvature_map(tel: pd.DataFrame, team_color: str) -> go.Figure:
 
 
 def _render_model_card(reg: dict, cv_beta: float, k: int, team_color: str) -> None:
-    """Panel de resultados del modelo con interpretación honesta."""
+    """Panel de resultados del modelo — desglosado en parámetros y calidad."""
     quality_color = (
         ACCENT_GREEN if reg["r_sq"] >= 0.65 else
         ACCENT_AMBER if reg["r_sq"] >= 0.40 else F1_RED
     )
     quality_label = (
-        "BUENO (R²≥0.65)" if reg["r_sq"] >= 0.65 else
-        "MODERADO (R²≥0.40)" if reg["r_sq"] >= 0.40 else
-        "DÉBIL (R²<0.40) — interpretar con precaución"
+        "Bueno" if reg["r_sq"] >= 0.65 else
+        "Moderado" if reg["r_sq"] >= 0.40 else
+        "Débil"
     )
     cv_color = (
         ACCENT_GREEN if not np.isnan(cv_beta) and cv_beta < 0.05 else
@@ -764,72 +764,118 @@ def _render_model_card(reg: dict, cv_beta: float, k: int, team_color: str) -> No
         F1_RED
     )
     cv_label = (
-        "muy estable" if not np.isnan(cv_beta) and cv_beta < 0.05 else
-        "estable"     if not np.isnan(cv_beta) and cv_beta < 0.10 else
-        "sensible al percentil"
+        "Muy estable" if not np.isnan(cv_beta) and cv_beta < 0.05 else
+        "Estable"     if not np.isnan(cv_beta) and cv_beta < 0.10 else
+        "Sensible"
     )
-    sig_str   = "✓ significativa (p<0.05)" if reg["p_value"] < 0.05 else \
-                f"✗ no significativa (p={reg['p_value']:.3f})"
     sig_color = ACCENT_GREEN if reg["p_value"] < 0.05 else F1_RED
+    sig_label = "Significativa" if reg["p_value"] < 0.05 else "No significativa"
 
+    # ── Cabecera: ecuación del modelo ──────────────────────────────────────
     st.markdown(
         f"""
-        <div style="background:{BG_SURFACE};border-left:4px solid {team_color};
-            padding:16px 20px;border-radius:3px;font-family:{MONO_FONT};">
-
-          <p style="font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.35);margin:0 0 14px;">
-            MODELO · P{k}(|G_lat|) = α + β·v²  &nbsp;—&nbsp; OLS sobre {reg['n_bins']} bins (Freedman-Diaconis)
-          </p>
-
-          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:14px;">
-            <div>
-              <div style="font-size:9px;color:rgba(255,255,255,0.4);">α (intercepto)</div>
-              <div style="font-size:18px;font-weight:800;color:{ACCENT_CYAN};">
-                {reg['alpha']:.3f} G</div>
-              <div style="font-size:9px;color:rgba(255,255,255,0.3);">P{k}(G_lat) extrapolado a v=0</div>
-            </div>
-            <div>
-              <div style="font-size:9px;color:rgba(255,255,255,0.4);">β (pendiente)</div>
-              <div style="font-size:18px;font-weight:800;color:{team_color};">
-                {reg['beta']*1e3:.4f} ×10⁻³</div>
-              <div style="font-size:9px;color:rgba(255,255,255,0.3);">
-                G/(m/s)² &nbsp;±{reg['ci95_beta']*1e3:.4f} (IC95%)</div>
-            </div>
-            <div>
-              <div style="font-size:9px;color:rgba(255,255,255,0.4);">R² del ajuste</div>
-              <div style="font-size:18px;font-weight:800;color:{quality_color};">
-                {reg['r_sq']:.3f}</div>
-              <div style="font-size:9px;color:{quality_color};">{quality_label}</div>
-            </div>
-            <div>
-              <div style="font-size:9px;color:rgba(255,255,255,0.4);">Significancia β</div>
-              <div style="font-size:14px;font-weight:700;color:{sig_color};margin-top:4px;">
-                {sig_str}</div>
-            </div>
-            <div>
-              <div style="font-size:9px;color:rgba(255,255,255,0.4);">CV(β) por percentil</div>
-              <div style="font-size:18px;font-weight:800;color:{cv_color};">
-                {cv_beta*100:.1f}%</div>
-              <div style="font-size:9px;color:{cv_color};">{cv_label}</div>
-            </div>
+        <div style="border-left:3px solid {team_color};padding:8px 14px;
+                    background:rgba(255,255,255,0.02);margin-bottom:14px;">
+          <div style="font-size:9px;letter-spacing:2px;color:rgba(255,255,255,0.4);">
+            ECUACIÓN DEL MODELO · OLS sobre {reg['n_bins']} bins
           </div>
-
-          <div style="background:rgba(255,255,255,0.03);padding:10px 14px;border-radius:2px;
-              font-size:9px;color:rgba(255,255,255,0.45);line-height:1.7;">
-            <b style="color:rgba(255,255,255,0.6);">QUÉ DICE ESTE MODELO:</b><br>
-            Si β &gt; 0 y p &lt; 0.05 → hay evidencia estadística de que el grip lateral
-            crece con v². Eso es consistente con la presencia de carga aerodinámica.<br><br>
-            <b style="color:rgba(255,255,255,0.6);">QUÉ NO DICE:</b><br>
-            α ≠ μ_mecánico exactamente (el piloto puede no estar al límite en curvas lentas;
-            hay carga aerodinámica incluso a baja velocidad). β no da Cl ni A sin conocer m.
-            α y β son parámetros compuestos comparativos, no absolutos.<br><br>
-            <b style="color:rgba(255,255,255,0.6);">CONSTANTES USADAS:</b>
-            g = 9.81 m/s² (BIPM) — única constante que entra en los cálculos numéricos.
+          <div style="font-family:{MONO_FONT};font-size:16px;color:#FFF;margin-top:2px;">
+            P<sub>{k}</sub>(|G<sub>lat</sub>|) = α + β · v²
           </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
+
+    # ── Bloque 1: Parámetros del modelo ───────────────────────────────────
+    st.markdown(
+        "<p style='font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.45);"
+        "margin:8px 0 6px;'>PARÁMETROS</p>",
+        unsafe_allow_html=True,
+    )
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown(
+            f"""
+            <div style="background:{BG_PANEL};padding:14px 16px;border-radius:3px;
+                        border-top:2px solid {ACCENT_CYAN};">
+              <div style="font-size:10px;color:rgba(255,255,255,0.5);letter-spacing:1px;">
+                α  ·  INTERCEPTO
+              </div>
+              <div style="font-size:24px;font-weight:800;color:{ACCENT_CYAN};
+                          font-family:{MONO_FONT};margin-top:4px;">
+                {reg['alpha']:.3f} <span style="font-size:13px;color:rgba(255,255,255,0.4);">G</span>
+              </div>
+              <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:4px;">
+                Grip extrapolado a v = 0
+              </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with c2:
+        st.markdown(
+            f"""
+            <div style="background:{BG_PANEL};padding:14px 16px;border-radius:3px;
+                        border-top:2px solid {team_color};">
+              <div style="font-size:10px;color:rgba(255,255,255,0.5);letter-spacing:1px;">
+                β  ·  PENDIENTE
+              </div>
+              <div style="font-size:24px;font-weight:800;color:{team_color};
+                          font-family:{MONO_FONT};margin-top:4px;">
+                {reg['beta']*1e3:.4f} <span style="font-size:13px;color:rgba(255,255,255,0.4);">×10⁻³</span>
+              </div>
+              <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:4px;">
+                ± {reg['ci95_beta']*1e3:.4f}  (IC 95%) · G/(m/s)²
+              </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    # ── Bloque 2: Calidad del ajuste ──────────────────────────────────────
+    st.markdown(
+        "<p style='font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.45);"
+        "margin:18px 0 6px;'>CALIDAD Y ROBUSTEZ</p>",
+        unsafe_allow_html=True,
+    )
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        st.markdown(
+            f"""
+            <div style="background:{BG_PANEL};padding:12px 14px;border-radius:3px;">
+              <div style="font-size:10px;color:rgba(255,255,255,0.5);letter-spacing:1px;">R²</div>
+              <div style="font-size:22px;font-weight:800;color:{quality_color};
+                          font-family:{MONO_FONT};margin-top:2px;">{reg['r_sq']:.3f}</div>
+              <div style="font-size:10px;color:{quality_color};margin-top:2px;">{quality_label}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with c2:
+        st.markdown(
+            f"""
+            <div style="background:{BG_PANEL};padding:12px 14px;border-radius:3px;">
+              <div style="font-size:10px;color:rgba(255,255,255,0.5);letter-spacing:1px;">P-VALOR β</div>
+              <div style="font-size:22px;font-weight:800;color:{sig_color};
+                          font-family:{MONO_FONT};margin-top:2px;">{reg['p_value']:.4f}</div>
+              <div style="font-size:10px;color:{sig_color};margin-top:2px;">{sig_label}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with c3:
+        st.markdown(
+            f"""
+            <div style="background:{BG_PANEL};padding:12px 14px;border-radius:3px;">
+              <div style="font-size:10px;color:rgba(255,255,255,0.5);letter-spacing:1px;">CV(β)</div>
+              <div style="font-size:22px;font-weight:800;color:{cv_color};
+                          font-family:{MONO_FONT};margin-top:2px;">{cv_beta*100:.1f}%</div>
+              <div style="font-size:10px;color:{cv_color};margin-top:2px;">{cv_label}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -876,72 +922,50 @@ def render_aero_analysis(session: Session, driver: str, lap_number: int) -> None
     n_total   = len(speed_kmh_all)
     n_corners = len(speed_kmh)
 
-    # ── Selector de percentil ─────────────────────────────────────────────
-    st.caption("PARÁMETRO DE ANÁLISIS")
-    col_sl, col_info = st.columns([2, 5])
+    # ── Filtros y datos procesados ──────────────────────
+    col_sl, col_data1, col_data2 = st.columns([3, 1, 1])
     with col_sl:
         k = st.slider(
-            "Percentil k del envelope",
+            "Percentil k del envelope de grip lateral",
             min_value=75, max_value=99, value=90, step=1,
             key="aero_percentile",
-            help=(
-                "Percentil k de |G_lat| en cada bin de velocidad (solo datos en curva). "
-                "El análisis de sensibilidad valida si la elección de k afecta al resultado."
-            ),
         )
-    with col_info:
-        st.caption(f"Bins de velocidad: regla Freedman‑Diaconis (≥15 pts/bin). Tab 3 muestra estabilidad de α/β para k=75‑98. CV(β)<10 % → robusto. Datos en curva: {n_corners:,} de {n_total:,} ({100*n_corners/max(n_total,1):.0f}%).")
 
-    st.divider()
-
-    # ── Cálculos ──────────────────────────────────────────────────────────
+    # Cálculos
     envelope  = _compute_envelope(speed_kmh, g_lat_abs, float(k))
     reg       = _fit_regression(envelope)
     sens_df   = _sensitivity_analysis(speed_kmh, g_lat_abs)
     cv_beta   = sens_df.attrs.get("cv_beta", np.nan)
-
-    # ── KPIs cabecera ─────────────────────────────────────────────────────
     n_bins_valid = int((~np.isnan(envelope["g_pk"])).sum())
-    col = st.columns(5)
-    col[0].metric("Datos en curva", f"{n_corners:,}",
-                  delta=f"de {n_total:,} totales",
-                  help=f"Puntos con |G_lat| ≥ {g_threshold:.2f} G (umbral adaptativo)")
-    col[1].metric("Bins válidos", n_bins_valid,
-                  help="Bins con ≥15 muestras (estabilidad del percentil)")
-    col[2].metric(f"R² (k={k})",
-                  f"{reg['r_sq']:.3f}" if reg else "—",
-                  help="Bondad del ajuste lineal G_lat_Pk vs v²")
-    col[3].metric("p-valor β",
-                  f"{reg['p_value']:.4f}" if reg else "—",
-                  help="H0: β=0. p<0.05 → pendiente significativamente distinta de cero")
-    col[4].metric("CV(β)",
-                  f"{cv_beta*100:.1f}%" if not np.isnan(cv_beta) else "—",
-                  help="Coeficiente de variación de β para k∈{75..98}. <10% = robusto")
+
+    with col_data1:
+        st.metric("Datos en curva", f"{n_corners:,}",
+                  delta=f"{100*n_corners/max(n_total,1):.0f}% del total")
+    with col_data2:
+        st.metric("Bins válidos", n_bins_valid)
 
     st.divider()
 
-    # ── Card del modelo ───────────────────────────────────────────────────
+    # ── Card del modelo ───────────────────────────────
     if reg:
         _render_model_card(reg, cv_beta if not np.isnan(cv_beta) else 0.0, k, team_color)
     else:
         st.warning(
             f"No hay suficientes bins válidos para la regresión "
-            f"(se necesitan ≥4, hay {n_bins_valid}). "
-            "Prueba con una vuelta más larga o en un circuito con más variedad de velocidades."
+            f"(se necesitan >=4, hay {n_bins_valid})."
         )
 
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.divider()
 
     # ── Tabs (4: sin G-G, que ya está en GGDiagram) ──────────────────────
     tab1, tab2, tab3, tab4 = st.tabs([
-        f"📈 Regresión P{k} vs v²",
-        "⚡ Envelope vs velocidad",
-        "🔬 Sensibilidad al percentil",
-        "🗺 Mapa de curvatura",
+        f"Regresión P{k} vs v²",
+        "Envelope vs velocidad",
+        "Sensibilidad al percentil",
+        "Mapa de curvatura",
     ])
 
     with tab1:
-        st.caption(f"Datos en curva (|G_lat|≥{g_threshold:.2f} G). Cada bin = velocidad (FD) con peso = nº muestras.")
         if reg:
             st.plotly_chart(_fig_envelope_regression(envelope, reg, team_color),
                             use_container_width=True, config={"displayModeBar": False})
@@ -949,7 +973,6 @@ def render_aero_analysis(session: Session, driver: str, lap_number: int) -> None
             st.info("Regresión no disponible.")
 
     with tab2:
-        st.caption("Eje X en km/h – pendiente positiva → evidencia de downforce.")
         if reg:
             st.plotly_chart(_fig_envelope_vs_speed(envelope, reg, team_color),
                             use_container_width=True, config={"displayModeBar": False})
@@ -957,7 +980,6 @@ def render_aero_analysis(session: Session, driver: str, lap_number: int) -> None
             st.info("Envolvente no disponible.")
 
     with tab3:
-        st.caption("β estable para k=80‑98 → robusto (CV<10 %).")
         if len(sens_df.dropna(subset=["beta"])) >= 3:
             st.plotly_chart(_fig_sensitivity(sens_df, team_color),
                             use_container_width=True, config={"displayModeBar": False})
@@ -965,6 +987,5 @@ def render_aero_analysis(session: Session, driver: str, lap_number: int) -> None
             st.info("Análisis de sensibilidad no disponible (pocos bins válidos).")
 
     with tab4:
-        st.caption("R = v²/(|G_lat|·g) – cinemática exacta. Rojo: curva cerrada, Azul: recta.")
         st.plotly_chart(_fig_curvature_map(tel, team_color),
                         use_container_width=True, config={"displayModeBar": False})

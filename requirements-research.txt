@@ -1,0 +1,5 @@
+# Dependencias adicionales para los scripts de investigacion (research/)
+# Necesarias para re-entrenar los clasificadores K-Means
+# Instalar DESPUES de requirements.txt
+matplotlib==3.10.8
+scikit-learn==1.8.0

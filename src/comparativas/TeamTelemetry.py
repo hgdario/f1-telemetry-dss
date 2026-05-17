@@ -87,17 +87,42 @@ def _get_teams_and_drivers(session: Session) -> dict:
         pass
     return {k: v for k, v in teams.items() if len(v) == 2}
 
-def _colorize_svg(color_hex: str) -> str:
-    """Lee el SVG del coche y lo colorea con el color del equipo."""
-    svg_path = os.path.join(os.path.dirname(__file__), "assets", "IABFx01.svg")
+def _get_team_car_image(team_name: str, color_hex: str) -> str:
+    """Retorna la imagen del coche para el equipo (PNG personalizado si existe, sino SVG colorizado)."""
+    # Mapeo de equipos a archivos PNG personalizados
+    TEAM_CAR_IMAGES = {
+        "Mercedes": "mercedes.png",
+        "Ferrari": "ferrari.png",
+        "McLaren": "mclaren.png",
+        "Red Bull Racing": "redbull.png",
+        "Aston Martin": "astonmartin.png",
+    }
+
+    # assets/ está en src/, no en src/comparativas/ → subir un nivel
+    assets_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "assets")
+
+    # Intentar cargar PNG personalizado si existe para este equipo
+    png_filename = TEAM_CAR_IMAGES.get(team_name)
+    if png_filename:
+        png_path = os.path.join(assets_dir, png_filename)
+        if os.path.exists(png_path):
+            try:
+                with open(png_path, "rb") as f:
+                    png_b64 = base64.b64encode(f.read()).decode('utf-8')
+                return f"data:image/png;base64,{png_b64}"
+            except Exception:
+                pass
+
+    # Fallback: SVG colorizado
+    svg_path = os.path.join(assets_dir, "IABFx01.svg")
     try:
         with open(svg_path, "r", encoding="utf-8") as f:
             svg_content = f.read()
-        # Reemplazamos el color negro por defecto por el color del equipo
         svg_content = svg_content.replace('fill="#000000"', f'fill="{color_hex}"')
-        return svg_content
+        svg_b64 = base64.b64encode(svg_content.encode('utf-8')).decode('utf-8')
+        return f"data:image/svg+xml;base64,{svg_b64}"
     except Exception as e:
-        return f"<div style='color:red;'>SVG Error: {e}</div>"
+        return ""
 
 # ─────────────────────────────────────────────────────────────────────────────
 # EXTRACCIÓN DE DATOS
@@ -368,10 +393,11 @@ def _metric_html(label: str, value: str, align: str = "center") -> str:
 
 def _render_driver_panel(session: Session, driver: str, lap_n: int, is_left: bool):
     """Renderiza la mitad del panel para un piloto (izquierdo o derecho)."""
-    
+
     data = _extract_lap_data(session, driver, lap_n)
     color = _get_team_color(session, driver)
     full_name = _get_full_name(session, driver).upper()
+    team_name = session.get_driver(driver).get("TeamName", "")
     
     # Extraer primer nombre y apellido para el estilo SAP
     name_parts = full_name.split()
@@ -405,13 +431,12 @@ def _render_driver_panel(session: Session, driver: str, lap_n: int, is_left: boo
             
     st.divider()
 
-    # --- FILA 2: SVG + TIEMPOS ---
-    svg_b64 = base64.b64encode(_colorize_svg(color).encode('utf-8')).decode('utf-8')
-    # Añadimos scaleY(-1) si es el piloto derecho para que mire hacia el centro
+    # --- FILA 2: SVG/PNG + TIEMPOS ---
+    img_src = _get_team_car_image(team_name, color)
     transform = "transform: scaleX(-1);" if not is_left else ""
-    svg_img = f'<div style="text-align:center; padding: 20px 0;"><img src="data:image/svg+xml;base64,{svg_b64}" width="280px" style="{transform}"></div>'
+    img_html = f'<div style="text-align:center; padding: 20px 0;"><img src="{img_src}" width="280px" style="{transform}"></div>'
 
-    st.markdown(svg_img, unsafe_allow_html=True)
+    st.markdown(img_html, unsafe_allow_html=True)
     
     c_metrics1, c_metrics2, c_metrics3 = st.columns(3)
     with c_metrics1:

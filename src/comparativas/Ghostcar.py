@@ -1,6 +1,5 @@
 from __future__ import annotations
 import ui_assets
-
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -31,7 +30,7 @@ SCROLL_WINDOW_M = 900
 # Tamaño del marcador de cada coche
 CAR_MARKER_SIZE = 14
 
-# Colores de fallback si el equipo no está disponible
+# Colores de repuesto si el equipo no está disponible
 FALLBACK_COLORS = ["#00D2FF", "#FF6B35", "#C77DFF", "#39FF14"]
 
 # Colorscale del heatmap de velocidad del circuito base
@@ -110,7 +109,7 @@ def _corner_vlines(corner_dists: list[float]) -> tuple[list, list]:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# EXTRACCIÓN E INTERPOLACIÓN EN REJILLA DE DISTANCIA COMÚN
+# EXTRACCIÓN E INTERPOLACIÓN EN COMÚN
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _extract_lap_telemetry(
@@ -517,16 +516,7 @@ def _build_delta_chart(
     label_a: str,
     label_b: str,
 ) -> go.Figure:
-    """
-    Gráfico de delta acumulado (A − B) a lo largo de la distancia.
 
-    La línea cruza el cero donde los dos pilotos se igualan.
-    Área verde = A va por delante.
-    Área roja  = B va por delante.
-
-    Interpretación: la pendiente del delta en cada zona indica dónde se gana
-    o se pierde tiempo. Pendiente negativa → A gana en ese sector.
-    """
     delta = data_a["time_s"] - data_b["time_s"]
 
     # Separar en positivo y negativo para rellenar con colores distintos
@@ -686,20 +676,7 @@ def _driver_lap_selector(
 # ─────────────────────────────────────────────────────────────────────────────
 
 def render_ghost_car(sesion: Session, corners: bool = True) -> None:
-    """
-    Punto de entrada principal del módulo Ghost Car.
 
-    Renders:
-      1. Selectores de piloto/vuelta para A y B (pueden ser el mismo piloto
-         con vueltas distintas para self-comparison).
-      2. Animación 2D sincronizada por distancia con HUD dual y delta en tiempo real.
-      3. Gráfico de delta acumulado vs distancia.
-
-    Parámetros
-    ──────────
-    sesion  : fastf1.core.Session ya cargada (con load_telemetry=True).
-    corners : si se muestran las etiquetas de curva en el mapa.
-    """
     # ── 1. Cabecera ───────────────────────────────────────────────────────
     st.markdown(
         "<p style='font-family: JetBrains Mono, monospace; font-size: 11px; "
