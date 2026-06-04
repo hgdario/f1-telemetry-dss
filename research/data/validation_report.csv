@@ -1,0 +1,4 @@
+classifier,silhouette,calinski_harabasz,davies_bouldin,pct_bien_asignados,accuracy_loo,ari_loo,sil_train_5fold,sil_test_5fold,sil_test_5fold_std,ari_5fold,sil_temporal,ari_temporal
+circuit,0.3721,22.04,0.6717,32.0,0.96,0.9283,,,,,,
+laps,0.1507,3007.84,1.7281,0.0,,,0.1507,0.1502,0.0032,0.9757,0.1619,0.8861
+drivers,0.4479,26.75,0.6538,44.0,1.0,1.0,,,,,0.2806,0.1264

@@ -1,7 +1,31 @@
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {1.1}{\ignorespaces Pipeline: LR MRI \(\rightarrow \) SR reconstruction \(\rightarrow \) segmentation. Training uses multi-task losses and shared augmentations.}}{13}{figure.caption.11}%
 \addvspace {10\p@ }
+\contentsline {figure}{\numberline {2.1}{\ignorespaces Sincronización de dos vueltas por interpolación sobre una rejilla de distancia común. Las muestras originales de cada vuelta, registradas en posiciones distintas, se remuestrean sobre puntos equiespaciados compartidos que permiten compararlas directamente.}}{23}{figure.caption.11}%
+\contentsline {figure}{\numberline {2.2}{\ignorespaces Ejemplo de gráfico \textit {Battle Forecast} de AWS F1 Insights emitido durante una carrera.}}{25}{figure.caption.12}%
+\contentsline {figure}{\numberline {2.3}{\ignorespaces Interfaz de F1Dash, dashboard de telemetría en tiempo real basado en FastF1.}}{28}{figure.caption.13}%
 \addvspace {10\p@ }
+\contentsline {figure}{\numberline {3.1}{\ignorespaces Ejemplo de gráfico \textit {GitHub Projects} durante la realización del trabajo.}}{34}{figure.caption.15}%
+\contentsline {figure}{\numberline {3.2}{\ignorespaces Tecnologías utilizadas en el desarrollo de TALOS.}}{38}{figure.caption.18}%
+\contentsline {figure}{\numberline {3.3}{\ignorespaces Diagrama de navegación y arquitectura de vistas de TALOS.}}{39}{figure.caption.20}%
+\contentsline {figure}{\numberline {3.4}{\ignorespaces Las tres vistas secuenciales de la navegación de TALOS: el mapa mundial de Grandes Premios (\textit {Grid}), la selección de sesión (\textit {Sessions}) y el hub de módulos de análisis (\textit {Analysis}).}}{40}{figure.caption.21}%
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {4.1}{\ignorespaces Axial slices: LR input, SR output, and segmentation overlay.}}{23}{figure.caption.13}%
+\contentsline {figure}{\numberline {4.1}{\ignorespaces Vista de Resumen de la sesión: mapa del circuito dibujado desde la telemetría, condiciones meteorológicas y estadísticas de la carrera.}}{52}{figure.caption.22}%
+\contentsline {figure}{\numberline {4.2}{\ignorespaces Vista de Cronología de Eventos: reconstrucción de la secuencia de banderas, \textit {Safety Car} y \textit {VSC} a lo largo de la sesión a partir de los códigos de \texttt {track\_status}.}}{53}{figure.caption.23}%
+\contentsline {figure}{\numberline {4.3}{\ignorespaces Accidente de Russell, GP de Australia 2024}}{54}{figure.caption.24}%
+\contentsline {figure}{\numberline {4.4}{\ignorespaces Vista de Estrategia de Neumáticos: diagrama de Gantt de \textit {stints} por piloto, reparto de compuestos y curva de degradación.}}{55}{figure.caption.25}%
+\contentsline {figure}{\numberline {4.5}{\ignorespaces Vista de Resumen del Piloto: KPIs de la vuelta, tiempos por sector y distribución de la sesión.}}{56}{figure.caption.26}%
+\contentsline {figure}{\numberline {4.6}{\ignorespaces Mapa de velocidad: el trazado del circuito coloreado según la velocidad en cada punto. El mapa de marchas es análogo, codificando la marcha seleccionada.}}{57}{figure.caption.27}%
+\contentsline {figure}{\numberline {4.7}{\ignorespaces Efecto del DRS sobre el flujo de aire}}{58}{figure.caption.28}%
+\contentsline {figure}{\numberline {4.8}{\ignorespaces Vista de Telemetry Trace: evolución de los canales de telemetría (velocidad, acelerador, freno, marcha, RPM y DRS) a lo largo de la vuelta frente a la distancia.}}{59}{figure.caption.29}%
+\contentsline {figure}{\numberline {4.9}{\ignorespaces Los dos clasificadores en acción sobre una vuelta de Daniel Ricciardo (GP de Australia 2024): arriba el tipo de vuelta (\textit {Lift \& Coast}, gestión) y abajo la firma de pilotaje (\textit {Reactivo}), ambos calculados en vivo. Su construcción se detalla en la Sección~4.7.}}{59}{figure.caption.30}%
+\contentsline {figure}{\numberline {4.10}{\ignorespaces Simulación animada de la vuelta: un punto recorre el trazado mientras se desplazan los paneles de pedales y se marcan zonas de DRS y tiempos por sector.}}{60}{figure.caption.31}%
+\contentsline {figure}{\numberline {4.11}{\ignorespaces La Vuelta Ideal: el circuito dividido en microsectores, cada uno coloreado con el equipo más rápido en él y filtrado por equipos. El tiempo resultante es la suma de los mejores parciales de toda la parrilla.}}{63}{figure.caption.32}%
+\contentsline {figure}{\numberline {4.12}{\ignorespaces Coche Fantasma (Qualy GP de Mónaco 2023): dos vueltas interpoladas sobre la rejilla común se reproducen como persecución; abajo, la curva del delta acumulado entre ambas.}}{64}{figure.caption.33}%
+\contentsline {figure}{\numberline {4.13}{\ignorespaces Visualización CFD ilustrativa del flujo aerodinámico}}{68}{figure.caption.39}%
+\contentsline {figure}{\numberline {4.14}{\ignorespaces Mapa de Carga por Rueda: estimación de la carga vertical y la exigencia sobre cada neumático a lo largo de la vuelta, derivada de las transferencias de masa. Curva número 1 de brasil, frenada fuerte.}}{70}{figure.caption.40}%
 \addvspace {10\p@ }
+\contentsline {figure}{\numberline {5.1}{\ignorespaces Selección de $k$ para el clasificador de tipo de vuelta: inercia (codo) y coeficiente de Silhouette frente al número de clústeres. El máximo del Silhouette se alcanza en $k=4$.}}{77}{figure.caption.47}%
+\contentsline {figure}{\numberline {5.2}{\ignorespaces Selección de $k$ para el clasificador de estilo de pilotaje. En $k=4$ el silhouette es de 0,45, a solo 0,01 del máximo, pero con grupos interpretables y sin fragmentar en exceso a los pilotos.}}{77}{figure.caption.48}%
+\contentsline {figure}{\numberline {5.3}{\ignorespaces Selección de $k$ para el clasificador de circuitos. Se adopta $k=5$ por la interpretabilidad de las cinco tipologías resultantes, pese a que un $k$ menor ofrezca un silhouette superior.}}{78}{figure.caption.49}%
+\contentsline {figure}{\numberline {5.4}{\ignorespaces Clústeres de circuitos proyectados sobre sus dos componentes principales (95,8\% de la varianza). Mónaco queda completamente aislado del resto, confirmando su carácter de trazado único.}}{79}{figure.caption.51}%
+\contentsline {figure}{\numberline {5.5}{\ignorespaces Clústeres de estilo de pilotaje proyectados sobre sus dos componentes principales (64,5\% de la varianza), que sustentan la separación de los cuatro perfiles.}}{79}{figure.caption.52}%

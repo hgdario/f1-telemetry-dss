@@ -212,9 +212,13 @@ def plot_elbow_and_silhouette(X: np.ndarray, ks: range = range(2, 7)) -> None:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def run_kmeans(X: np.ndarray, k: int) -> tuple[np.ndarray, KMeans]:
+    # Clusterizar en el espacio PCA-2 (igual que el modelo desplegado). Las 8
+    # features están muy correlacionadas; proyectar a sus 2 componentes
+    # principales (~65% de varianza) casi duplica la separación de los clusters.
+    Xp = PCA(n_components=2, random_state=42).fit_transform(X)
     kmeans = KMeans(n_clusters=k, random_state=42, n_init=50)
-    labels = kmeans.fit_predict(X)
-    print(f"✓ K-means (K={k}) · inercia={kmeans.inertia_:.2f}")
+    labels = kmeans.fit_predict(Xp)
+    print(f"✓ K-means (K={k}) sobre PCA-2 · inercia={kmeans.inertia_:.2f}")
     counts = {i: int((labels == i).sum()) for i in range(k)}
     print(f"  Pilotos por cluster: {counts}\n")
     return labels, kmeans

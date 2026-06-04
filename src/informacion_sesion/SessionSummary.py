@@ -8,6 +8,8 @@ y ADN del circuito (clasificación K-means).
 
 from __future__ import annotations
 
+import os
+
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
@@ -235,6 +237,91 @@ def _render_circuit_map(ref_tel, fastest_lap, circuit_info=None) -> None:
     _render_html("".join(legend))
 
 
+@st.cache_data(show_spinner=False)
+def _load_weekend_weather() -> pd.DataFrame | None:
+    """Carga el CSV de temp. por fin de semana (lo genera weather_data_scraper.py).
+
+    Devuelve None si no existe — la barra cae con elegancia a escala fija.
+    """
+    here = os.path.dirname(__file__)
+    path = os.path.join(here, "..", "data", "track_temp_by_weekend.csv")
+    if not os.path.exists(path):
+        return None
+    try:
+        return pd.read_csv(path)
+    except Exception:
+        return None
+
+
+def _track_temp_context(session, track_val: float) -> dict | None:
+    """Sitúa la temp. de asfalto de esta carrera dentro de su temporada.
+
+    Solo aplica a la CARRERA (comparar una FP/Q contra un pool de carreras
+    engañaría: la hora del día cambia el asfalto drásticamente). Devuelve None
+    si no hay pool, no es carrera, o la temporada tiene pocos datos.
+    """
+    pool = _load_weekend_weather()
+    if pool is None or pool.empty:
+        return None
+
+    sess_name = str(getattr(session, "name", "") or "")
+    if "Race" not in sess_name or "Sprint" in sess_name:
+        return None
+
+    try:
+        year = int(pd.Timestamp(session.event.get("EventDate")).year)
+    except Exception:
+        return None
+
+    season = pool[pool["year"] == year].dropna(subset=["track_temp_mean"])
+    if len(season) < 5:
+        return None
+
+    vals = season["track_temp_mean"].astype(float)
+    vmin, vmax = float(vals.min()), float(vals.max())
+    if vmax <= vmin:
+        return None
+
+    pct  = float(np.clip((track_val - vmin) / (vmax - vmin) * 100, 0, 100))
+    rank = int((vals > track_val).sum()) + 1   # 1 = la más cálida
+    return {"vmin": vmin, "vmax": vmax, "pct": pct,
+            "rank": rank, "n": int(len(vals)), "year": year}
+
+
+def _wbar_fixed(name: str, val: float, unit: str, vmax: float, color: str) -> str:
+    pct = float(np.clip(val / vmax * 100, 0, 100))
+    return (
+        f'<div class="ss-wbar" style="--wbar-color:{color};">'
+        f'<div class="ss-wbar-row">'
+        f'<span class="ss-wbar-name">{name}</span>'
+        f'<span class="ss-wbar-value">{val:.1f}<span class="ss-wbar-unit">{unit}</span></span>'
+        f'</div>'
+        f'<div class="ss-wbar-track"><div class="ss-wbar-fill" style="width:{pct:.1f}%;"></div></div>'
+        f'<div class="ss-wbar-meta"><span>0</span><span>{vmax}{unit}</span></div>'
+        f'</div>'
+    )
+
+
+def _wbar_relative(name: str, val: float, unit: str, color: str, rel: dict) -> str:
+    return (
+        f'<div class="ss-wbar ss-wbar-rel" style="--wbar-color:{color};">'
+        f'<div class="ss-wbar-row">'
+        f'<span class="ss-wbar-name">{name}</span>'
+        f'<span class="ss-wbar-value">{val:.1f}<span class="ss-wbar-unit">{unit}</span></span>'
+        f'</div>'
+        f'<div class="ss-wbar-track">'
+        f'<div class="ss-wbar-marker" style="left:{rel["pct"]:.1f}%;"></div>'
+        f'</div>'
+        f'<div class="ss-wbar-meta">'
+        f'<span>{rel["vmin"]:.0f}{unit} · + fría</span>'
+        f'<span>+ cálida · {rel["vmax"]:.0f}{unit}</span>'
+        f'</div>'
+        f'<div class="ss-wbar-rank"><b>{rel["rank"]}.ª</b> carrera más cálida '
+        f'de {rel["n"]} · {rel["year"]}</div>'
+        f'</div>'
+    )
+
+
 def _render_weather(session) -> None:
     _section("METEOROLOGÍA", "MEDIA DURANTE LA SESIÓN")
 
@@ -248,24 +335,15 @@ def _render_weather(session) -> None:
         track = float(weather["TrackTemp"].mean())
         humid = float(weather["Humidity"].mean())
 
-        bars = [
-            ("TEMP. AIRE",    air,   "°C", 50,  "#00D7B5"),
-            ("TEMP. ASFALTO", track, "°C", 70,  "#FF6B35"),
-            ("HUMEDAD",       humid, "%",  100, "#3B82F6"),
-        ]
+        track_rel = _track_temp_context(session, track)
+
         cards = ['<div class="ss-weather-grid">']
-        for name, val, unit, vmax, color in bars:
-            pct = float(np.clip(val / vmax * 100, 0, 100))
-            cards.append(
-                f'<div class="ss-wbar" style="--wbar-color:{color};">'
-                f'<div class="ss-wbar-row">'
-                f'<span class="ss-wbar-name">{name}</span>'
-                f'<span class="ss-wbar-value">{val:.1f}<span class="ss-wbar-unit">{unit}</span></span>'
-                f'</div>'
-                f'<div class="ss-wbar-track"><div class="ss-wbar-fill" style="width:{pct:.1f}%;"></div></div>'
-                f'<div class="ss-wbar-meta"><span>0</span><span>{vmax}{unit}</span></div>'
-                f'</div>'
-            )
+        cards.append(_wbar_fixed("TEMP. AIRE", air, "°C", 50, "#00D7B5"))
+        if track_rel is not None:
+            cards.append(_wbar_relative("TEMP. ASFALTO", track, "°C", "#FF6B35", track_rel))
+        else:
+            cards.append(_wbar_fixed("TEMP. ASFALTO", track, "°C", 70, "#FF6B35"))
+        cards.append(_wbar_fixed("HUMEDAD", humid, "%", 100, "#3B82F6"))
         cards.append('</div>')
         _render_html("".join(cards))
     except Exception:

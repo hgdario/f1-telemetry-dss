@@ -649,7 +649,7 @@ def render_telemetry_trace(
         except Exception:
             pass
 
-        render_lap_dna(tel, event_name)
+        render_lap_dna(tel, event_name, session=session)
 
         # ---------------------------------------------------------
         # 8. FIRMA DE PILOTAJE — K-means sobre firmas residualizadas por (gp, sesión)

@@ -137,18 +137,28 @@ def _compute_wheel_loads(tel: pd.DataFrame, alpha: float, beta: float, brake_bia
     Fy_rl = abs(g_lat) * (Fz_rl / Fz_total)
     Fy_rr = abs(g_lat) * (Fz_rr / Fz_total)
     
-    # ── 3. Exigencia (Grip Utilization) ────────────────────
-    # Exigencia = Fuerza Resultante / Grip Máximo Disponible
-    # Grip Máximo = alpha * Fz (asumiendo alpha como coeficiente de fricción base)
-    exig_fl = np.sqrt(Fx_fl**2 + Fy_fl**2) / (alpha * Fz_fl)
-    exig_fr = np.sqrt(Fx_fr**2 + Fy_fr**2) / (alpha * Fz_fr)
-    exig_rl = np.sqrt(Fx_rl**2 + Fy_rl**2) / (alpha * Fz_rl)
-    exig_rr = np.sqrt(Fx_rr**2 + Fy_rr**2) / (alpha * Fz_rr)
-    
-    tel["load_fl"] = np.clip(exig_fl, 0, 1)
-    tel["load_fr"] = np.clip(exig_fr, 0, 1)
-    tel["load_rl"] = np.clip(exig_rl, 0, 1)
-    tel["load_rr"] = np.clip(exig_rr, 0, 1)
+    # ── 3. Sufrimiento (Carga Vertical Relativa) ────────────────────
+    # En lugar de "grip utilization" (que mate. resulta igual en las 4 ruedas
+    # en una curva pura), mostramos el SUFRIMIENTO REAL: cuán cargado está
+    # cada neumático respecto al promedio del coche.
+    #
+    # Físicamente, el neumático que más sufre es el que tiene más carga
+    # vertical: tiene que generar más fuerza lateral/longitudinal, se calienta
+    # más, y es el que limita la velocidad de la curva o la frenada.
+    #
+    # Normalización: 0.5 = carga promedio del coche, 1.0 = doble del promedio.
+    Fz_avg = (Fz_fl + Fz_fr + Fz_rl + Fz_rr) / 4.0
+    Fz_avg = np.where(Fz_avg > 0.01, Fz_avg, 0.01)  # evitar división por cero
+
+    sufr_fl = Fz_fl / (2.0 * Fz_avg)
+    sufr_fr = Fz_fr / (2.0 * Fz_avg)
+    sufr_rl = Fz_rl / (2.0 * Fz_avg)
+    sufr_rr = Fz_rr / (2.0 * Fz_avg)
+
+    tel["load_fl"] = np.clip(sufr_fl, 0, 1)
+    tel["load_fr"] = np.clip(sufr_fr, 0, 1)
+    tel["load_rl"] = np.clip(sufr_rl, 0, 1)
+    tel["load_rr"] = np.clip(sufr_rr, 0, 1)
     
     # Exportamos Fx para el modelo térmico de frenos
     tel["Fx_fl"] = Fx_fl
@@ -163,20 +173,38 @@ def _compute_wheel_loads(tel: pd.DataFrame, alpha: float, beta: float, brake_bia
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _temp_to_color(temp: float) -> str:
-    """Interpola temperatura a un mapa distinto (Azul -> Magenta -> Blanco) para diferenciarlo de los neumáticos"""
+    """
+    Interpola temperatura a un mapa tipo 'metal calentándose' (blackbody):
+    gris oscuro (frío) → rojo oscuro → rojo → naranja → amarillo → blanco (al rojo vivo).
+    Es la progresión real de un disco de freno calentándose, muy contrastado
+    entre estados intermedios y claramente distinto del verde→amarillo→rojo
+    que usan los neumáticos.
+    """
     t = np.clip(temp, 100, 1200)
-    if t < 500:
-        # Azul oscuro a Azul vivo
-        f = (t - 100) / 400
-        r, g, b = 0, int(f*100), 255
+    if t < 300:
+        # Gris oscuro/casi negro (frío) → rojo oscuro
+        f = (t - 100) / 200
+        r = int(45 + f * 115)   # 45 → 160
+        g = int(45 - f * 35)    # 45 → 10
+        b = int(50 - f * 40)    # 50 → 10
+    elif t < 600:
+        # Rojo oscuro → rojo vivo
+        f = (t - 300) / 300
+        r = int(160 + f * 95)   # 160 → 255
+        g = int(10 + f * 40)    # 10 → 50
+        b = int(10 - f * 10)    # 10 → 0
     elif t < 900:
-        # Azul a Rosa/Magenta
-        f = (t - 500) / 400
-        r, g, b = int(f*255), 0, 255
+        # Rojo → naranja → amarillo
+        f = (t - 600) / 300
+        r = 255
+        g = int(50 + f * 205)   # 50 → 255
+        b = 0
     else:
-        # Magenta a Blanco
+        # Amarillo → blanco (al rojo vivo)
         f = (t - 900) / 300
-        r, g, b = 255, int(f*255), 255
+        r = 255
+        g = 255
+        b = int(f * 255)        # 0 → 255
     return f"rgb({r},{g},{b})"
 
 def _compute_brake_thermals(tel: pd.DataFrame) -> pd.DataFrame:
@@ -343,7 +371,7 @@ def _build_animated_figure(tel: pd.DataFrame, lap_time_seg: float) -> go.Figure:
 
     # ── Imagen silueta ────────────────────────────────────────────────────────
     _here     = _os.path.dirname(_os.path.abspath(__file__))
-    img_path  = _os.path.join(_here, "assets", "f1silueta.png")
+    img_path  = _os.path.join(_here, "..","assets", "f1silueta.png")
     img_uri   = _img_to_uri(img_path)
 
     # ── Subplots: mapa izq (65%) + silueta der (35%) ─────────────────────────

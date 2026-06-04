@@ -1,10 +1,347 @@
-@article{lecun2015deep,
-  title={Deep learning},
-  author={LeCun, Yann and Bengio, Yoshua and Hinton, Geoffrey},
-  journal={nature},
-  volume={521},
-  number={7553},
-  pages={436--444},
-  year={2015},
-  publisher={Nature Publishing Group UK London}
+% ── Librerías y herramientas open-source ──────────────────────────────
+
+@software{fastf1,
+  author       = {Oehrly and contributors},
+  title        = {{FastF1}: A Python package for accessing and analyzing
+                  Formula 1 data},
+  year         = {2020},
+  version      = {3.8.2},
+  url          = {https://github.com/theOehrly/Fast-F1}
+}
+
+@misc{jolpica,
+  author       = {{Jolpica contributors}},
+  title        = {{Jolpica-F1}: Ergast-compatible Formula 1 REST API},
+  year         = {2024},
+  url          = {https://github.com/jolpica/jolpica-f1},
+  note         = {Sustituto oficial de Ergast API tras su deprecación en 2024}
+}
+
+@misc{openf1,
+  author       = {{OpenF1 contributors}},
+  title        = {{OpenF1}: Free and open-source Formula 1 API},
+  year         = {2023},
+  url          = {https://openf1.org}
+}
+
+@misc{ergast,
+  author       = {Newell, Chris},
+  title        = {{Ergast} Motor Racing Developer API},
+  year         = {2005},
+  url          = {https://ergast.com/mrd/},
+  note         = {API deprecada en diciembre de 2024. Cobertura histórica
+                  desde la temporada 1950}
+}
+
+% ── Herramientas profesionales ─────────────────────────────────────────
+
+@misc{atlas,
+  author       = {{McLaren Applied}},
+  title        = {{ATLAS}: Advanced Telemetry Linked Acquisition System},
+  year         = {2023},
+  url          = {https://www.mclaren.com/applied/case-study/atlas-advanced-telemetry-linked-acquisition-system/}
+}
+
+@misc{awsf1,
+  author       = {{Amazon Web Services}},
+  title        = {{AWS} Formula 1 Insights},
+  year         = {2018},
+  url          = {https://aws.amazon.com/sports/f1/},
+  note         = {Socio oficial de nube e inteligencia artificial de la
+                  Fórmula 1 desde 2018}
+}
+
+@misc{grafanaf1,
+  author       = {Patierno, Paolo},
+  title        = {Real-time monitoring of {Formula 1} telemetry data on
+                  {Kubernetes} with {Grafana}, {Apache Kafka} and {Strimzi}},
+  year         = {2021},
+  url          = {https://grafana.com/blog/2021/02/02/real-time-monitoring-of-formula-1-telemetry-data-on-kubernetes-with-grafana-apache-kafka-and-strimzi/},
+  note         = {Grafana Labs blog}
+}
+
+@misc{f1dash,
+  author       = {Tarbet, Fraser},
+  title        = {{F1Dash}: Interactive Formula 1 analytical dashboard},
+  year         = {2022},
+  url          = {https://github.com/FraserTarbet/F1Dash}
+}
+
+@misc{f1tempo,
+  author       = {{F1-Tempo}},
+  title        = {{F1-Tempo}: Formula 1 telemetry comparison tool},
+  year         = {2023},
+  url          = {https://www.f1-tempo.com},
+  note         = {Construido con React y TypeScript sobre FastF1}
+}
+
+% ── Artículos académicos ───────────────────────────────────────────────
+
+@article{aversa2018,
+  author       = {Aversa, Paolo and Cabantous, Laure and Haefliger, Stefan},
+  title        = {When decision support systems fail: Insights for strategic
+                  information systems from {Formula 1}},
+  journal      = {Journal of Strategic Information Systems},
+  volume       = {27},
+  number       = {2},
+  pages        = {221--236},
+  year         = {2018},
+  doi          = {10.1016/j.jsis.2016.09.002},
+  publisher    = {Elsevier}
+}
+
+@article{bekker2009,
+  author       = {Bekker, Jocelyn and Lotz, Warren},
+  title        = {Planning {Formula One} race strategies using discrete-event
+                  simulation},
+  journal      = {Journal of the Operational Research Society},
+  volume       = {60},
+  number       = {7},
+  pages        = {952--961},
+  year         = {2009},
+  doi          = {10.1057/palgrave.jors.2602626},
+  publisher    = {Springer}
+}
+
+@article{heilmeier2020,
+  author       = {Heilmeier, Alexander and Graf, Michael and Betz, Johannes
+                  and Lienkamp, Markus},
+  title        = {Virtual Strategy Engineer: Using Artificial Neural Networks
+                  for Making Race Strategy Decisions in Circuit Motorsport},
+  journal      = {Applied Sciences},
+  volume       = {10},
+  number       = {21},
+  pages        = {7805},
+  year         = {2020},
+  doi          = {10.3390/app10217805},
+  publisher    = {MDPI}
+}
+
+@article{aguad2024,
+  author       = {Aguad, Andrés and Thraves, Charles},
+  title        = {Optimizing pit stop strategies in {Formula 1} with dynamic
+                  programming and game theory},
+  journal      = {European Journal of Operational Research},
+  volume       = {319},
+  number       = {3},
+  pages        = {908--919},
+  year         = {2024},
+  doi          = {10.1016/j.ejor.2024.06.020},
+  publisher    = {Elsevier}
+}
+
+@inproceedings{thomas2025rl,
+  author       = {Thomas, Joshua and others},
+  title        = {Explainable Reinforcement Learning for {Formula One}
+                  Race Strategy},
+  booktitle    = {Proceedings of the ACM Symposium on Applied Computing (SAC)},
+  year         = {2025},
+  note         = {arXiv:2501.04068}
+}
+
+@mastersthesis{moranextremadura2022,
+  author       = {Morán Montero, David},
+  title        = {Análisis de datos de telemetría de {Fórmula 1} con técnicas
+                  de {Deep Learning}},
+  school       = {Universidad de Extremadura},
+  year         = {2022},
+  url          = {https://dehesa.unex.es/handle/10662/15838}
+}
+
+@mastersthesis{cidespeso2023,
+  author       = {Cid Espeso, Miguel},
+  title        = {Visualización de datos de {Fórmula 1}: diseño de un
+                  dashboard para seguimiento de carreras},
+  school       = {Universidad Politécnica de Madrid},
+  year         = {2023},
+  url          = {https://oa.upm.es/83177/}
+}
+
+@mastersthesis{latorreub2025,
+  author       = {Latorre Castelltort, Arturo},
+  title        = {{F1 Data Analysis}},
+  school       = {Universitat de Barcelona},
+  year         = {2025},
+  url          = {https://diposit.ub.edu/dspace/handle/2445/221250}
+}
+
+% ── Fuentes de imágenes ────────────────────────────────────────────────
+
+@online{russell2024crash,
+  author       = {{Formula 1}},
+  title        = {Watch: Russell dramatically crashes out while chasing Alonso
+                  on final lap in Australia},
+  year         = {2024},
+  url          = {https://www.formula1.com/en/latest/article/watch-russell-dramatically-crashes-out-while-chasing-alonso-on-final-lap-in.3LEuxMY2ykTHVjPrqLmkLu},
+  note         = {Fórmula 1, 24 de marzo de 2024}
+}
+
+% ── Métodos, algoritmos y herramientas software ────────────────────────
+
+@article{savgol1964,
+  author       = {Savitzky, Abraham and Golay, Marcel J. E.},
+  title        = {Smoothing and Differentiation of Data by Simplified Least
+                  Squares Procedures},
+  journal      = {Analytical Chemistry},
+  volume       = {36},
+  number       = {8},
+  pages        = {1627--1639},
+  year         = {1964},
+  doi          = {10.1021/ac60214a047}
+}
+
+@article{scipy,
+  author       = {Virtanen, Pauli and others},
+  title        = {{SciPy} 1.0: Fundamental Algorithms for Scientific Computing
+                  in {Python}},
+  journal      = {Nature Methods},
+  volume       = {17},
+  pages        = {261--272},
+  year         = {2020},
+  doi          = {10.1038/s41592-019-0686-2}
+}
+
+@article{numpy,
+  author       = {Harris, Charles R. and others},
+  title        = {Array Programming with {NumPy}},
+  journal      = {Nature},
+  volume       = {585},
+  pages        = {357--362},
+  year         = {2020},
+  doi          = {10.1038/s41586-020-2649-2}
+}
+
+@article{sklearn,
+  author       = {Pedregosa, Fabian and others},
+  title        = {Scikit-learn: Machine Learning in {Python}},
+  journal      = {Journal of Machine Learning Research},
+  volume       = {12},
+  pages        = {2825--2830},
+  year         = {2011}
+}
+
+@inproceedings{pandas,
+  author       = {McKinney, Wes},
+  title        = {Data Structures for Statistical Computing in {Python}},
+  booktitle    = {Proceedings of the 9th Python in Science Conference},
+  pages        = {56--61},
+  year         = {2010},
+  doi          = {10.25080/Majora-92bf1922-00a}
+}
+
+@misc{plotly,
+  author       = {{Plotly Technologies Inc.}},
+  title        = {Collaborative Data Science},
+  year         = {2015},
+  url          = {https://plot.ly}
+}
+
+@misc{streamlit,
+  author       = {{Streamlit Inc.}},
+  title        = {Streamlit: A Faster Way to Build and Share Data Apps},
+  year         = {2019},
+  url          = {https://streamlit.io}
+}
+
+@book{milliken1995,
+  author       = {Milliken, William F. and Milliken, Douglas L.},
+  title        = {Race Car Vehicle Dynamics},
+  publisher    = {SAE International},
+  address      = {Warrendale, PA},
+  year         = {1995}
+}
+
+@article{lloyd1982,
+  author       = {Lloyd, Stuart P.},
+  title        = {Least Squares Quantization in {PCM}},
+  journal      = {IEEE Transactions on Information Theory},
+  volume       = {28},
+  number       = {2},
+  pages        = {129--137},
+  year         = {1982},
+  doi          = {10.1109/TIT.1982.1056489}
+}
+
+@misc{f1briefing_fuel,
+  author       = {{F1 Briefing}},
+  title        = {Fuel Load vs. Lap Time: {F1} Performance Analysis},
+  year         = {2024},
+  url          = {https://f1briefing.com/fuel-load-vs-lap-time-f1-performance-analysis/},
+  note         = {Efecto de la carga de combustible sobre el tiempo por vuelta
+                  (aprox. 0,03 s/kg)}
+}
+
+@book{jolliffe2002,
+  author       = {Jolliffe, Ian T.},
+  title        = {Principal Component Analysis},
+  edition      = {2},
+  publisher    = {Springer},
+  address      = {New York},
+  year         = {2002}
+}
+
+% ── Física: aerodinámica y dinámica vehicular ──────────────────────────
+
+@inproceedings{wischnewski2019,
+  author       = {Wischnewski, Alexander and Stahl, Tim and Betz, Johannes
+                  and Lohmann, Boris},
+  title        = {Vehicle Dynamics State Estimation and Localization for
+                  High Performance Race Cars},
+  booktitle    = {IFAC-PapersOnLine (10th IFAC Symposium on Intelligent
+                  Autonomous Vehicles)},
+  volume       = {52},
+  number       = {8},
+  pages        = {307--312},
+  year         = {2019},
+  doi          = {10.1016/j.ifacol.2019.08.083}
+}
+
+@article{katz2006,
+  author       = {Katz, Joseph},
+  title        = {Aerodynamics of Race Cars},
+  journal      = {Annual Review of Fluid Mechanics},
+  volume       = {38},
+  pages        = {27--63},
+  year         = {2006},
+  doi          = {10.1146/annurev.fluid.38.050304.092016}
+}
+
+@article{guerrero2020,
+  author       = {Guerrero, Alex and Castilla, Robert},
+  title        = {Aerodynamic Study of the Wake Effects on a {Formula 1} Car},
+  journal      = {Energies},
+  volume       = {13},
+  number       = {19},
+  pages        = {5183},
+  year         = {2020},
+  doi          = {10.3390/en13195183}
+}
+
+@book{pacejka2012,
+  author       = {Pacejka, Hans B.},
+  title        = {Tire and Vehicle Dynamics},
+  edition      = {3},
+  publisher    = {Butterworth-Heinemann (Elsevier)},
+  address      = {Oxford},
+  year         = {2012}
+}
+
+@book{gillespie1992,
+  author       = {Gillespie, Thomas D.},
+  title        = {Fundamentals of Vehicle Dynamics},
+  publisher    = {SAE International},
+  address      = {Warrendale, PA},
+  year         = {1992},
+  doi          = {10.4271/R-114}
+}
+
+@article{savitzky_schafer2011,
+  author       = {Schafer, Ronald W.},
+  title        = {What Is a {Savitzky-Golay} Filter?},
+  journal      = {IEEE Signal Processing Magazine},
+  volume       = {28},
+  number       = {4},
+  pages        = {111--117},
+  year         = {2011},
+  doi          = {10.1109/MSP.2011.941097}
 }

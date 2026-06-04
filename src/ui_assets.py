@@ -1898,6 +1898,29 @@ CSS_SESSION_SUMMARY = """
     font-family: 'JetBrains Mono', ui-monospace, monospace;
     font-size: 0.6rem;
 }
+/* ── Variante relativa: posición de esta carrera en el rango de la temporada ── */
+.ss-wbar-rel .ss-wbar-track {
+    overflow: visible;
+    background: linear-gradient(90deg, #3B82F6 0%, #8B5CF6 52%, #FF6B35 100%);
+}
+.ss-wbar-marker {
+    position: absolute;
+    top: 50%;
+    width: 3px;
+    height: 16px;
+    background: #fff;
+    border-radius: 2px;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 0 2px rgba(13,13,18,0.65), 0 0 10px var(--wbar-color);
+}
+.ss-wbar-rank {
+    margin-top: 8px;
+    color: #9497A8;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.03em;
+}
+.ss-wbar-rank b { color: var(--wbar-color); font-weight: 800; }
 
 /* ── Tabla de resultados ──────────────────────────────────────────── */
 .ss-results {

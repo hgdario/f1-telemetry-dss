@@ -97,102 +97,59 @@ def _estimate_sampling_sigma(tel: pd.DataFrame) -> float:
 
 def _calculate_g_forces(tel: pd.DataFrame) -> pd.DataFrame:
     """
-    Calcula las fuerzas G laterales, longitudinales y totales a partir de la
-    telemetría
+    Calcula las fuerzas G laterales, longitudinales y totales desde la telemetría.
 
-    Requiere que el DataFrame contenga: Time, X, Y, Speed.
-    Devuelve el mismo DataFrame con columnas añadidas:
-        g_lat   → G lateral  (Con signo: + izquierda, − derecha)
-        g_lon   → G longitudinal (Con signo: + aceleración, − frenada)
-        g_total → G total (magnitud)
+    Requiere: Time, Speed y (para la G lateral) X, Y.
+    Añade: g_lat (+ izquierda, − derecha), g_lon (+ acelera, − frena), g_total.
 
-    Proceso paso a paso
-    ───────────────────
-    1. Convertir Speed de km/h → m/s
-    2. Calcular dt (diferencial de tiempo en segundos)
-    3. Calcular vx = dX/dt, vy = dY/dt (componentes de velocidad en el plano)
-    4. Calcular heading θ = arctan2(vy, vx)
-    5. Calcular ω = dθ/dt con corrección de discontinuidades en ±π
-    6. G_lat = Speed_ms · ω / 9.81
-    7. G_lon = dSpeed_ms/dt / 9.81
-    8. Suavizar con filtro Savitzky (reduce ruido de cuantización)
-    9. G_total = √(G_lat² + G_lon²)
+    Aplica directamente las fórmulas físicas:
+        G_lon = (dv/dt) / g                  — derivada de la velocidad
+        G_lat = (v · ω) / g,  ω = dθ/dt      — θ = arctan2(dY, dX)
+
+    Las fórmulas son directas. Lo único que se añade es:
+      · un suavizado Savitzky-Golay ligero (una derivada numérica de datos
+        muestreados siempre necesita algo de suavizado),
+      · anular la G lateral por debajo de 30 km/h, donde la dirección de marcha
+        no es fiable (boxes, in/out laps) y v·ω se dispara,
+      · un clip al límite físico (±6 G) como red de seguridad.
     """
     tel = tel.copy()
-
-    # ── Paso 1: velocidad en m/s ───────────────────────────────────────────
-    if "Speed" not in tel.columns:
-        tel["g_lat"]   = np.nan
-        tel["g_lon"]   = np.nan
-        tel["g_total"] = np.nan
+    n = len(tel)
+    if n < 7 or not {"Speed", "Time"}.issubset(tel.columns):
+        tel["g_lat"] = tel["g_lon"] = tel["g_total"] = np.nan
         return tel
 
-    speed_ms = tel["Speed"].values / 3.6   # km/h → m/s
+    speed_ms = tel["Speed"].to_numpy(dtype=float) / 3.6
+    time_s   = tel["Time"].dt.total_seconds().to_numpy(dtype=float)
 
-    # ── Paso 2: diferencial de tiempo ────────────────────────────────────
-    time_s = tel["Time"].dt.total_seconds().values
-    dt     = np.diff(time_s, prepend=time_s[0])
-    dt     = np.where(dt <= 0, 1e-3, dt)   # evitar división por cero
+    # Ventana de suavizado ~0.5 s (impar, > polyorder, acotada a la longitud)
+    dt  = np.diff(time_s, prepend=time_s[0])
+    win = int((1.0 / np.median(dt[dt > 0])) * 0.5) if np.any(dt > 0) else 11
+    win = win + 1 if win % 2 == 0 else win
+    win = max(5, min(win, n if n % 2 == 1 else n - 1))
+    poly = 3 if win > 3 else 2
 
-    # ── Paso 3-5: heading y velocidad angular ────────────────────────────
+    # ── G longitudinal: dv/dt ───────────────────────────────────────────────
+    g_lon = savgol_filter(np.gradient(speed_ms, time_s) / 9.81, win, poly)
+
+    # ── G lateral: v · ω ────────────────────────────────────────────────────
     if "X" in tel.columns and "Y" in tel.columns:
-        x = tel["X"].values.astype(float)
-        y = tel["Y"].values.astype(float)
-
-        # Componentes de velocidad en el plano XY
-        vx = np.gradient(x, time_s)
-        vy = np.gradient(y, time_s)
-
-        # Ángulo de heading en cada instante
-        heading = np.arctan2(vy, vx)
-
-        # Derivada del heading con corrección de salto ±π (unwrap)
-        d_heading = np.diff(np.unwrap(heading), prepend=heading[0])
-        omega     = d_heading / dt           # velocidad angular [rad/s]
-
-        # ── Paso 6: G lateral ──────────────────────────────────────────
-        # a_lat = v · ω   →   positivo si giramos a la izquierda
-        a_lat = speed_ms * omega
-        g_lat_raw = a_lat / 9.81
-
+        x = savgol_filter(tel["X"].to_numpy(dtype=float), win, poly)
+        y = savgol_filter(tel["Y"].to_numpy(dtype=float), win, poly)
+        heading = np.unwrap(np.arctan2(np.gradient(y, time_s),
+                                       np.gradient(x, time_s)))
+        omega = np.gradient(heading, time_s)
+        g_lat = savgol_filter(speed_ms * omega / 9.81, win, poly)
+        g_lat[speed_ms < 30.0 / 3.6] = 0.0      # heading no fiable a baja velocidad
     else:
-        # Sin coordenadas XY no podemos calcular G lateral
-        g_lat_raw = np.zeros(len(tel))
+        g_lat = np.zeros(n)
 
-    # ── Paso 7: G longitudinal ────────────────────────────────────────────
-    # Derivada de la velocidad escalar
-    d_speed  = np.gradient(speed_ms, time_s)
-    g_lon_raw = d_speed / 9.81
+    g_lat = np.clip(np.nan_to_num(g_lat, nan=0.0), -6.0, 6.0)
+    g_lon = np.clip(np.nan_to_num(g_lon, nan=0.0), -6.0, 6.0)
 
-   # Calculamos los Hz aproximados sacando la media del diferencial de tiempo (dt)
-    hz = 1.0 / np.median(dt[1:])
-
-    # Queremos filtrar una ventana de medio segundo (0.5s)
-    window = int(hz * 0.5)
-
-    # Forzamos a que sea un número impar (condición obligatoria de savgol)
-    if window % 2 == 0:
-        window += 1
-    # Y forzamos que sea al menos mayor que el polyorder
-    if window <= 3:
-        window = 5 
-
-    poly_order = 3
-    # ── Paso 8: suavizado Savitzky-Golay ───────────────────────────────────────
-    g_lat_smooth = savgol_filter(g_lat_raw, window_length=window, polyorder=poly_order)
-    g_lon_smooth = savgol_filter(g_lon_raw, window_length=window, polyorder=poly_order)
-
-    # Clip de outliers (valores físicamente imposibles en F1: >6 G es rarísimo)
-    g_lat_smooth = np.clip(g_lat_smooth, -6.0, 6.0)
-    g_lon_smooth = np.clip(g_lon_smooth, -6.0, 6.0)
-
-    # ── Paso 9: G total ───────────────────────────────────────────────────
-    g_total = np.sqrt(g_lat_smooth**2 + g_lon_smooth**2)
-
-    tel["g_lat"]   = g_lat_smooth
-    tel["g_lon"]   = g_lon_smooth
-    tel["g_total"] = g_total
-
+    tel["g_lat"]   = g_lat
+    tel["g_lon"]   = g_lon
+    tel["g_total"] = np.sqrt(g_lat**2 + g_lon**2)
     return tel
 
 def _g_to_color(val: float, cmin: float, cmax: float, colorscale: list) -> str:
@@ -415,11 +372,12 @@ def _build_g_distribution(tel: pd.DataFrame) -> go.Figure:
     g_total = tel["g_total"].values if "g_total" in tel.columns else np.sqrt(g_lat**2 + g_lon**2)
 
     # ── 1. FILTRADO GLOBAL DE OUTLIERS (La "Roomba" de la FIA) ─────────────
-    # Nos cargamos cualquier glitch del GPS que genere valores físicamente imposibles
-    # o que pertenezca al 0.2% más absurdo de la sesión.
-    p998_global = np.nanpercentile(g_total, 99.8)
-    valid_mask = (g_total < p998_global) & (g_total < 8.0)
-    
+    # Descartamos los glitches del GPS: el 1% más extremo de la sesión y
+    # cualquier punto que toque el límite del clip (>= 5.9 G), que son ruido
+    # de la doble derivada de posición, no cargas reales.
+    p99_global = np.nanpercentile(g_total, 99.0)
+    valid_mask = (g_total < p99_global) & (g_total < 5.9)
+
     g_lat_clean = g_lat[valid_mask]
     g_lon_clean = g_lon[valid_mask]
     g_total_clean = g_total[valid_mask]
@@ -441,81 +399,53 @@ def _build_g_distribution(tel: pd.DataFrame) -> go.Figure:
         name="Telemetría",
     ))
 
-    # ── 3. LÍMITE DE ADHERENCIA EMPÍRICO (BINS POLARES) ────────────────────
-    # Convertimos a coordenadas polares (Radio y Ángulo)
-    r = np.sqrt(g_lat_clean**2 + g_lon_clean**2)
-    theta = np.arctan2(g_lon_clean, g_lat_clean) # Ángulo de -pi a pi
-    
-    num_bins = 72 # 360 grados / 72 = Tramos de 5 grados
-    bins = np.linspace(-np.pi, np.pi, num_bins + 1)
-    
-    env_theta = []
-    env_r = []
-    
-    for i in range(num_bins):
-        # Aislamos los puntos que caen dentro de esta porción de pizza (bin)
-        mask_bin = (theta >= bins[i]) & (theta < bins[i+1])
-        r_bin = r[mask_bin]
-        
-        # Exigimos un mínimo de 3 puntos en el bin para considerarlo límite real
-        if len(r_bin) > 3:
-            # Tomamos el percentil 98 de esa dirección para evitar el último pico aislado
-            r_max = np.nanpercentile(r_bin, 98) 
-            theta_center = (bins[i] + bins[i+1]) / 2.0
-            env_theta.append(theta_center)
-            env_r.append(r_max)
-            
-    if len(env_theta) > 10: 
-        # Cerramos la curva repitiendo el primer punto al final (matemática polar)
-        env_theta.append(env_theta[0] + 2*np.pi)
-        env_r.append(env_r[0])
-        
-        env_theta = np.array(env_theta)
-        env_r = np.array(env_r)
-        
-        # Tamaño de la ventana del filtro (siempre impar)
-        window = min(15, len(env_r) - 1 if len(env_r) % 2 == 0 else len(env_r) - 2)
-        
-        if window > 3:
-            # MÉTODO PRO: Padding periódico para señales circulares
-            # Copiamos la "cola" al principio y la "cabeza" al final
-            pad_size = window
-            r_padded = np.concatenate((env_r[-pad_size:], env_r, env_r[:pad_size]))
-            
-            # Pasamos el filtro Savitzky-Golay a la señal extendida
-            r_smooth_padded = savgol_filter(r_padded, window_length=window, polyorder=3)
-            
-            # Recortamos la señal original ya suavizada sin costuras
-            env_r_smooth = r_smooth_padded[pad_size:-pad_size]
-        else:
-            env_r_smooth = env_r
-            
-        # Volvemos a convertir a cartesianas para Plotly
-        x_envelope = env_r_smooth * np.cos(env_theta)
-        y_envelope = env_r_smooth * np.sin(env_theta)
-
-        fig.add_trace(go.Scattergl(
-            x=x_envelope, 
-            y=y_envelope,
-            mode="lines",
-            line=dict(color="rgba(255, 255, 255, 0.8)", width=2),
-            name="Límite Físico (Polar)",
-            hoverinfo="skip",
-            showlegend=False
-        ))
+    # ── 3. LÍMITE DE ADHERENCIA — ENVOLVENTE CONVEXA ───────────────────────
+    # La envolvente convexa (convex hull) encierra TODOS los puntos limpios con
+    # el polígono convexo de menor área. Representa el límite de agarre que el
+    # piloto llegó a exprimir; ningún punto queda fuera.
+    pts = np.column_stack((g_lat_clean, g_lon_clean))
+    if len(pts) > 10:
+        try:
+            from scipy.spatial import ConvexHull
+            hull = ConvexHull(pts)
+            verts = np.append(hull.vertices, hull.vertices[0])  # cerrar el polígono
+            fig.add_trace(go.Scattergl(
+                x=pts[verts, 0],
+                y=pts[verts, 1],
+                mode="lines",
+                line=dict(color="rgba(255,255,255,0.8)", width=2),
+                fill="toself",
+                fillcolor="rgba(255,255,255,0.04)",
+                name="Límite de adherencia",
+                hoverinfo="skip",
+                showlegend=False,
+            ))
+        except Exception:
+            pass
 
     # ── 4. FORMATO DEL GRÁFICO ─────────────────────────────────────────────
+    # Rango fijo a la nube real (con un pequeño margen) para que los pocos
+    # puntos extremos no compriman la visualización.
+    if len(g_lat_clean) > 0:
+        lim = max(np.nanpercentile(np.abs(g_lat_clean), 99.5),
+                  np.nanpercentile(np.abs(g_lon_clean), 99.5)) * 1.15
+        lim = float(np.clip(lim, 3.0, 5.0))
+    else:
+        lim = 4.0
+
     fig.update_layout(
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
         xaxis=dict(
             title=dict(text="G Lateral", font=dict(color="rgba(255,255,255,0.6)")),
+            range=[-lim, lim],
             zeroline=True, zerolinecolor="rgba(255,255,255,0.3)", zerolinewidth=1.5,
             showgrid=True, gridcolor="rgba(255,255,255,0.05)",
             scaleanchor="y", scaleratio=1
         ),
         yaxis=dict(
             title=dict(text="G Longitudinal", font=dict(color="rgba(255,255,255,0.6)")),
+            range=[-lim, lim],
             zeroline=True, zerolinecolor="rgba(255,255,255,0.3)", zerolinewidth=1.5,
             showgrid=True, gridcolor="rgba(255,255,255,0.05)"
         ),
@@ -657,113 +587,6 @@ def _build_g_vs_distance(tel: pd.DataFrame, team_color: str = F1_RED) -> go.Figu
         )
 
     return fig
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# MOTOR DE INFERENCIAS — ANÁLISIS DE EXIGENCIA DEL TRAZADO
-# ─────────────────────────────────────────────────────────────────────────────
-
-def _generate_demand_summary(tel: pd.DataFrame) -> str:
-    """
-    Genera un resumen en lenguaje natural del perfil de exigencia del trazado,
-    basado en las fuerzas G calculadas.
-    """
-    g_lat   = tel["g_lat"].dropna()
-    g_lon   = tel["g_lon"].dropna()
-    g_total = tel["g_total"].dropna()
-
-    if g_total.empty:
-        return "No hay datos de fuerzas G disponibles para este análisis."
-
-    # ── Métricas base ──────────────────────────────────────────────────────
-    lat_p95       = float(np.percentile(g_lat.abs(), 95))   # G lateral típico punta
-    lat_max       = float(g_lat.abs().max())
-    lon_brk_p95   = float(np.percentile((-g_lon).clip(0), 95))  # G frenada punta
-    lon_acc_p95   = float(np.percentile(g_lon.clip(0),    95))  # G aceleración punta
-    g_total_p95   = float(np.percentile(g_total, 95))
-    g_total_mean  = float(g_total.mean())
-
-    # Porcentaje de tiempo en alta carga (> 2G total)
-    pct_high_load = float((g_total > 2.0).mean() * 100)
-    # Porcentaje de tiempo en baja carga (< 0.5G) = rectas y coasting
-    pct_low_load  = float((g_total < 0.5).mean() * 100)
-
-    # Balance lateral vs longitudinal
-    ratio_lat_lon = lat_p95 / (lon_brk_p95 + 1e-6)
-
-    # ── Scores fuzzy ──────────────────────────────────────────────────────
-    def sig(v, c, s=2.0):
-        return float(1 / (1 + np.exp(-s * (v - c))))
-
-    score_corner_speed  = sig(lat_p95,      c=3.0, s=2.0)   # alto = curvas rápidas
-    score_braking       = sig(lon_brk_p95,  c=4.0, s=2.0)   # alto = frenadas brutales
-    score_traction_load = sig(lon_acc_p95,  c=1.8, s=2.5)   # alto = mucha tracción
-    score_physical      = sig(pct_high_load,c=25.0, s=0.12) # alto = muy exigente
-    score_fast_circuit  = sig(ratio_lat_lon,c=0.9, s=3.0)   # alto = curvas dominan
-
-    # ── Insights ──────────────────────────────────────────────────────────
-    insights = []
-
-    # Tipo de circuito
-    if score_fast_circuit > 0.65:
-        insights.append(
-            f"un circuito dominado por curvas rápidas (G lateral p95: {lat_p95:.1f} G). "
-            "Las cargas laterales son el factor principal, lo que exige máxima carga "
-            "aerodinámica y neumáticos con alta rigidez lateral (perfil tipo Silverstone o Suzuka)"
-        )
-    elif score_fast_circuit < 0.35:
-        insights.append(
-            f"un perfil de circuito urbano o técnico, donde las frenadas dominan sobre las "
-            f"curvas rápidas (G frenada p95: {lon_brk_p95:.1f} G vs G lateral p95: {lat_p95:.1f} G). "
-            "La exigencia cae sobre el sistema de frenos y la tracción de salida de curva"
-        )
-    else:
-        insights.append(
-            f"un trazado mixto con equilibrio entre curvas rápidas ({lat_p95:.1f} G lat) "
-            f"y frenadas ({lon_brk_p95:.1f} G lon), lo que penaliza los set-ups extremos"
-        )
-
-    # Exigencia de frenada
-    if score_braking > 0.65:
-        insights.append(
-            f"frenadas muy agresivas (hasta {lon_brk_p95:.1f} G de deceleración). "
-            "El sistema de frenos sufrirá degradación térmica severa; gestión de "
-            "temperatura crítica para la estrategia"
-        )
-
-    # Exigencia física
-    if score_physical > 0.60:
-        insights.append(
-            f"alta carga física sobre el piloto: {pct_high_load:.0f}% de la vuelta por encima "
-            "de 2 G combinados. Circuitos con este perfil suelen agotar el cuello y core "
-            "muscular, siendo factor diferencial en vueltas largas de stint"
-        )
-    elif pct_low_load > 40:
-        insights.append(
-            f"mucho tiempo en baja carga ({pct_low_load:.0f}% por debajo de 0.5 G), lo que "
-            "sugiere largas rectas o mucho coasting. El calentamiento de neumáticos será "
-            "un reto en este trazado"
-        )
-
-    # Construcción del texto
-    if not insights:
-        return (
-            f"El trazado muestra un perfil de exigencia moderado: "
-            f"G lateral p95 {lat_p95:.1f} G, G frenada p95 {lon_brk_p95:.1f} G, "
-            f"carga total media {g_total_mean:.1f} G."
-        )
-
-    if len(insights) == 1:
-        body = insights[0]
-    elif len(insights) == 2:
-        body = insights[0] + "; además presenta " + insights[1]
-    else:
-        body = insights[0] + "; además presenta " + ", ".join(insights[1:-1]) + " y " + insights[-1]
-
-    return (
-        f"El mapa de exigencia revela {body}. "
-        f"[Pico G total: {g_total_p95:.1f} G · G lat máx: {lat_max:.1f} G]"
-    )
 
 
 # ─────────────────────────────────────────────────────────────────────────────

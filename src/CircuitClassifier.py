@@ -17,7 +17,7 @@ CLUSTER_LABELS: dict[int, str] = {
     1: "Stop-and-Go",
     2: "Aero Efficiency",
     3: "Balanced Chassis",
-    4: "Monaco",
+    4: "Urbano extremo",
 }
 
 CLUSTER_COLORS: dict[int, str] = {

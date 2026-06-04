@@ -1,9 +1,31 @@
 import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
+import numpy as np
 import fastf1
 
 import ui_assets
+
+# Corrección de carga de combustible (constantes públicas).
+FUEL_KG_INICIAL = 110.0   # depósito máximo al arrancar la carrera (kg)
+SEG_POR_KG      = 0.03     # penalización de tiempo por kg a bordo (s/vuelta)
+
+
+def fuel_corrected_laptime(lap_seconds, lap_number, total_laps,
+                           fuel_kg=FUEL_KG_INICIAL, sec_per_kg=SEG_POR_KG):
+    """
+    Corrige un tiempo por vuelta descontando el efecto de la carga de combustible.
+
+    Un F1 arranca con hasta ``fuel_kg`` de combustible que quema de forma
+    aproximadamente lineal, y cada kg a bordo penaliza el tiempo en ``sec_per_kg``
+    segundos. Esta función estima el combustible restante en cada vuelta y resta
+    su penalización, dejando los tiempos referidos a una misma carga (depósito
+    vacío) para que sean comparables entre fases de carrera.
+
+    Acepta escalares o series/arrays (la aritmética es vectorizada).
+    """
+    kg_restante = fuel_kg * (1.0 - lap_number / total_laps)
+    return lap_seconds - kg_restante * sec_per_kg
 
 
 def render_strategy_dashboard(session):
@@ -225,7 +247,38 @@ def render_strategy_dashboard(session):
 
     valid_laps = laps.dropna(subset=['LapTime', 'Compound', 'TyreLife'])
 
+    valid_laps = valid_laps.copy()
+
+    # Descartar vueltas de entrada y salida de boxes (in/out laps): la vuelta de
+    # instalación sale con neumático frío y rueda lenta para calentarlo, por lo
+    # que no refleja el rendimiento del compuesto y distorsiona la curva.
+    if 'PitOutTime' in valid_laps.columns:
+        valid_laps = valid_laps[valid_laps['PitOutTime'].isna()]
+    if 'PitInTime' in valid_laps.columns:
+        valid_laps = valid_laps[valid_laps['PitInTime'].isna()]
+
+    # Corrección de carga de combustible (ver fuel_corrected_laptime). Sin ella un
+    # compuesto usado al inicio (coche pesado) parecería más lento que otro usado
+    # al final (coche ligero), enmascarando su rendimiento real.
+    total_laps = float(valid_laps['LapNumber'].max())
+    valid_laps['LapTimeCorr'] = fuel_corrected_laptime(
+        valid_laps['LapTime'].dt.total_seconds(),
+        valid_laps['LapNumber'],
+        total_laps,
+    )
+
+    # Descartar vueltas anómalas (Safety Car, tráfico, errores): por encima del
+    # percentil 95 dejan de representar el ritmo real del compuesto.
+    umbral = valid_laps['LapTimeCorr'].quantile(0.95)
+    valid_laps = valid_laps[valid_laps['LapTimeCorr'] <= umbral]
+
     fig_deg = go.Figure()
+
+    # Para cada compuesto mostramos el dato real (mediana por vida de neumático,
+    # en puntos tenues) y, encima, una recta de tendencia por regresión lineal.
+    # La pendiente de esa recta es el ritmo de degradación (s/vuelta) y el punto
+    # donde dos rectas se cruzan es el "crossover" entre compuestos.
+    deg_fits = {}  # compuesto -> (slope, intercept) para el crossover
 
     for comp in used_compounds:
         comp_data = valid_laps[valid_laps['Compound'].str.upper() == comp]
@@ -233,15 +286,56 @@ def render_strategy_dashboard(session):
         if comp_data.empty:
             continue
 
-        grouped = comp_data.groupby('TyreLife')['LapTime'].median().reset_index()
+        color = tire_colors.get(comp, '#AAA')
 
+        # Dato real: mediana del tiempo corregido por vida de neumático
+        grouped = comp_data.groupby('TyreLife')['LapTimeCorr'].median().reset_index()
         fig_deg.add_trace(go.Scatter(
             x=grouped['TyreLife'],
-            y=grouped['LapTime'].dt.total_seconds(),
-            mode='lines',
+            y=grouped['LapTimeCorr'],
+            mode='markers',
             name=comp,
-            line=dict(color=tire_colors.get(comp, '#AAA'), width=2)
+            marker=dict(color=color, size=5, opacity=0.4),
+            hovertemplate=f"{comp}<br>Vida: %{{x}} vueltas<br>%{{y:.2f}} s<extra></extra>",
         ))
+
+        # Tendencia: regresión lineal sobre todas las vueltas del compuesto
+        x = comp_data['TyreLife'].to_numpy(dtype=float)
+        y = comp_data['LapTimeCorr'].to_numpy(dtype=float)
+        if len(np.unique(x)) >= 2:
+            slope, intercept = np.polyfit(x, y, 1)
+            deg_fits[comp] = (slope, intercept)
+            xs = np.array([x.min(), x.max()])
+            fig_deg.add_trace(go.Scatter(
+                x=xs,
+                y=slope * xs + intercept,
+                mode='lines',
+                name=f"{comp} · {slope:+.3f} s/vuelta",
+                line=dict(color=color, width=3),
+            ))
+
+    # Crossover entre los dos compuestos más usados: vida de neumático en la que
+    # sus rectas de tendencia se igualan (a partir de ahí, el más rápido en seco
+    # pasa a ser el más lento). Solo se marca si cae dentro del rango observado.
+    if len(deg_fits) >= 2:
+        top2 = sorted(deg_fits, key=lambda c: -len(
+            valid_laps[valid_laps['Compound'].str.upper() == c]))[:2]
+        (s1, i1), (s2, i2) = deg_fits[top2[0]], deg_fits[top2[1]]
+        if not np.isclose(s1, s2):
+            x_cross = (i2 - i1) / (s1 - s2)
+            vidas = valid_laps['TyreLife']
+            if vidas.min() <= x_cross <= vidas.max():
+                y_cross = s1 * x_cross + i1
+                fig_deg.add_trace(go.Scatter(
+                    x=[x_cross], y=[y_cross],
+                    mode='markers+text',
+                    marker=dict(color='#FFFFFF', size=10, symbol='x'),
+                    text=[f"  cruce ~v{x_cross:.0f}"],
+                    textposition='top right',
+                    textfont=dict(color='#FFFFFF', size=11),
+                    name=f"Cruce {top2[0]}/{top2[1]}",
+                    hovertemplate=f"Cruce {top2[0]}/{top2[1]}<br>~vuelta %{{x:.1f}}<extra></extra>",
+                ))
 
     fig_deg.update_layout(
         height=400,
@@ -249,7 +343,7 @@ def render_strategy_dashboard(session):
         paper_bgcolor='rgba(0,0,0,0)',
         font=dict(color="#EEE"),
         xaxis=dict(title="Vida del neumático (vueltas)", gridcolor="#333"),
-        yaxis=dict(title="Tiempo medio por vuelta (s)", gridcolor="#333")
+        yaxis=dict(title="Tiempo por vuelta corregido por combustible (s)", gridcolor="#333")
     )
 
     st.plotly_chart(fig_deg, use_container_width=True)

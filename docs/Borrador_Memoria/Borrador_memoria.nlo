@@ -1,8 +1,8 @@
-\nomenclatureentry{a$x \in \mathbb{R}^{H\times W\times D}$@[{$x \in \mathbb{R}^{H\times W\times D}$}]\begingroup HR volume\nomeqref {0}|nompageref}{12}
-\nomenclatureentry{a$y \in \mathbb{R}^{h\times w\times d}$@[{$y \in \mathbb{R}^{h\times w\times d}$}]\begingroup LR volume\nomeqref {0}|nompageref}{12}
-\nomenclatureentry{a$A$@[{$A$}]\begingroup Forward operator (blur+downsample)\nomeqref {0}|nompageref}{12}
-\nomenclatureentry{a$\hat x$@[{$\hat x$}]\begingroup Network reconstruction\nomeqref {0}|nompageref}{12}
-\nomenclatureentry{a$\mathcal{L}$@[{$\mathcal{L}$}]\begingroup Training objective\nomeqref {0}|nompageref}{12}
-\nomenclatureentry{a$\operatorname{PSNR}$@[{$\operatorname{PSNR}$}]\begingroup Peak Signal-to-Noise Ratio\nomeqref {0}|nompageref}{12}
-\nomenclatureentry{a$\operatorname{SSIM}$@[{$\operatorname{SSIM}$}]\begingroup Structural Similarity\nomeqref {0}|nompageref}{12}
-\nomenclatureentry{a$\operatorname{Dice}$@[{$\operatorname{Dice}$}]\begingroup Sørensen–Dice coefficient\nomeqref {0}|nompageref}{12}
+\nomenclatureentry{a$x \in \mathbb{R}^{H\times W\times D}$@[{$x \in \mathbb{R}^{H\times W\times D}$}]\begingroup HR volume\nomeqref {0}|nompageref}{14}
+\nomenclatureentry{a$y \in \mathbb{R}^{h\times w\times d}$@[{$y \in \mathbb{R}^{h\times w\times d}$}]\begingroup LR volume\nomeqref {0}|nompageref}{14}
+\nomenclatureentry{a$A$@[{$A$}]\begingroup Forward operator (blur+downsample)\nomeqref {0}|nompageref}{14}
+\nomenclatureentry{a$\hat x$@[{$\hat x$}]\begingroup Network reconstruction\nomeqref {0}|nompageref}{14}
+\nomenclatureentry{a$\mathcal{L}$@[{$\mathcal{L}$}]\begingroup Training objective\nomeqref {0}|nompageref}{14}
+\nomenclatureentry{a$\operatorname{PSNR}$@[{$\operatorname{PSNR}$}]\begingroup Peak Signal-to-Noise Ratio\nomeqref {0}|nompageref}{14}
+\nomenclatureentry{a$\operatorname{SSIM}$@[{$\operatorname{SSIM}$}]\begingroup Structural Similarity\nomeqref {0}|nompageref}{14}
+\nomenclatureentry{a$\operatorname{Dice}$@[{$\operatorname{Dice}$}]\begingroup Sørensen–Dice coefficient\nomeqref {0}|nompageref}{14}

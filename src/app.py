@@ -13,9 +13,9 @@ from analisis_piloto import SpeedHeatMap as sm
 from analisis_piloto import GearHeatMap as gm
 from analisis_piloto import Telemetrytrace as trace
 from analisis_piloto import DriverReport as dreport
-import SessionTimeLine as stl
-import Strat_Grid as sgrid
-import SessionSummary as ss
+from informacion_sesion import SessionTimeLine as stl
+from informacion_sesion import Strat_Grid as sgrid
+from informacion_sesion import SessionSummary as ss
 from comparativas import Ghostcar as ghost
 from comparativas import OptimalLap as ol
 from comparativas import OverallStandings as os
@@ -281,6 +281,11 @@ def _back_to_hub_button():
 
 
 def _header():
+    st.markdown(
+        '<h1 class="gp-title">FORMULA 1 <span>GRAND PRIX</span> DATABASE</h1>',
+        unsafe_allow_html=True,
+    )
+
     c_yr, _ = st.columns([0.9, 9.1])
 
     with c_yr:
@@ -294,11 +299,6 @@ def _header():
                     st.session_state["selected_year"] = yr
                     st.session_state["selected_event"] = None
                     sl.go("grid")
-
-    st.markdown(
-        '<h1 class="gp-title">FORMULA 1 <span>GRAND PRIX</span> DATABASE</h1>',
-        unsafe_allow_html=True,
-    )
 
 
 # ─── VISTA GRID — Mapamundi interactivo con lollipops ─────────────────────────

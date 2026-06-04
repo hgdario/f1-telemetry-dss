@@ -369,21 +369,6 @@ def _build_ghost_figure(
         cur_dist = float(dist_grid[idx])
         cur_time = float(data_a["time_s"][idx])
 
-        # ── LA CÁMARA ESTILO SUPER MARIO (TAMAÑO DE ZOOM FIJO) ──
-        window_size = SCROLL_WINDOW_M * 2
-
-        v_min = cur_dist - SCROLL_WINDOW_M
-        v_max = cur_dist + SCROLL_WINDOW_M
-
-        # Clampeamos los bordes pero forzando que el tamaño de la ventana NUNCA cambie
-        if v_min < 0:
-            v_min = 0
-            v_max = window_size
-        if v_max > dist_max:
-            v_max = dist_max
-            v_min = max(0.0, dist_max - window_size)
-        # ────────────────────────────────────────────────────────
-
         delta_at_point = float(data_a["time_s"][idx] - data_b["time_s"][idx])
         
         if delta_at_point > 0.05:
@@ -424,8 +409,6 @@ def _build_ghost_figure(
         ]
 
         frame_layout = {
-            "xaxis2": {"range": [v_min, v_max]}, # ¡Pásale solo el range!
-            "xaxis3": {"range": [v_min, v_max]},
             "annotations": [dict(
                 x=0.14, y=0.98, xref="paper", yref="paper",
                 text=hud_text, showarrow=False, align="left",
@@ -445,14 +428,14 @@ def _build_ghost_figure(
     for i in range(0, len(fidxs), tick_every):
         d_i = float(dist_grid[min(fidxs[i], N - 1)])
         slider_steps.append(dict(
-            args=[[str(i)], {"frame": {"duration": frame_ms, "redraw": False}, "mode": "immediate", "transition": {"duration": 0}}],
+            args=[[str(i)], {"frame": {"duration": frame_ms, "redraw": True}, "mode": "immediate", "transition": {"duration": 0}}],
             label=f"{d_i/1000:.1f}km", method="animate",
         ))
 
     updatemenus = [dict(
         type="buttons", showactive=False, y=1.06, x=0.0, xanchor="left", yanchor="top", pad=dict(t=0, r=10),
         buttons=[
-            dict(label="▶ PLAY", method="animate", args=[None, {"frame": {"duration": frame_ms, "redraw": False}, "fromcurrent": True, "transition": {"duration": 0}}]),
+            dict(label="▶ PLAY", method="animate", args=[None, {"frame": {"duration": frame_ms, "redraw": True}, "fromcurrent": True, "transition": {"duration": 0}}]),
             dict(label="⏸ PAUSE", method="animate", args=[[None], {"frame": {"duration": 0, "redraw": False}, "mode": "immediate", "transition": {"duration": 0}}]),
         ],
     )]
@@ -487,9 +470,9 @@ def _build_ghost_figure(
         xaxis=dict(range=[x_min - margen_x, x_max + margen_x], showgrid=False, zeroline=False, visible=False),
         yaxis=dict(range=[y_min - margen_y, y_max + margen_y], showgrid=False, zeroline=False, visible=False, scaleanchor="x", scaleratio=1),
         # Paneles pedal
-        xaxis2={**axis_panel, "range": [0, SCROLL_WINDOW_M * 2]},
+        xaxis2={**axis_panel, "range": [0, dist_max]},
         yaxis2=dict(range=[0, 105], showgrid=True, gridcolor="rgba(255,255,255,0.05)", zeroline=False, showticklabels=False, title=dict(text="THROT", font=dict(size=9, color="rgba(255,255,255,0.5)"))),
-        xaxis3={**axis_panel, "range": [0, SCROLL_WINDOW_M * 2]},
+        xaxis3={**axis_panel, "range": [0, dist_max]},
         yaxis3=dict(range=[0, 105], showgrid=True, gridcolor="rgba(255,255,255,0.05)", zeroline=False, showticklabels=False, title=dict(text="BRAKE", font=dict(size=9, color="rgba(255,255,255,0.5)"))),
         # HUD Inicial Integrado (Sin Cajas)
         annotations=[dict(

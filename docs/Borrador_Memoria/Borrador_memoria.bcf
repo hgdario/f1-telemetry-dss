@@ -2373,7 +2373,42 @@
     <bcf:datasource type="file" datatype="bibtex" glob="false">references.bib</bcf:datasource>
   </bcf:bibdata>
   <bcf:section number="0">
-    <bcf:citekey order="1" intorder="1">lecun2015deep</bcf:citekey>
+    <bcf:citekey order="1" intorder="1">savgol1964</bcf:citekey>
+    <bcf:citekey order="2" intorder="1">atlas</bcf:citekey>
+    <bcf:citekey order="3" intorder="1">awsf1</bcf:citekey>
+    <bcf:citekey order="4" intorder="1">fastf1</bcf:citekey>
+    <bcf:citekey order="5" intorder="1">ergast</bcf:citekey>
+    <bcf:citekey order="6" intorder="1">jolpica</bcf:citekey>
+    <bcf:citekey order="7" intorder="1">openf1</bcf:citekey>
+    <bcf:citekey order="8" intorder="1">f1dash</bcf:citekey>
+    <bcf:citekey order="9" intorder="1">f1tempo</bcf:citekey>
+    <bcf:citekey order="10" intorder="1">grafanaf1</bcf:citekey>
+    <bcf:citekey order="11" intorder="1">bekker2009</bcf:citekey>
+    <bcf:citekey order="12" intorder="1">heilmeier2020</bcf:citekey>
+    <bcf:citekey order="13" intorder="1">aversa2018</bcf:citekey>
+    <bcf:citekey order="14" intorder="1">aguad2024</bcf:citekey>
+    <bcf:citekey order="15" intorder="1">thomas2025rl</bcf:citekey>
+    <bcf:citekey order="16" intorder="1">moranextremadura2022</bcf:citekey>
+    <bcf:citekey order="17" intorder="1">cidespeso2023</bcf:citekey>
+    <bcf:citekey order="18" intorder="1">latorreub2025</bcf:citekey>
+    <bcf:citekey order="19" intorder="1">streamlit</bcf:citekey>
+    <bcf:citekey order="20" intorder="1">plotly</bcf:citekey>
+    <bcf:citekey order="21" intorder="1">pandas</bcf:citekey>
+    <bcf:citekey order="22" intorder="1">numpy</bcf:citekey>
+    <bcf:citekey order="23" intorder="1">scipy</bcf:citekey>
+    <bcf:citekey order="24" intorder="1">sklearn</bcf:citekey>
+    <bcf:citekey order="25" intorder="1">russell2024crash</bcf:citekey>
+    <bcf:citekey order="26" intorder="1">russell2024crash</bcf:citekey>
+    <bcf:citekey order="27" intorder="1">f1briefing_fuel</bcf:citekey>
+    <bcf:citekey order="28" intorder="1">savgol1964</bcf:citekey>
+    <bcf:citekey order="28" intorder="2">savitzky_schafer2011</bcf:citekey>
+    <bcf:citekey order="29" intorder="1">wischnewski2019</bcf:citekey>
+    <bcf:citekey order="30" intorder="1">pacejka2012</bcf:citekey>
+    <bcf:citekey order="31" intorder="1">katz2006</bcf:citekey>
+    <bcf:citekey order="32" intorder="1">guerrero2020</bcf:citekey>
+    <bcf:citekey order="33" intorder="1">guerrero2020</bcf:citekey>
+    <bcf:citekey order="34" intorder="1">gillespie1992</bcf:citekey>
+    <bcf:citekey order="34" intorder="2">milliken1995</bcf:citekey>
   </bcf:section>
   <!-- SORTING TEMPLATES -->
   <bcf:sortingtemplate name="nyt">

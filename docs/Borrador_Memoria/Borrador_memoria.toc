@@ -2,25 +2,104 @@
 \contentsline {chapter}{Abstract}{3}{chapter*.2}%
 \contentsline {chapter}{Agradecimientos}{5}{chapter*.4}%
 \contentsline {chapter}{Índice General}{7}{chapter*.6}%
-\contentsline {chapter}{Índice de Figuras}{9}{chapter*.8}%
-\contentsline {chapter}{Índice de Tablas}{11}{chapter*.10}%
-\contentsline {chapter}{\numberline {1}Introduction}{13}{chapter.1}%
-\contentsline {chapter}{\numberline {2}Fundamentals}{15}{chapter.2}%
-\contentsline {section}{\numberline {2.1}Imaging model and objectives}{15}{section.2.1}%
-\contentsline {section}{\numberline {2.2}Metrics}{15}{section.2.2}%
-\contentsline {chapter}{\numberline {3}Methods}{17}{chapter.3}%
-\contentsline {section}{\numberline {3.1}Network design}{17}{section.3.1}%
-\contentsline {section}{\numberline {3.2}Mathematical foundations}{18}{section.3.2}%
-\contentsline {section}{\numberline {3.3}Reference implementation (PyTorch)}{19}{section.3.3}%
-\contentsline {chapter}{\numberline {4}Results}{23}{chapter.4}%
-\contentsline {section}{\numberline {4.1}Quantitative metrics}{23}{section.4.1}%
-\contentsline {section}{\numberline {4.2}Qualitative examples}{23}{section.4.2}%
-\contentsline {chapter}{\numberline {5}Discussion}{25}{chapter.5}%
-\contentsline {chapter}{Apéndice~A.\ Data splits and preprocessing}{27}{uma@appendix.1}%
-\contentsline {section}{\numberline {A.1}Preprocessing}{27}{section.5.1}%
-\contentsline {chapter}{Apéndice~B.\ Additional code snippets}{29}{uma@appendix.2}%
-\contentsline {section}{\numberline {B.1}Evaluation script (Python)}{29}{section.5.1}%
-\contentsline {section}{\numberline {B.2}R quick-look plot}{29}{section.5.2}%
-\contentsline {section}{\numberline {B.3}C++ performance-critical kernels}{30}{section.5.3}%
-\contentsline {section}{\numberline {B.4}SQL data pipeline}{31}{section.5.4}%
-\contentsline {section}{\numberline {B.5}Bash automation}{32}{section.5.5}%
+\contentsline {chapter}{Índice de Figuras}{11}{chapter*.8}%
+\contentsline {chapter}{Índice de Tablas}{13}{chapter*.10}%
+\contentsline {chapter}{\numberline {1}Introducción y Objetivos}{15}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Introducción}{15}{section.1.1}%
+\contentsline {section}{\numberline {1.2}Motivación}{16}{section.1.2}%
+\contentsline {section}{\numberline {1.3}Objetivos}{17}{section.1.3}%
+\contentsline {section}{\numberline {1.4}Estructura de la memoria}{18}{section.1.4}%
+\contentsline {section}{\numberline {1.5}Uso de IA}{19}{section.1.5}%
+\contentsline {chapter}{\numberline {2}Marco Teórico y Estado del arte}{21}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Marco Contextual Teórico}{21}{section.2.1}%
+\contentsline {subsection}{\numberline {2.1.1}La Fórmula 1 y su estructura}{21}{subsection.2.1.1}%
+\contentsline {subsection}{\numberline {2.1.2}El fin de semana de un Gran Premio}{22}{subsection.2.1.2}%
+\contentsline {subsection}{\numberline {2.1.3}Desarrollo de una carrera}{22}{subsection.2.1.3}%
+\contentsline {subsection}{\numberline {2.1.4}Los compuestos de neumático}{22}{subsection.2.1.4}%
+\contentsline {subsection}{\numberline {2.1.5}Telemetría}{23}{subsection.2.1.5}%
+\contentsline {subsection}{\numberline {2.1.6}Comparación y sincronización}{23}{subsection.2.1.6}%
+\contentsline {section}{\numberline {2.2}Estado del arte}{24}{section.2.2}%
+\contentsline {subsection}{\numberline {2.2.1}Herramientas profesionales}{24}{subsection.2.2.1}%
+\contentsline {subsubsection}{\numberline {2.2.1.1}McLaren Applied ATLAS}{24}{subsubsection.2.2.1.1}%
+\contentsline {subsubsection}{\numberline {2.2.1.2}AWS F1 Insights}{24}{subsubsection.2.2.1.2}%
+\contentsline {subsubsection}{\numberline {2.2.1.3}Otras plataformas comerciales: MoTeC y Bosch Motorsport}{25}{subsubsection.2.2.1.3}%
+\contentsline {subsubsection}{\numberline {2.2.1.4}Datos oficiales de la Fórmula 1}{26}{subsubsection.2.2.1.4}%
+\contentsline {subsection}{\numberline {2.2.2}Ecosistema de código abierto}{26}{subsection.2.2.2}%
+\contentsline {subsubsection}{\numberline {2.2.2.1}FastF1}{26}{subsubsection.2.2.2.1}%
+\contentsline {subsubsection}{\numberline {2.2.2.2}De Ergast a Jolpica-F1}{26}{subsubsection.2.2.2.2}%
+\contentsline {subsubsection}{\numberline {2.2.2.3}OpenF1 API}{27}{subsubsection.2.2.2.3}%
+\contentsline {subsection}{\numberline {2.2.3}Proyectos y Herramientas de la comunidad}{27}{subsection.2.2.3}%
+\contentsline {subsubsection}{\numberline {2.2.3.1}Dashboards basados en FastF1}{27}{subsubsection.2.2.3.1}%
+\contentsline {subsubsection}{\numberline {2.2.3.2}Grafana y el \textit {stack} de monitorización genérico}{28}{subsubsection.2.2.3.2}%
+\contentsline {subsubsection}{\numberline {2.2.3.3}Herramientas BI genéricas: Tableau y Power Bi}{29}{subsubsection.2.2.3.3}%
+\contentsline {subsection}{\numberline {2.2.4}Investigación académica}{29}{subsection.2.2.4}%
+\contentsline {subsubsection}{\numberline {2.2.4.1}Investigación Internacional en estrategia y predicción}{29}{subsubsection.2.2.4.1}%
+\contentsline {subsubsection}{\numberline {2.2.4.2}Trabajos de fin de grado}{30}{subsubsection.2.2.4.2}%
+\contentsline {subsubsection}{\numberline {2.2.4.3}Análisis comparativo y posicionamiento de la aplicación}{30}{subsubsection.2.2.4.3}%
+\contentsline {chapter}{\numberline {3}Metodología, Decisiones de análisis y diseño del sistema}{33}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Metodología}{33}{section.3.1}%
+\contentsline {subsection}{\numberline {3.1.1}Modelo de desarrollo}{33}{subsection.3.1.1}%
+\contentsline {subsection}{\numberline {3.1.2}Seguimiento con el tutor}{34}{subsection.3.1.2}%
+\contentsline {subsection}{\numberline {3.1.3}Gestión de tareas}{34}{subsection.3.1.3}%
+\contentsline {subsection}{\numberline {3.1.4}Control de versiones}{34}{subsection.3.1.4}%
+\contentsline {subsection}{\numberline {3.1.5}Planificación temporal}{35}{subsection.3.1.5}%
+\contentsline {section}{\numberline {3.2}Análisis de requisitos}{35}{section.3.2}%
+\contentsline {section}{\numberline {3.3}Tecnologías empleadas}{37}{section.3.3}%
+\contentsline {section}{\numberline {3.4}Diseño del sistema}{38}{section.3.4}%
+\contentsline {subsection}{\numberline {3.4.1}FastF1 sobre otras alternativas}{40}{subsection.3.4.1}%
+\contentsline {subsection}{\numberline {3.4.2}Streamlit para interfaz}{40}{subsection.3.4.2}%
+\contentsline {subsection}{\numberline {3.4.3}Estado de la sesión}{41}{subsection.3.4.3}%
+\contentsline {subsection}{\numberline {3.4.4}Caché de dos niveles}{41}{subsection.3.4.4}%
+\contentsline {subsection}{\numberline {3.4.5}Módulos independientes entre sí}{41}{subsection.3.4.5}%
+\contentsline {subsection}{\numberline {3.4.6}K-Means pre-entrenado}{41}{subsection.3.4.6}%
+\contentsline {subsection}{\numberline {3.4.7}Interfaz Visual}{42}{subsection.3.4.7}%
+\contentsline {chapter}{\numberline {4}Implementación}{43}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Estructura del código}{43}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Modelo y Acceso a datos}{46}{section.4.2}%
+\contentsline {subsection}{\numberline {4.2.1}Origen y naturaleza de datos}{47}{subsection.4.2.1}%
+\contentsline {subsection}{\numberline {4.2.2}Modelo Jerárquico de datos}{47}{subsection.4.2.2}%
+\contentsline {subsection}{\numberline {4.2.3}Patrón de preparación}{48}{subsection.4.2.3}%
+\contentsline {subsection}{\numberline {4.2.4}Caché}{49}{subsection.4.2.4}%
+\contentsline {section}{\numberline {4.3}Información de sesión}{51}{section.4.3}%
+\contentsline {subsection}{\numberline {4.3.1}Resumen de la sesión}{51}{subsection.4.3.1}%
+\contentsline {subsection}{\numberline {4.3.2}Cronología de Eventos}{52}{subsection.4.3.2}%
+\contentsline {subsection}{\numberline {4.3.3}Estrategia de neumáticos}{54}{subsection.4.3.3}%
+\contentsline {section}{\numberline {4.4}Análisis de piloto}{55}{section.4.4}%
+\contentsline {subsection}{\numberline {4.4.1}Resumen del Piloto}{56}{subsection.4.4.1}%
+\contentsline {subsection}{\numberline {4.4.2}Mapas sobre el trazado: velocidad y marchas}{57}{subsection.4.4.2}%
+\contentsline {subsection}{\numberline {4.4.3}Telemetry Trace}{58}{subsection.4.4.3}%
+\contentsline {subsubsection}{\numberline {4.4.3.1}Circuito animado}{60}{subsubsection.4.4.3.1}%
+\contentsline {section}{\numberline {4.5}Análisis comparativo}{60}{section.4.5}%
+\contentsline {subsection}{\numberline {4.5.1}Panel de Equipo}{61}{subsection.4.5.1}%
+\contentsline {subsection}{\numberline {4.5.2}Comparativa de sesión}{62}{subsection.4.5.2}%
+\contentsline {subsection}{\numberline {4.5.3}La vuelta ideal}{62}{subsection.4.5.3}%
+\contentsline {subsection}{\numberline {4.5.4}Coche fantasma}{63}{subsection.4.5.4}%
+\contentsline {section}{\numberline {4.6}Dinámica vehicular}{64}{section.4.6}%
+\contentsline {subsection}{\numberline {4.6.1}Fundamento físico}{64}{subsection.4.6.1}%
+\contentsline {paragraph}{Aceleración longitudinal.}{65}{paragraph*.34}%
+\contentsline {paragraph}{Aceleración lateral.}{65}{paragraph*.35}%
+\contentsline {paragraph}{Uso de la teoría}{65}{paragraph*.36}%
+\contentsline {paragraph}{Savitzky-Golay}{66}{paragraph*.37}%
+\contentsline {paragraph}{Validación del método}{66}{paragraph*.38}%
+\contentsline {subsection}{\numberline {4.6.2}El Diagrama G-G}{67}{subsection.4.6.2}%
+\contentsline {subsection}{\numberline {4.6.3}Carga Aerodinámica}{67}{subsection.4.6.3}%
+\contentsline {subsection}{\numberline {4.6.4}Carga por rueda}{68}{subsection.4.6.4}%
+\contentsline {section}{\numberline {4.7}Modelos de aprendizaje no supervisado}{69}{section.4.7}%
+\contentsline {subsection}{\numberline {4.7.1}El problema y el enfoque no supervisado}{69}{subsection.4.7.1}%
+\contentsline {subsection}{\numberline {4.7.2}Representación de las características}{69}{subsection.4.7.2}%
+\contentsline {subsection}{\numberline {4.7.3}Cómo agrupa K-Means}{71}{subsection.4.7.3}%
+\contentsline {subsection}{\numberline {4.7.4}Refinamiento sobre el modelo base}{71}{subsection.4.7.4}%
+\contentsline {paragraph}{Residualización por circuito}{71}{paragraph*.41}%
+\contentsline {paragraph}{Reducción de dimensionalidad con PCA}{71}{paragraph*.42}%
+\contentsline {paragraph}{Entrenamiento offline e inferencia en vivo}{72}{paragraph*.43}%
+\contentsline {paragraph}{Observaciones atípicas}{72}{paragraph*.44}%
+\contentsline {chapter}{\numberline {5}Validación y Pruebas}{73}{chapter.5}%
+\contentsline {section}{\numberline {5.1}Validación funcional}{73}{section.5.1}%
+\contentsline {section}{\numberline {5.2}Pruebas Unitarias}{74}{section.5.2}%
+\contentsline {subsection}{\numberline {5.2.1}Estrategia: telemetría sintética frente a \textit {mocking}}{74}{subsection.5.2.1}%
+\contentsline {subsection}{\numberline {5.2.2}Niveles de verificación}{75}{subsection.5.2.2}%
+\contentsline {section}{\numberline {5.3}Validación de los clasificadores}{76}{section.5.3}%
+\contentsline {subsection}{\numberline {5.3.1}Métricas empleadas}{76}{subsection.5.3.1}%
+\contentsline {subsection}{\numberline {5.3.2}Selección del número de clústeres}{76}{subsection.5.3.2}%
+\contentsline {subsection}{\numberline {5.3.3}Resultados}{78}{subsection.5.3.3}%
+\contentsline {subsection}{\numberline {5.3.4}Interpretación y limitaciones}{80}{subsection.5.3.4}%

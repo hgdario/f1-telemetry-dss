@@ -46,20 +46,20 @@ CLUSTER_TAGLINES: dict[int, str] = {
 }
 
 CLUSTER_EXPLAIN: dict[int, str] = {
-   -2: ("La firma de este piloto está a más de 2σ del centroide más cercano en "
-        "el espacio de las 8 features. K-means lo asigna al cluster más próximo, "
-        "pero su perfil no encaja limpiamente: combina rasgos de varios clusters. "
-        "Habitualmente son pilotos en coches muy limitados, o que adoptaron un "
-        "estilo conservador por estrategia de equipo."),
+   -2: ("La firma de este piloto está lejos del centroide de su cluster en el "
+        "espacio PCA. K-means lo asigna al grupo más próximo, pero su perfil no "
+        "encaja limpiamente: combina rasgos de varios clusters. Habitualmente son "
+        "pilotos en coches muy limitados, o que adoptaron un estilo conservador "
+        "por estrategia de equipo."),
    -1: ("Este piloto no formaba parte del dataset de entrenamiento (≥100 "
         "vueltas en 2022-2025 sobre los 8 GPs muestreados). No tenemos firma "
         "suficiente para clasificarlo de forma fiable."),
     0: ("Modulación constante del throttle en curva. Estos pilotos negocian "
         "el agarre punto a punto en lugar de ir tope-o-cero. Reduce el riesgo "
-        "de pérdida de tracción pero baja la velocidad media. Habitualmente "
-        "asociado a coches con potencia difícil de domar o con balance "
-        "delantero. Hay un fuerte sesgo de equipo: los 3 pilotos del cluster "
-        "han pilotado para Ferrari."),
+        "de pérdida de tracción pero baja la velocidad media. Conviene señalar "
+        "un posible sesgo de coche: ambos pilotos del cluster han pilotado "
+        "monoplazas Ferrari, conocidos por un tren delantero nervioso que "
+        "obliga a modular para no perder la trasera."),
     1: ("Inputs progresivos y transiciones suaves. Frenadas menos agresivas "
         "y throttle medio bajo. Es el perfil 'cerebral' clásico: menos input "
         "agresivo pero más eficiente en gestión de neumático y consistencia "
@@ -74,11 +74,11 @@ CLUSTER_EXPLAIN: dict[int, str] = {
         "que entienden bien la mecánica del coche."),
 }
 
-# Umbral de "Híbrido": si la firma del piloto está a >N σ del centroide del
-# cluster que K-means le asignó (en espacio escalado 8D), lo etiquetamos como
-# perfil sin pertenencia clara en lugar de forzarlo al cluster más cercano.
-# 2.0σ es generoso pero deja fuera los borderlines verdaderos como SAR.
-OUTLIER_THRESHOLD_Z: float = 2.0
+# Umbral de "Híbrido": si la firma del piloto está a >N de su centroide en el
+# espacio PCA (2 componentes), lo etiquetamos como perfil sin pertenencia clara
+# en lugar de forzarlo al cluster. En el espacio PCA las distancias son menores,
+# por lo que 1.5 marca solo los pilotos genuinamente fronterizos (~12%).
+OUTLIER_THRESHOLD_Z: float = 1.5
 
 # Features que componen la firma (mismo orden que en lap_data_scraper)
 FEATURE_COLS = [
@@ -152,13 +152,18 @@ def _load_driver_features() -> dict[str, tuple]:
 
 def _compute_scaler_and_centroids(
     features: dict[str, tuple],
-) -> tuple[np.ndarray, np.ndarray, dict[int, np.ndarray]]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, dict[int, np.ndarray]]:
     """
-    Reproduce el StandardScaler + medias-por-cluster del entrenamiento offline.
+    Reproduce el pipeline offline: StandardScaler -> PCA(2) -> centroides por
+    cluster en el espacio de las 2 componentes principales.
 
+    El PCA se calcula con SVD de numpy (equivalente a scikit-learn) para no
+    añadir esa dependencia en producción. Las 8 features de pilotaje están muy
+    correlacionadas, así que proyectar sobre sus 2 componentes principales
+    (≈65% de la varianza) casi duplica la separación entre clusters.
     """
     if not features:
-        return np.zeros(8), np.ones(8), {}
+        return np.zeros(8), np.ones(8), np.zeros((2, 8)), np.zeros(8), {}
 
     drivers = list(features.keys())
     raw_matrix = np.array([list(features[d][:-1]) for d in drivers])  # (N, 8)
@@ -168,16 +173,24 @@ def _compute_scaler_and_centroids(
     feat_std  = raw_matrix.std(axis=0) + 1e-12
     scaled    = (raw_matrix - feat_mean) / feat_std
 
+    # PCA a 2 componentes vía SVD (sin scikit-learn en runtime)
+    pca_mean   = scaled.mean(axis=0)
+    centered   = scaled - pca_mean
+    _, _, Vt   = np.linalg.svd(centered, full_matrices=False)
+    components = Vt[:2]                     # (2, 8) ejes principales
+    projected  = centered @ components.T    # (N, 2) firmas en espacio PCA
+
     centroids: dict[int, np.ndarray] = {}
     for cid in np.unique(cluster_ids):
         mask = cluster_ids == cid
-        centroids[int(cid)] = scaled[mask].mean(axis=0)
+        centroids[int(cid)] = projected[mask].mean(axis=0)
 
-    return feat_mean, feat_std, centroids
+    return feat_mean, feat_std, components, pca_mean, centroids
 
 
 DRIVER_FEATURES: dict[str, tuple] = _load_driver_features()
-_FEATURE_MEAN, _FEATURE_STD, _CLUSTER_CENTROIDS = _compute_scaler_and_centroids(DRIVER_FEATURES)
+(_FEATURE_MEAN, _FEATURE_STD, _PCA_COMPONENTS,
+ _PCA_MEAN, _CLUSTER_CENTROIDS) = _compute_scaler_and_centroids(DRIVER_FEATURES)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -206,11 +219,12 @@ def classify_driver(driver_code: str) -> dict | None:
             "features":   feats_dict,
         }
 
-    # Escalar la firma del piloto al mismo espacio que el K-means
+    # Escalar y proyectar la firma al espacio PCA (el mismo del K-means)
     raw = np.array(raw_feats)
     scaled = (raw - _FEATURE_MEAN) / _FEATURE_STD
+    projected = (scaled - _PCA_MEAN) @ _PCA_COMPONENTS.T
     centroid = _CLUSTER_CENTROIDS[cid_assigned]
-    distance = float(np.linalg.norm(scaled - centroid))
+    distance = float(np.linalg.norm(projected - centroid))
 
     # Umbral: si la firma está demasiado lejos de su centroide, no fingir
     if distance > OUTLIER_THRESHOLD_Z:

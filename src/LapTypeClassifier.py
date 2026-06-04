@@ -245,12 +245,62 @@ def _resolve_gp_key(event_name: str) -> str | None:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# MEDIA EN VIVO DE LA SESIÓN (residualización para cualquier circuito)
+# ─────────────────────────────────────────────────────────────────────────────
+
+@st.cache_data(show_spinner=False)
+def _session_feature_mean(_session, cache_key: str) -> np.ndarray | None:
+    """
+    Media de las 8 features sobre todas las vueltas de la sesión cargada.
+
+    Es la línea base del circuito calculada en vivo: permite residualizar (y por
+    tanto clasificar) en cualquier Gran Premio sin depender de GP_MEANS, que solo
+    cubre los 8 circuitos del entrenamiento. Se cachea por sesión (cache_key).
+    """
+    try:
+        laps = _session.laps
+    except Exception:
+        return None
+
+    vectors = []
+    for _, lap in laps.iterlaps():
+        try:
+            tel = lap.get_telemetry().add_distance()
+        except Exception:
+            continue
+        f = _extract_lap_features(tel)
+        if f is not None:
+            vectors.append([f[c] for c in FEATURE_COLS])
+
+    if len(vectors) < 5:
+        return None
+    return np.asarray(vectors, dtype=float).mean(axis=0)
+
+
+def live_session_mean(session) -> np.ndarray | None:
+    """Envoltorio: construye la clave de caché y devuelve la media de la sesión."""
+    if session is None:
+        return None
+    try:
+        ev = session.event
+        cache_key = f"{ev.year}|{ev['EventName']}|{getattr(session, 'name', '')}"
+    except Exception:
+        cache_key = "unknown"
+    return _session_feature_mean(session, cache_key)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # CLASIFICACIÓN
 # ─────────────────────────────────────────────────────────────────────────────
 
-def classify_lap(tel: pd.DataFrame, event_name: str) -> dict | None:
+def classify_lap(tel: pd.DataFrame, event_name: str,
+                 gp_mean: np.ndarray | None = None) -> dict | None:
     """
     Clasifica una vuelta en uno de los 4 clusters de tipo de vuelta.
+
+    Si se pasa `gp_mean` (media calculada en vivo de la sesión) se usa como línea
+    base de residualización, lo que permite clasificar en cualquier circuito. Si
+    no, se recurre a GP_MEANS (8 GPs entrenados) o a la media global de reserva.
 
     Retorna dict con: cluster_id, label, features, gp_used, distance, method.
     """
@@ -260,16 +310,21 @@ def classify_lap(tel: pd.DataFrame, event_name: str) -> dict | None:
 
     feat_vec = np.array([feats[c] for c in FEATURE_COLS])
 
-    # Residualizar por GP (si conocido) o por media global (fallback)
-    gp_key = _resolve_gp_key(event_name)
-    if gp_key is not None:
-        gp_mean = GP_MEANS[gp_key]
-        method  = "live"
+    # Línea base de residualización: media en vivo > GP entrenado > media global
+    if gp_mean is not None:
+        mean_vec = gp_mean
+        gp_key   = None
+        method   = "live_session"
     else:
-        gp_mean = GLOBAL_FALLBACK_MEAN
-        method  = "live_fallback"
+        gp_key = _resolve_gp_key(event_name)
+        if gp_key is not None:
+            mean_vec = GP_MEANS[gp_key]
+            method   = "live"
+        else:
+            mean_vec = GLOBAL_FALLBACK_MEAN
+            method   = "live_fallback"
 
-    residual = feat_vec - gp_mean
+    residual = feat_vec - mean_vec
     z = residual / FEATURE_STD   # FEATURE_MEAN = 0 por construcción
 
     # Distancia a cada centroide
@@ -286,7 +341,7 @@ def classify_lap(tel: pd.DataFrame, event_name: str) -> dict | None:
             "cluster_id": -1,
             "label":      CLUSTER_LABELS[-1],
             "features":   feats,
-            "gp_used":    gp_key or "fallback",
+            "gp_used":    gp_key or ("sesión" if gp_mean is not None else "fallback"),
             "distance":   d_min,
             "method":     method,
         }
@@ -388,9 +443,12 @@ def _render_html(html: str) -> None:
         st.markdown(html, unsafe_allow_html=True)
 
 
-def render_lap_dna(tel: pd.DataFrame, event_name: str) -> None:
+def render_lap_dna(tel: pd.DataFrame, event_name: str, session=None) -> None:
     """Renderiza el bloque de tipo de vuelta — espejo de render_circuit_dna."""
-    cls = classify_lap(tel, event_name)
+    # Media en vivo de la sesión: residualiza en cualquier circuito, no solo los 8
+    gp_mean = live_session_mean(session)
+
+    cls = classify_lap(tel, event_name, gp_mean=gp_mean)
     if cls is None:
         _render_html('<div class="ss-empty">Tipo de vuelta no disponible — '
                      'telemetría insuficiente.</div>')
@@ -410,11 +468,14 @@ def render_lap_dna(tel: pd.DataFrame, event_name: str) -> None:
     else:
         badge_text = "EN VIVO"
 
-    # Vector en espacio z-score (residual / std, contra GP de la vuelta)
+    # Vector en espacio z-score (residual / std, contra la línea base usada)
     feat_vec = np.array([feats[c] for c in FEATURE_COLS])
-    gp_key   = _resolve_gp_key(event_name)
-    gp_mean  = GP_MEANS[gp_key] if gp_key in GP_MEANS else GLOBAL_FALLBACK_MEAN
-    z_vec    = (feat_vec - gp_mean) / FEATURE_STD
+    if gp_mean is not None:
+        mean_vec = gp_mean
+    else:
+        gp_key   = _resolve_gp_key(event_name)
+        mean_vec = GP_MEANS[gp_key] if gp_key in GP_MEANS else GLOBAL_FALLBACK_MEAN
+    z_vec    = (feat_vec - mean_vec) / FEATURE_STD
 
     z_full  = float(z_vec[0])
     z_coast = float(z_vec[2])

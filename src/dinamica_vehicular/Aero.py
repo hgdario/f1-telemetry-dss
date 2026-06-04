@@ -41,6 +41,7 @@ from typing import Optional
 
 import ui_assets
 from fastf1.core import Session
+from .GGDiagram import _calculate_g_forces as _gg_calculate_g_forces
 
 # ─────────────────────────────────────────────────────────────────────────────
 # CONSTANTES FÍSICAS UNIVERSALES
@@ -65,50 +66,17 @@ MONO_FONT  = "'JetBrains Mono', 'Courier New', monospace"
 
 def _calculate_g_forces(tel: pd.DataFrame) -> pd.DataFrame:
     """
-    Calcula g_lat [G], g_lon [G], g_total [G] y speed_ms [m/s].
-    Mismo pipeline que GGDiagram._calculate_g_forces() para consistencia.
+    Fuerzas G (g_lat, g_lon, g_total) + speed_ms [m/s].
+
+    Delega en GGDiagram._calculate_g_forces() — única fuente de verdad del
+    cálculo físico y su saneamiento numérico — y añade la columna speed_ms
+    que usa el análisis aerodinámico.
     """
-    tel = tel.copy()
-    if "Speed" not in tel.columns:
-        for col in ("g_lat", "g_lon", "g_total", "speed_ms"):
-            tel[col] = np.nan
-        return tel
-
-    speed_ms = tel["Speed"].values / 3.6
-    time_s   = tel["Time"].dt.total_seconds().values
-    dt       = np.diff(time_s, prepend=time_s[0])
-    dt       = np.where(dt <= 0, 1e-3, dt)
-
-    if "X" in tel.columns and "Y" in tel.columns:
-        x, y     = tel["X"].values.astype(float), tel["Y"].values.astype(float)
-        vx, vy   = np.gradient(x, time_s), np.gradient(y, time_s)
-        heading  = np.arctan2(vy, vx)
-        d_heading = np.diff(np.unwrap(heading), prepend=heading[0])   # BUG FIX
-        omega     = d_heading / dt
-        g_lat_raw = (speed_ms * omega) / G_CONST
+    tel = _gg_calculate_g_forces(tel)
+    if "Speed" in tel.columns:
+        tel["speed_ms"] = tel["Speed"].to_numpy(dtype=float) / 3.6
     else:
-        g_lat_raw = np.zeros(len(tel))
-
-    g_lon_raw = np.gradient(speed_ms, time_s) / G_CONST
-
-    # Ventana Savitzky-Golay: hz derivado de la mediana real del muestreo
-    # Ventana de 0.5 s — consistente con GGDiagram._calculate_g_forces()
-    hz     = 1.0 / float(np.median(dt[1:]))
-    window = int(hz * 0.5)
-    if window % 2 == 0:
-        window += 1
-    if window <= 3:
-        window = 5
-
-    g_lat_s = savgol_filter(g_lat_raw, window_length=window, polyorder=3)
-    g_lon_s = savgol_filter(g_lon_raw, window_length=window, polyorder=3)
-    g_lat_s = np.clip(g_lat_s, -6.0, 6.0)
-    g_lon_s = np.clip(g_lon_s, -6.0, 6.0)
-
-    tel["g_lat"]   = g_lat_s
-    tel["g_lon"]   = g_lon_s
-    tel["g_total"] = np.sqrt(g_lat_s**2 + g_lon_s**2)
-    tel["speed_ms"] = speed_ms
+        tel["speed_ms"] = np.nan
     return tel
 
 
