@@ -60,7 +60,7 @@
   degree     = {Grado en Ingeniería Informática},
   mencion    = {Mención en Sistemas de la información},
   titleES    = {Diseño de un sistema de telemetría para el análisis, visualización y ayuda a la toma de decisiones 
-aplicado al deporte de motor y alta competicións},
+aplicado al deporte de motor y alta competición},
   titleEN    = {Design of a telemetry system for analysis, visualization and decision support applied to 
 high-performance motorsport },
   author     = {Darío Alessandro Di Totaro Ruíz},
@@ -91,12 +91,10 @@ gráficos. Python se ha utilizado como lenguaje aprovechando bibliotecas como Nu
 Se obtienen datos del monoplaza mediante el uso de APIs públicas como Ergast y la biblioteca FastF1 para la recolección de datos de la API de la Fórmula 1 así
 como una caché local para mejorar los tiempos de carga.
 
-\medskip
 \noindent 
 Se ha identificado como área de posible expansión la integración de datos de otras competiciones con mayor accesibilidad de datos, como el WEC (\emph{World Endurance Championship}) o categorías de Fórmula inferiores.
 El resultado es una herramienta de análisis post-sesión que integra con una interfaz la visualización de telemetría, estrategia de carrera y clasificación automática de estilos de pilotaje.
 
-\medskip
 \noindent\textbf{Palabras clave:} Fórmula 1, Análisis de datos, Python,
 Telemetría, Streamlit, Dashboard, Deportes
 \end{abstract}
@@ -112,18 +110,22 @@ Users can interact with the different sections and analyze details that can help
 The development has been carried out based on Streamlit, an open-source Python framework that allows building web applications for data analysis with the capacity to integrate graphics. Python has been used as the language taking advantage of libraries like Numpy, Pandas or Plotly for the different processes that data handling entails.
 Data of the car is obtained through the use of public APIs like Ergast and the FastF1 library for data collection from the Formula 1 API as well as a local cache to improve loading times.
 
-\medskip
 \noindent
 It has been identified as an area of possible expansion the integration of data from other competitions with greater data accessibility, such as the WEC (World Endurance Championship) or lower Formula categories.
 The result is a post-session analysis tool that integrates telemetry visualization, race strategy and automatic classification of driving styles into a single interface, bringing to the average fan an analysis previously reserved for the teams.
 
-\medskip
 \noindent\textbf{Keywords:} Formula 1, Data analysis, Python, Telemetry, Streamlit, Dashboard, Sports
 \end{abstract}
 
 %──────────────── Acknowledgments ───────────────────────────────────────
 \begin{umaacknowledgments}
-Agradezco su función a 
+Quiero agradecer en primer lugar a mi tutor, Francisco Javier Ferer Urbano, por su orientación y seguimiento constante a lo largo del desarrollo de este trabajo.
+
+A mi familia, lo primero y lo más importante. Por estar siempre, por el apoyo incondicional en cada paso de estos años y por no dejarme tirar la toalla cuando tocaba. Nada de esto habría sido posible sin vosotros, y este trabajo es tan vuestro como mío.
+
+A mis amigos y compañeros de carrera, por las horas en la biblioteca y las que no fueron en la biblioteca, por hacer que estos años hayan merecido la pena.
+
+Y, en general, a todos los que de una forma u otra han caminado conmigo hasta aquí. Gracias.
 \end{umaacknowledgments}
 
 %────────────────────── TOC and lists ──────────────────────────────────
@@ -133,19 +135,19 @@ Agradezco su función a
 \listoffigures
 \clearpage
 \listoftables
+%────────────────────── Índice de Listados ─────────────────────────────
+\makeatletter
+\cleardoublepage
+\phantomsection
+\chapter*{Índice de Listados}
+\addcontentsline{toc}{chapter}{Índice de Listados}
+\markboth{Índice de Listados}{Índice de Listados}
+\vspace{10pt}
+\@starttoc{lol}
+\makeatother
 \clearpage
 
-%────────────────────── Nomenclature ───────────────────────────────────
-\nomenclature{$x \in \mathbb{R}^{H\times W\times D}$}{HR volume}
-\nomenclature{$y \in \mathbb{R}^{h\times w\times d}$}{LR volume}
-\nomenclature{$A$}{Forward operator (blur+downsample)}
-\nomenclature{$\hat x$}{Network reconstruction}
-\nomenclature{$\mathcal{L}$}{Training objective}
-\nomenclature{$\operatorname{PSNR}$}{Peak Signal-to-Noise Ratio}
-\nomenclature{$\operatorname{SSIM}$}{Structural Similarity}
-\nomenclature{$\operatorname{Dice}$}{Sørensen–Dice coefficient}
-\printnomenclature
-\clearpage
+
 
 \mainmatter
 %────────────────────── Capítulo 1 - Introducción ───────────────────────
@@ -470,6 +472,8 @@ Además, las diferentes tareas fueron divididas en épicas que corresponden al m
 
 \subsection{Control de versiones}
 \noindent El código fuente se gestiono con \textit{Git} y se alojó en un repositorio de \textit{GitHub}. Se trabajó sobre la rama principal main, realizando commits asociados a funcionalidades o conjunto de estas.
+El repositorio es público y está disponible en \url{https://github.com/hgdario/f1-telemetry-dss}. El proceso de instalación y puesta en marcha se detalla en el Apéndice~\ref{app:instalacion}.
+
 \subsection{Planificación temporal}
 \noindent La tabla \ref{tab:temporalizacion} recoge la distribución de horas por fase establecidas en el anteproyecto
 \begin{table}[ht]
@@ -672,7 +676,7 @@ Los scripts de entrenamiento están separados de la parte de producción de modo
 El diseño visual adopta una estética oscura inspirada en la identidad gráfica de la Fórmula 1. Consta de una paleta basada en tonos de rojo \#E8002D sobre fondos oscuros. Uso de la tipografía Titillium Web habitual en la comunicación del deporte (además de Inter y JetBrains Mono). El objetivo era que la herramienta resultara familiar desde el primer vistazo a cualquier aficionado promedio, sin instrucciones necesarias.
 
 \noindent Antes de comenzar la implementación se elaboraron \textit{mockups} de las vistas principales usando draw.io, estos bocetos recogían la disposicióngeneral de los elementos aunque algunos acabaron pivotando en el layout. Han servido como referencia visual temprana durante el desarrollo.
-
+\noindent El funcionamiento completo de la interfaz y la descripción de cada uno de sus módulos se recogen en el Apéndice~\ref{app:usuario}.
 \chapter{Implementación}
 \noindent Los capítulos anteriores han descrito qué es lo que hace la aplicación y por qué se tomaron determinadas decisiones de diseño. Este capítulo da el paso siguiente explicando cómo se ha materializado todas las decisiones de diseño en código.
 Se mostrarán fragmentos más representativos de determinadas decisiones técnicas en lugar de mostrar el código completo, que se encuentra en el repositorio.
@@ -1288,6 +1292,7 @@ Corrección por combustible      &  6 & Analítica \\
 
 \noindent La totalidad de las pruebas se superan. Conviene precisar su alcance,  acotado a la lógica del cálculo, que es la parte con resultado verificable. No se incluyen pruebas de integración con FastF1 ni de interfaz, esta dimensión queda cubierta por la validación funcional de la sección anterior.
 
+\noindent Las 59 pruebas cubren las funciones de cálculo críticas, que presenta una cobertura del 100\%. La cobertura de líneas sobre el conjunto de los módulos es del 31\%, ya que estos incluyen también el código de la interfaz, que no es susceptible de prueba unitaria y queda fuera del alcance por diseño.
 \section{Validación de los clasificadores}
 Los tres modelos de aprendizaje no supervisado descritos en la sección 4.7 requieren una validación distinta a la de dentro del sistema. Al no existir etiquetas verdaderas o una \textit{ground truth} a la que acogerse, no es posible medir una exactitud en el sentido clásico.
 En su lugar, la calidad de un agrupamiento se evalúa con dos familias de métricas: las que miden calidad interna de los clústeres y las que miden su estabilidad.
@@ -1346,31 +1351,192 @@ Tipo de vuelta  & 4 & 0,15 & 1,73 & 3007,8 & 0,98 (5-fold) \\
 \label{tab:metricas_clasificadores}
 \end{table}
 
-\begin{figure}[htbp]
+\noindent Los resultados han de leerse con honestidad. Los clasificadores de pilotaje y de circuito presentan coeficientes de silhouette razonables e índices de Davies-Bouldin bajos, lo que indica que los grupos están bien definidos.
+El clasificador de tipo de vuelta presenta un Silhouette bajo, lo cual refleja la naturaleza continua de los datos.
+
+\noindent Cabe aclarar que el índice de Calinski-Harabász depende del tamaño de la muestra, por lo que solo es comparable entre valores de $k$ de un mismo clasificador, no entre distintos.
+
+\noindent La proyección de los clústeres sobre sus dos primeras componentes principales confirma visualmente esta lectura. En los circuitos de la figura \ref{fig:cluster_circuitos} los grupos aparecen claramente separados y Mónaco queda completamente aislado, coherente con su carácter de trazado Urbano Extremo.
+
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.85\textwidth]{cluster_circuitos.png}
   \caption{Clústeres de circuitos proyectados sobre sus dos componentes principales (95,8\% de la varianza). Mónaco queda completamente aislado del resto, confirmando su carácter de trazado único.}
   \label{fig:cluster_circuitos}
 \end{figure}
 
-\begin{figure}[htbp]
+\noindent Los estilos de pilotaje de la figura \ref{fig:cluster_pilotaje} también se distinguen sobre sus componentes principales, sustentando la separación de los cuatro perfiles.
+En esto se puede ver como pilotos de la escudería Ferrari tienen un mismo estilo (posible sesgo de coche).
+
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.85\textwidth]{cluster_pilotaje.png}
   \caption{Clústeres de estilo de pilotaje proyectados sobre sus dos componentes principales (64,5\% de la varianza), que sustentan la separación de los cuatro perfiles.}
   \label{fig:cluster_pilotaje}
 \end{figure}
 
-\noindent Cabe aclarar que el índice de Calinski-Harabász depende del tamaño de la muestra, por lo que solo es comparable entre valores de $k$ de un mismo clasificador, no entre clasificadores distintos.
-\subsection{Interpretación y limitaciones}
-Los resultados han de leerse con honestidad. Los clasificadores de pilotaje y de circuito presentan coeficientes de Silhouette razonables (0,45 y 0,37) e índices de Davies-Bouldin bajos, indicando grupos bien definidos. La proyección de los circuitos lo confirma visualmente. El clasificador de tipo de vuelta, en cambio, presenta un Silhouette bajo (0,15). Lejos de ser un defecto del modelo, esto refleja la naturaleza de los datos.
-El estilo de conducción es un \textit{continuo} y no un conjunto de categorías discretas por lo que no presenta unas fronteras nítidas, por lo que ningún agrupamiento puede separar grupos que en la realidad se solapan.
-En datos reales de comportamiento, valores de Silhouette en el rango 0,1 a 0,3 son habituales, frente a los valores altos propios de conjuntos con grupos artificialmente separados.
+\noindent Como limitación principal, la estabilidad temporal del clasificador de pilotaje es baja entre temporadas distintas. Esto es esperable, ya que la firma de un piloto evoluciona con los cambios de coche y reglamento de cada año.
+\noindent No obstante, lo determinante es que, pese al solapamiento, las particiones son muy estables, el ARI alcanza valores de 0,93 lo que confirma que las asignaciones son reproducibles.
 
-\noindent Lo verdaderamente determinante es que, pese a ese solapamiento, la partición es muy estable. El ARI por validación cruzada alcanza 0,98 en tipo de vuelta y 0,93 en circuito, lo que demuestra que las asignaciones son reproducibles y no producto del azar.
-El valor de los clasificadores reside en ofrecer una discretización estable e interpretable de un fenómeno continuo sirviendo como herramienta descriptiva en lugar de separar grupos perfectamente aislados.
+\chapter{Conclusiones y Trabajos futuros}
+Este trabajo partió de una convicción simple: los datos de Fórmula 1 ya son públicos y accesibles, y lo que faltaba era una forma gratuita de explorarla a fondo. Este proyecto materializa esa visión en una herramienta de análisis que cubre, en un único sistema integrado, gran parte del dominio.
 
-\noindent Como limitación principal, la estabilidad temporal del clasificador de pilotaje es baja entre temporadas distintas. Esto es esperable, ya que la firma de un piloto evoluciona con los cambios de coche y reglamento de cada año. Una línea de trabajo futura sería entrenar firmas específicas por temporada o normalizar el efecto de la era reglamentaria.
+\noindent A lo largo del desarrollo se han construido catorce módulos de análisis agrupado en cuatro categorías funcionales, tres clasificadores de aprendizaje no supervisado y un módulo de dinámica vehicular que deriva magnitudes de la telemetría. La arquitectura resultante es modular, reproducible e Instalable en cualquier sistema Windows y Linux con Python sin dependencias de pago.
 
+\noindent Desde el punto de vista técnico los principales retos abordados han sido el procesamiento de telemetría y muestreo irregular, las magnitudes físicas y el diseño de clasificadores no supervisados que ofrecen etiquetas interpretables, así como montar la aplicación funcional desde cero.
+La validación cuantitativa de los clasificadores afirman que, aunque hay una separación moderada por la naturaleza del dominio, la estabilidad es alta.
+
+\noindent El desarrollo dejó también varias lecciones. La principal fue trabajar con datos reales que obligan a diseñar entorno a su imperfección, la telemetría llega con un muestreo irregular, dañada o con datos de ruido que obligó a procesarlas para poder comparararlas. Las fuerzas G y las posiciones GPS exigieron un filtrado de ruido y en general, cada decisión técnica vino impuesta por una limitación concreta de los datos, no por una preferencia previa.
+
+\noindent Otra lección surgió de los clasificadores. Fue el primer contacto con el aprendizaje no supervisado a un dominio real, y el principal reto no fue técnico sino coneptual al agrupar un fenómeno continuo que carece de fronteras nítidas. Elegir el número de grupos  equilibrando las métricas con el significado del dominio, y dar a cada clúster una etiqueta con sentido, enseñó que en este tipo de problemas la interpretabilidad pesa tanto como cualquier indicador numérico.
+
+\noindent En cuanto al público objetivo, TALOS ha sido diseñado para ser útil en un espectro amplio de usuarios, desde el aficionado ocasional que quiere entender por que su piloto favorito perdió la carrera hasta el entusiasta técnico que compara fuerzas G en trazados distintos. La ausencia de barreras de entrada (gratuito, sin registro, sin conocimientos de programación)
+es en sí misma parte del objetivo del proyecto.
+
+\section{Trabajo Futuro}
+El alcance de este trabajo deja abierta varias líneas de mejora que se identificaron durante el desarrollo y la validación, y que representan extensiones naturales del sistema.
+
+\noindent \textbf{Clasificador de tipo de vuelta con pertenencia suave}: El bajo Silhouette del clasificador refleja la naturaleza continua del estilo de conducción, una mejora conceptual sería sustituir k-means por un modelo distinto para modelar de una mejor manera el clasificador sin depender de fronteras discretas. 
+
+\noindent \textbf{Integración de telemetría de simuladores}: La arquitectura modular permite añadir nuevas fuentes de datos sin alterar el núcleo de la aplicación. Una extensión natural sería capturar los paquetes UDP que emiten videojuegos como \textit{EA Sports F1} o simuladores como \textit{Assetto Corsa Competizione}, permitiendo a los jugadores comparar su propia telemetría con la de pilotos reales.
+
+\noindent \textbf{Integración de competiciones}: Aunque el deporte objetivo es la Fórmula 1, la herramienta funciona mediante datos que pueden provenir de cualquier fuente. Esto deja pie a que, siempre que haya datos disponibles, pueda analizarse cualquier deporte de motor incluyendo competiciones de resistencia como la \textit{World Endurance Championship} o categorías inferiores de Fórmula.
+
+\noindent \textbf{Independencia del proveedor de datos}: Actualmente la aplicación depende directamente de FastF1 como fuente de telemetría. Una mejora estructural sería introducir una capa de abstracción entre la fuente de datos y la lógica de negocio, de modo que un cambio en la API de FastF1, o su eventual discontinuación, no afectara al resto del sistema y permitiera incorporar nuevas fuentes con un impacto mínimo.
+
+%────────────────────── Apéndices ─────────────────────────────────────
+\begin{umaappendices}
+
+\umaappendix{Manual de Instalación}\label{app:instalacion}
+El código fuente de TALOS está disponible públicamente en el repositorio:
+\begin{center}
+\url{https://github.com/hgdario/f1-telemetry-dss}
+\end{center}
+
+\section{Requisitos previos}
+\begin{itemize}
+  \item \textbf{Python 3.10 o superior.} Disponible en \url{https://www.python.org/downloads/}.
+  \item \textbf{Conexión a Internet.} Necesaria durante la instalación para descargar las dependencias y, en la primera consulta de cada sesión, para que FastF1 descargue los datos desde los servidores de Fórmula 1. Las sesiones consultadas quedan almacenadas en caché local y no requieren conexión en accesos posteriores.
+  \item \textbf{Git} (opcional). Necesario para clonar el repositorio; alternativamente puede descargarse el archivo ZIP desde la página del repositorio.
+\end{itemize}
+
+\section{Obtención del código fuente}
+\begin{lstlisting}[style=bash, caption={Clonado del repositorio}, label={lst:clone}]
+git clone https://github.com/hgdario/f1-telemetry-dss.git
+cd f1-telemetry-dss
+\end{lstlisting}
+
+\section{Instalación en Windows}
+En Windows la instalación y el arranque están automatizados mediante scripts \texttt{.bat}
+
+\begin{enumerate}
+  \item Instalar Python 3.10 o superior desde \url{https://www.python.org/downloads/}, marcando la opción \textit{Add Python to PATH} durante la instalación.
+  \item Ejecutar \texttt{install.bat} con doble clic. El script detecta Python, crea un entorno virtual aislado en \texttt{.venv} e instala todas las dependencias listadas en \texttt{requirements.txt}.
+  \item Una vez completada la instalación, ejecutar \texttt{start.bat} para arrancar la aplicación.
+\end{enumerate}
+
+\section{Instalación en Linux}
+En sistemas Unix el proceso equivalente se realiza desde el terminal. En distribuciones basadas en Debian puede ser necesario instalar previamente el módulo \texttt{venv}.
+\begin{lstlisting}[style=bash, caption={Instalación en Linux}, label={lst:install_linux}]
+# Solo en Debian/Ubuntu/Mint, si el modulo venv no esta disponible
+sudo apt install python3-venv
+
+# Crear y activar el entorno virtual
+python3 -m venv .venv
+source .venv/bin/activate
+
+# Instalar dependencias
+pip install -r requirements.txt
+\end{lstlisting}
+
+Para arrancar la aplicación:
+
+\begin{lstlisting}[style=bash, caption={Arranque en Linux}, label={lst:start_linux}]
+source .venv/bin/activate
+cd src
+streamlit run app.py
+\end{lstlisting}
+
+\section{Primera ejecución}
+
+Al arrancar, Streamlit abre automáticamente el navegador en \texttt{http://localhost:8501}. La primera vez que se consulta una sesión, FastF1 descarga los datos correspondientes y los almacena en caché local; este proceso puede tardar desde unos segundos hasta varios minutos según la sesión y la conexión. Las consultas posteriores a la misma sesión son prácticamente instantáneas.
+
+\umaappendix{Manual de Usuario}\label{app:usuario}
+TALOS se organiza en torno a un flujo de navegación de tres niveles: el usuario parte de un \textbf{buscador de Gran Premio}, selecciona una \textbf{sesión} concreta yaccede a un \textbf{hub de módulos} de anñalisis. Toda la interacción se realiza desde el navegador, sin necesidad de conocimientos de programación.
+
+\section{Buscador de Gran Premio}
+La pantalla inicial presenta un mapamundi interactivo con todos los circuitosdel calendario del año seleccionado. El usuario puede cambiar de temporada mediante el selector de año situado en la cabecera. Al hacer clic sobre el marcador la aplicación accede a la pantalla de selección de sesión correspondiente.
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\linewidth]{grid.png}
+  \caption{Buscador de Gran Premio: mapamundi interactivo del calendario.}
+  \label{fig:manual_grid}
+\end{figure}
+
+\section{Selección de sesión}
+Una vez seleccionado el Gran Premio, se muestran las sesiones disponibles y las sesiones de formato \textit{Sprint} cuando proceda. Cada sesión se representa mediante una tarjeta, fecha y hora. Al pulsar \textit{Cargar}, FastF1 descarga y sincroniza los datos de dicha sesión.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\linewidth]{session.png}
+  \caption{Pantalla de selección de sesión del fin de semana.}
+  \label{fig:manual_session}
+\end{figure}
+
+\section{Hub de módulos}
+El hub es el punto central de la aplicación, muestra la sesión activa, un podio con los primeros clasificados y un panel lateral con métricas rápidas y la clasificación final.
+Los módulos de análisis se agrupan en cuatro categorías accesibles mediante pestañas. Desde cualquier módulo, el usuario puede volver al Hub.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\linewidth]{hub.png}
+  \caption{Hub de módulos con la sesión activa, el podio y el panel de métricas.}
+  \label{fig:manual_hub}
+\end{figure}
+
+\section{Módulos de análisis}
+A continuación se describen los catorce módulos disponibles agrupados por categoría.
+
+\subsection{Información de Sesión}
+\begin{enumerate}
+  \item \textbf{Resumen de la sesión.} Información del circuito y datos generales de la sesión. Se muestran temperaturas relativas al resto de circuitos y datos generales del trazado. Se dibuja el trazado con los sectores coloreados, zonas de velocidad y DRS. Este módulo incluye el clasificador de circuito indicándonos en cual de las 5 categorías se encuentra.
+  \item \textbf{Cronología de Eventos.} Reconstruye el transcurso de la sesión incluyendo las banderas, periodos de \textit{Safety Car} y \textit{Virtual Safety Car}, balance de adelantamientos que compara la posición inicial con la final y un resumen de los \textit{stints} de cada piloto.
+  \item \textbf{Estrategia de Neumáticos.}  Muestra, mediante un diagrama de Gantt, los \textit{compuestos} usados por cada piloto y los compuestos utilizados, permitiendo comparar las estrategias seguidas a lo largo de la carrera.
+\end{enumerate}
+
+\subsection{Análisis de Piloto}
+\begin{enumerate}
+  \item \textbf{Resumen del Piloto.} Sintetiza la sesión de un piloto concreto indicando claves de rendimiento, tiempos por sector, y KPIs. Sirve como una primera introducción a lo que ha hecho el corredor elegido en la sesión.
+  \item \textbf{Mapa de Velocidad.} Trazado del circuito coloreado según la velocidad (km/h) a lo largo de la vuelta seleccionada. Evidencia las zonas de máxima y mínima velocidad.
+  \item \textbf{Mapa de Marchas.} Trazado del circuito coloreado según la marcha engranada en cada punto. Esto permite identificar los puntos de cambio y la gestión de caja, así como visualizar en que marcha toma el piloto cada curva.
+  \item \textbf{Telemetry Trace.} Muestra los canales de telemetría del piloto junto con una animación del circuito y una caracterización de su estilo de conducción y tipo de vuelta. Muestra velocidad en todos los tramos del circuito, acelerador y freno, si ha activado o no el DRS, las RPM y marchas.
+\end{enumerate}
+
+\subsection{Comparativas}
+\begin{enumerate}
+  \item \textbf{Panel de Equipo.} Enfrenta a los dos pilotos de un mismo equipo, comparando su telemetría y ritmo para evaluar el rendimiento relativo entre compañeros. Incluye un trazado del circuito donde se puede apreciar el punto exacto del GPS de cada piloto para la vuelta dada. Como se muestra en la figura \ref{fig:manual_panel_equipo}
+  \begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{panelequipo.png}
+  \caption{Módulo \textit{Panel de Equipo}: comparación lado a lado de los dos pilotos de una escudería (telemetría, ritmo, neumáticos y circuito animado).}
+  \label{fig:manual_panel_equipo}
+\end{figure}
+  \item \textbf{Comparativa de Sesión.} Superpone (\textit{overlay}) los canales de telemetría de varios pilotos sobre la misma vuelta, facilitando la comparación directa de sus métricas. Incluye una sección de dominancia por circuito en la que se pinta del color del piloto dominante el microsector correspondiente.
+  \item \textbf{La Vuelta Ideal.} Reconstruye la vuelta óptima a partir de los mejores microsectores de toda la parrilla, con posibilidad de filtrar por equipos, mostrando el límite teórico de rendimiento.
+  \item \textbf{Coche Fantasma.}  Genera una animación 2D de persecución que enfrenta las vueltas de dos pilotos sobre el trazado, visualizando dónde y cuánto gana tiempo cada uno.
+\end{enumerate}
+
+\subsection{Dinámica Vehicular}
+\begin{enumerate}
+ \item \textbf{Diagrama G-G.} Representa el círculo de tracción y la envolvente de fuerzas G (longitudinales y laterales) del monoplaza, mostrando el aprovechamiento del agarre disponible.
+  \item \textbf{Carga Aerodinámica.} Ofrece una estimación teórica de la carga aerodinámica a partir de la relación entre la aceleración lateral y la velocidad del coche.
+  \item \textbf{Mapa de Carga por Rueda.} Estima la distribución de carga por eje y la temperatura de frenos a lo largo de la vuelta, ilustrando las transferencias de peso en frenadas y curvas.
+\end{enumerate}
+
+\section{Selección de piloto y vuelta}
+Los módulos centrados en un piloto concreto incorporan dos selectores comunes: uno para elegir el piloto y otro para la vuelta a analizar. Por defecto se selecciona la vuelta más rápida del piloto. Adicionalmente
+se incluye la opción de mostrar curvas que superpone la numeración de las curvas sobre las visualizaciones que lo permiten.
+\end{umaappendices}
 %────────────────────── Back cover and bibliography ────────────────────
 \backmatter
 \printbibliography[title={Bibliografía}]

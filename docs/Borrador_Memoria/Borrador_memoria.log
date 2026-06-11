@@ -1,4 +1,4 @@
-This is LuaHBTeX, Version 1.24.0 (MiKTeX 26.2) (format=lualatex 2026.5.2)  3 JUN 2026 22:02
+This is LuaHBTeX, Version 1.24.0 (MiKTeX 26.2) (format=lualatex 2026.5.2)  11 JUN 2026 13:22
  restricted system commands enabled.
  file:line:error style messages enabled.
 **"c:/Users/hgdar/Desktop/TFG - Unnamed/docs/Borrador_Memoria/Borrador_memoria"
@@ -1888,8 +1888,9 @@ warning  (pdf backend): ignoring duplicate destination with the name 'page.1'
 
 ]
 warning  (pdf backend): ignoring duplicate destination with the name 'page.2'
-[2] [3
+[2
 
+] [3
 
 ] [4
 
@@ -1922,349 +1923,401 @@ File: mt-cmr.cfg 2013/05/19 v2.2 microtype config. file: Computer Modern Roman
 
 
 
-] [8])
+] [8] [9])
 \tf@toc=\write6
 
 \openout6 = Borrador_memoria.toc
- [9] [10
-
-
-] (./Borrador_memoria.lof
+ [10] (./Borrador_memoria.lof
 Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `lmtt' (encoding: TU).
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
  [11
 
+
+
 ])
 \tf@lof=\write7
 
 \openout7 = Borrador_memoria.lof
- [12] (./Borrador_memoria.lot)
+ [12] [13] [14
+
+
+]
+(./Borrador_memoria.lot)
 \tf@lot=\write8
 
 \openout8 = Borrador_memoria.lot
+ [15
 
-[13
+] [16
 
+] (./Borrador_memoria.lol)
+\tf@lol=\write9
 
+\openout9 = Borrador_memoria.lol
+ [17
 
-] [14
+] [18
 
 
 ]
-No file Borrador_memoria.nls.
 Capítulo 1.
-[15
+[19
 
-
-
-] [16] [17] [18] [19] [20
+] [20] [21] [22] [23] [24
 
 ]
 Capítulo 2.
-[21] [22]
-Overfull \hbox (2.69946pt too wide) in paragraph at lines 286--287
+[25] [26]
+Overfull \hbox (2.69946pt too wide) in paragraph at lines 288--289
  [][] 
  []
 
-[23] [24]
-<AWS.png, id=566, 423.83344pt x 95.6072pt>
+[27] [28]
+<AWS.png, id=677, 423.83344pt x 95.6072pt>
 File: AWS.png Graphic file (type png)
 <use AWS.png>
-Package luatex.def Info: AWS.png  used on input line 315.
+Package luatex.def Info: AWS.png  used on input line 317.
 (luatex.def)             Requested size: 364.19667pt x 82.15784pt.
- [25<./AWS.png>] [26] [27]
-<F1Dash.png, id=602, 591.71063pt x 328.22626pt>
+ [29<./AWS.png>] [30] [31]
+<F1Dash.png, id=714, 591.71063pt x 328.22626pt>
 File: F1Dash.png Graphic file (type png)
 <use F1Dash.png>
-Package luatex.def Info: F1Dash.png  used on input line 374.
+Package luatex.def Info: F1Dash.png  used on input line 376.
 (luatex.def)             Requested size: 455.24411pt x 252.53465pt.
- [28<./F1Dash.png>] [29] [30] [31] [32
+ [32<./F1Dash.png>] [33] [34] [35] [36
 
 ]
 Capítulo 3.
-[33]
-<GitHubProjects.png, id=657, 1283.54532pt x 594.72188pt>
+[37]
+<GitHubProjects.png, id=768, 1283.54532pt x 594.72188pt>
 File: GitHubProjects.png Graphic file (type png)
 <use GitHubProjects.png>
-Package luatex.def Info: GitHubProjects.png  used on input line 466.
+Package luatex.def Info: GitHubProjects.png  used on input line 468.
 (luatex.def)             Requested size: 364.19667pt x 168.7443pt.
- [34<./GitHubProjects.png>]
-Underfull \hbox (badness 1675) in paragraph at lines 534--534
+ [38<./GitHubProjects.png>]
+Underfull \hbox (badness 1675) in paragraph at lines 538--538
 []|\TU/Malacitana-Sans(0)/m/n/12 Vuelta óp-tima di-vi-di-endo el cir-cuito
  []
 
-c:/Users/hgdar/Desktop/TFG - Unnamed/docs/Borrador_Memoria/Borrador_memoria.tex:534: ignored: Infinite glue shrinkage found in box being split [35]
-c:/Users/hgdar/Desktop/TFG - Unnamed/docs/Borrador_Memoria/Borrador_memoria.tex:534: ignored: Infinite glue shrinkage found in box being split [36] [37]
-<logos/python.png, id=689, 331.2375pt x 331.2375pt>
+c:/Users/hgdar/Desktop/TFG - Unnamed/docs/Borrador_Memoria/Borrador_memoria.tex:538: ignored: Infinite glue shrinkage found in box being split [39]
+c:/Users/hgdar/Desktop/TFG - Unnamed/docs/Borrador_Memoria/Borrador_memoria.tex:538: ignored: Infinite glue shrinkage found in box being split [40] [41]
+<logos/python.png, id=803, 331.2375pt x 331.2375pt>
 File: logos/python.png Graphic file (type png)
 <use logos/python.png>
-Package luatex.def Info: logos/python.png  used on input line 564.
+Package luatex.def Info: logos/python.png  used on input line 568.
 (luatex.def)             Requested size: 34.14159pt x 34.14322pt.
-<logos/streamlit.png, id=690, 2931.95375pt x 814.04124pt>
+<logos/streamlit.png, id=804, 2931.95375pt x 814.04124pt>
 File: logos/streamlit.png Graphic file (type png)
 <use logos/streamlit.png>
-Package luatex.def Info: logos/streamlit.png  used on input line 566.
+Package luatex.def Info: logos/streamlit.png  used on input line 570.
 (luatex.def)             Requested size: 122.9399pt x 34.14322pt.
-<logos/fastf1.png, id=691, 770.88pt x 770.88pt>
+<logos/fastf1.png, id=805, 770.88pt x 770.88pt>
 File: logos/fastf1.png Graphic file (type png)
 <use logos/fastf1.png>
-Package luatex.def Info: logos/fastf1.png  used on input line 568.
+Package luatex.def Info: logos/fastf1.png  used on input line 572.
 (luatex.def)             Requested size: 34.13525pt x 34.14322pt.
-<logos/plotly.png, id=692, 301.125pt x 100.4553pt>
+<logos/plotly.png, id=806, 301.125pt x 100.4553pt>
 File: logos/plotly.png Graphic file (type png)
 <use logos/plotly.png>
-Package luatex.def Info: logos/plotly.png  used on input line 570.
+Package luatex.def Info: logos/plotly.png  used on input line 574.
 (luatex.def)             Requested size: 102.34897pt x 34.14322pt.
-<logos/pandas.png, id=693, 331.2375pt x 134.5025pt>
+<logos/pandas.png, id=807, 331.2375pt x 134.5025pt>
 File: logos/pandas.png Graphic file (type png)
 <use logos/pandas.png>
-Package luatex.def Info: logos/pandas.png  used on input line 572.
+Package luatex.def Info: logos/pandas.png  used on input line 576.
 (luatex.def)             Requested size: 84.08284pt x 34.14322pt.
-<logos/numpy.png, id=694, 725.20938pt x 326.21875pt>
+<logos/numpy.png, id=808, 725.20938pt x 326.21875pt>
 File: logos/numpy.png Graphic file (type png)
 <use logos/numpy.png>
-Package luatex.def Info: logos/numpy.png  used on input line 574.
+Package luatex.def Info: logos/numpy.png  used on input line 578.
 (luatex.def)             Requested size: 75.90025pt x 34.14322pt.
-<logos/scipy.png, id=695, 331.2375pt x 331.2375pt>
+<logos/scipy.png, id=809, 331.2375pt x 331.2375pt>
 File: logos/scipy.png Graphic file (type png)
 <use logos/scipy.png>
-Package luatex.def Info: logos/scipy.png  used on input line 576.
+Package luatex.def Info: logos/scipy.png  used on input line 580.
 (luatex.def)             Requested size: 34.14159pt x 34.14322pt.
-<logos/sklearn.png, id=696, 128.48pt x 46.574pt>
+<logos/sklearn.png, id=810, 128.48pt x 46.574pt>
 File: logos/sklearn.png Graphic file (type png)
 <use logos/sklearn.png>
-Package luatex.def Info: logos/sklearn.png  used on input line 578.
+Package luatex.def Info: logos/sklearn.png  used on input line 582.
 (luatex.def)             Requested size: 94.19345pt x 34.14322pt.
-<logos/GitHub.png, id=697, 349.07773pt x 349.07773pt>
+<logos/GitHub.png, id=811, 349.07773pt x 349.07773pt>
 File: logos/GitHub.png Graphic file (type png)
 <use logos/GitHub.png>
-Package luatex.def Info: logos/GitHub.png  used on input line 580.
+Package luatex.def Info: logos/GitHub.png  used on input line 584.
 (luatex.def)             Requested size: 34.14279pt x 34.14322pt.
-<logos/vscode.png, id=698, 331.2375pt x 331.2375pt>
+<logos/vscode.png, id=812, 331.2375pt x 331.2375pt>
 File: logos/vscode.png Graphic file (type png)
 <use logos/vscode.png>
-Package luatex.def Info: logos/vscode.png  used on input line 582.
+Package luatex.def Info: logos/vscode.png  used on input line 586.
 (luatex.def)             Requested size: 34.14159pt x 34.14322pt.
-<logos/drawio.png, id=699, 1027.84pt x 1027.84pt>
+<logos/drawio.png, id=813, 1027.84pt x 1027.84pt>
 File: logos/drawio.png Graphic file (type png)
 <use logos/drawio.png>
-Package luatex.def Info: logos/drawio.png  used on input line 584.
+Package luatex.def Info: logos/drawio.png  used on input line 588.
 (luatex.def)             Requested size: 34.1431pt x 34.14322pt.
- [38<./logos/python.png><./logos/streamlit.png><./logos/fastf1.png><./logos/plot
+ [42<./logos/python.png><./logos/streamlit.png><./logos/fastf1.png><./logos/plot
 ly.png><./logos/pandas.png><./logos/numpy.png><./logos/scipy.png><./logos/sklear
 n.png><./logos/GitHub.png><./logos/vscode.png><./logos/drawio.png>]
-<diagrama_arquitectura.png, id=723, 683.55376pt x 402.50375pt>
+<diagrama_arquitectura.png, id=837, 683.55376pt x 402.50375pt>
 File: diagrama_arquitectura.png Graphic file (type png)
 <use diagrama_arquitectura.png>
-Package luatex.def Info: diagrama_arquitectura.png  used on input line 615.
+Package luatex.def Info: diagrama_arquitectura.png  used on input line 619.
 (luatex.def)             Requested size: 455.24411pt x 268.07312pt.
-<grid.png, id=727, 1166.85938pt x 572.1375pt>
+<grid.png, id=841, 1166.85938pt x 572.1375pt>
 File: grid.png Graphic file (type png)
 <use grid.png>
-Package luatex.def Info: grid.png  used on input line 624.
+Package luatex.def Info: grid.png  used on input line 628.
 (luatex.def)             Requested size: 145.68144pt x 71.4297pt.
-<session.png, id=728, 1397.22pt x 664.73344pt>
+<session.png, id=842, 1397.22pt x 664.73344pt>
 File: session.png Graphic file (type png)
 <use session.png>
-Package luatex.def Info: session.png  used on input line 629.
+Package luatex.def Info: session.png  used on input line 633.
 (luatex.def)             Requested size: 145.68144pt x 69.30713pt.
-<hub.png, id=729, 1301.61281pt x 688.82344pt>
+<hub.png, id=843, 1301.61281pt x 688.82344pt>
 File: hub.png Graphic file (type png)
 <use hub.png>
-Package luatex.def Info: hub.png  used on input line 634.
+Package luatex.def Info: hub.png  used on input line 638.
 (luatex.def)             Requested size: 145.68144pt x 77.09514pt.
- [39<./diagrama_arquitectura.png>] [40<./grid.png><./session.png><./hub.png>] [
-41] [42]
+ [43<./diagrama_arquitectura.png>] [44<./grid.png><./session.png><./hub.png>] [
+45] [46]
 Capítulo 4.
-[43
+[47
 
 ]
 (C:/Users/hgdar/AppData/Local/Programs/MiKTeX/tex/latex/listings/lstlang1.sty
 File: lstlang1.sty 2025/11/14 1.11b listings language file
 )
-[44] [45]
+[48] [49]
 LaTeX Font Info:    Font shape `TU/lmtt/bx/n' in size <10.95> not available
-(Font)              Font shape `TU/lmtt/b/n' tried instead on input line 742.
+(Font)              Font shape `TU/lmtt/b/n' tried instead on input line 746.
 
-Overfull \hbox (0.7715pt too wide) in paragraph at lines 745--747
+Overfull \hbox (0.7715pt too wide) in paragraph at lines 749--751
 \TU/lmtt/m/n/12 informacion_sesion/\TU/Malacitana-Sans(0)/m/n/12 , \TU/lmtt/m/n
 /12 analisis_piloto/\TU/Malacitana-Sans(0)/m/n/12 , \TU/lmtt/m/n/12 comparativas
 / \TU/Malacitana-Sans(0)/m/n/12 y \TU/lmtt/m/n/12 dinamica_vehicular/\TU/Malaci
 tana-Sans(0)/m/n/12 . Esta
  []
 
-[46] [47] [48] [49] [50]
-<resumen.png, id=931, 587.94656pt x 697.10437pt>
+[50] [51] [52] [53] [54]
+<resumen.png, id=1041, 587.94656pt x 697.10437pt>
 File: resumen.png Graphic file (type png)
 <use resumen.png>
-Package luatex.def Info: resumen.png  used on input line 895.
+Package luatex.def Info: resumen.png  used on input line 899.
 (luatex.def)             Requested size: 455.24411pt x 539.761pt.
- [51] [52<./resumen.png>]
-<timeline.png, id=943, 1215.79219pt x 663.22781pt>
+ [55] [56<./resumen.png>]
+<timeline.png, id=1053, 1215.79219pt x 663.22781pt>
 File: timeline.png Graphic file (type png)
 <use timeline.png>
-Package luatex.def Info: timeline.png  used on input line 912.
+Package luatex.def Info: timeline.png  used on input line 916.
 (luatex.def)             Requested size: 455.24411pt x 248.33537pt.
-<russell_australia2024.png, id=946, 729.47531pt x 409.53pt>
+<russell_australia2024.png, id=1056, 729.47531pt x 409.53pt>
 File: russell_australia2024.png Graphic file (type png)
 <use russell_australia2024.png>
-Package luatex.def Info: russell_australia2024.png  used on input line 920.
+Package luatex.def Info: russell_australia2024.png  used on input line 924.
 (luatex.def)             Requested size: 318.66948pt x 178.90022pt.
- [53<./timeline.png>] [54<./russell_australia2024.png>]
-<neumaticos.png, id=964, 423.83344pt x 517.935pt>
+ [57<./timeline.png>] [58<./russell_australia2024.png>]
+<neumaticos.png, id=1074, 423.83344pt x 517.935pt>
 File: neumaticos.png Graphic file (type png)
 <use neumaticos.png>
-Package luatex.def Info: neumaticos.png  used on input line 940.
+Package luatex.def Info: neumaticos.png  used on input line 944.
 (luatex.def)             Requested size: 327.7763pt x 400.56564pt.
- [55<./neumaticos.png>]
-<resumenpiloto.png, id=973, 585.68813pt x 681.29532pt>
+ [59<./neumaticos.png>]
+<resumenpiloto.png, id=1084, 585.68813pt x 681.29532pt>
 File: resumenpiloto.png Graphic file (type png)
 <use resumenpiloto.png>
-Package luatex.def Info: resumenpiloto.png  used on input line 955.
+Package luatex.def Info: resumenpiloto.png  used on input line 959.
 (luatex.def)             Requested size: 327.7763pt x 381.29407pt.
- [56<./resumenpiloto.png>]
-<mapacalor.png, id=981, 978.65625pt x 645.16031pt>
+ [60<./resumenpiloto.png>]
+<mapacalor.png, id=1092, 978.65625pt x 645.16031pt>
 File: mapacalor.png Graphic file (type png)
 <use mapacalor.png>
-Package luatex.def Info: mapacalor.png  used on input line 970.
+Package luatex.def Info: mapacalor.png  used on input line 974.
 (luatex.def)             Requested size: 327.7763pt x 216.08327pt.
 
-[57<./mapacalor.png>]
-<aleroncerrado.png, id=989, 1034.36438pt x 395.97937pt>
+[61<./mapacalor.png>]
+<aleroncerrado.png, id=1100, 1034.36438pt x 395.97937pt>
 File: aleroncerrado.png Graphic file (type png)
 <use aleroncerrado.png>
-Package luatex.def Info: aleroncerrado.png  used on input line 984.
+Package luatex.def Info: aleroncerrado.png  used on input line 988.
 (luatex.def)             Requested size: 223.07211pt x 85.3937pt.
-<aleronabierto.png, id=990, 634.62094pt x 327.47343pt>
+<aleronabierto.png, id=1101, 634.62094pt x 327.47343pt>
 File: aleronabierto.png Graphic file (type png)
 <use aleronabierto.png>
-Package luatex.def Info: aleronabierto.png  used on input line 988.
+Package luatex.def Info: aleronabierto.png  used on input line 992.
 (luatex.def)             Requested size: 223.07211pt x 115.1071pt.
-<telemetria.png, id=992, 901.11656pt x 692.5875pt>
+<telemetria.png, id=1103, 901.11656pt x 692.5875pt>
 File: telemetria.png Graphic file (type png)
 <use telemetria.png>
-Package luatex.def Info: telemetria.png  used on input line 999.
+Package luatex.def Info: telemetria.png  used on input line 1003.
 (luatex.def)             Requested size: 327.7763pt x 251.92047pt.
- [58<./aleroncerrado.png><./aleronabierto.png>]
-<ricciardostats.png, id=1001, 962.09438pt x 642.14906pt>
+ [62<./aleroncerrado.png><./aleronabierto.png>]
+<ricciardostats.png, id=1112, 962.09438pt x 642.14906pt>
 File: ricciardostats.png Graphic file (type png)
 <use ricciardostats.png>
-Package luatex.def Info: ricciardostats.png  used on input line 1008.
+Package luatex.def Info: ricciardostats.png  used on input line 1012.
 (luatex.def)             Requested size: 327.7763pt x 218.77852pt.
- [59<./telemetria.png><./ricciardostats.png>]
-<circuit2d.png, id=1012, 895.09406pt x 618.81187pt>
+ [63<./telemetria.png><./ricciardostats.png>]
+<circuit2d.png, id=1122, 895.09406pt x 618.81187pt>
 File: circuit2d.png Graphic file (type png)
 <use circuit2d.png>
-Package luatex.def Info: circuit2d.png  used on input line 1020.
+Package luatex.def Info: circuit2d.png  used on input line 1024.
 (luatex.def)             Requested size: 327.7763pt x 226.60567pt.
- [60<./circuit2d.png>] [61]
-<vueltaideal.png, id=1041, 800.23969pt x 688.07062pt>
+ [64<./circuit2d.png>] [65]
+<vueltaideal.png, id=1150, 800.23969pt x 688.07062pt>
 File: vueltaideal.png Graphic file (type png)
 <use vueltaideal.png>
-Package luatex.def Info: vueltaideal.png  used on input line 1066.
+Package luatex.def Info: vueltaideal.png  used on input line 1070.
 (luatex.def)             Requested size: 327.7763pt x 281.8378pt.
- [62]
-<monaco23.png, id=1048, 883.04906pt x 703.12688pt>
+ [66]
+<monaco23.png, id=1157, 883.04906pt x 703.12688pt>
 File: monaco23.png Graphic file (type png)
 <use monaco23.png>
-Package luatex.def Info: monaco23.png  used on input line 1076.
+Package luatex.def Info: monaco23.png  used on input line 1080.
 (luatex.def)             Requested size: 327.7763pt x 260.98972pt.
- [63<./vueltaideal.png>] [64<./monaco23.png>] [65] [66] [67]
-<sideview.png, id=1115, 1012.5328pt x 310.91156pt>
+ [67<./vueltaideal.png>] [68<./monaco23.png>] [69] [70] [71]
+<sideview.png, id=1224, 1012.5328pt x 310.91156pt>
 File: sideview.png Graphic file (type png)
 <use sideview.png>
-Package luatex.def Info: sideview.png  used on input line 1160.
+Package luatex.def Info: sideview.png  used on input line 1164.
 (luatex.def)             Requested size: 218.51521pt x 67.09612pt.
-<topview.png, id=1116, 797.22844pt x 180.675pt>
+<topview.png, id=1225, 797.22844pt x 180.675pt>
 File: topview.png Graphic file (type png)
 <use topview.png>
-Package luatex.def Info: topview.png  used on input line 1164.
+Package luatex.def Info: topview.png  used on input line 1168.
 (luatex.def)             Requested size: 218.51521pt x 49.52173pt.
-<front.png, id=1117, 597.73312pt x 377.15906pt>
+<front.png, id=1226, 597.73312pt x 377.15906pt>
 File: front.png Graphic file (type png)
 <use front.png>
-Package luatex.def Info: front.png  used on input line 1170.
+Package luatex.def Info: front.png  used on input line 1174.
 (luatex.def)             Requested size: 218.51521pt x 137.87772pt.
-<rearview.png, id=1118, 542.025pt x 359.09157pt>
+<rearview.png, id=1227, 542.025pt x 359.09157pt>
 File: rearview.png Graphic file (type png)
 <use rearview.png>
-Package luatex.def Info: rearview.png  used on input line 1174.
+Package luatex.def Info: rearview.png  used on input line 1178.
 (luatex.def)             Requested size: 218.51521pt x 144.76828pt.
- [68<./sideview.png><./topview.png><./front.png><./rearview.png>]
-<TyreLoad.png, id=1134, 425.33907pt x 603.75563pt>
+ [72<./sideview.png><./topview.png><./front.png><./rearview.png>]
+<TyreLoad.png, id=1243, 425.33907pt x 603.75563pt>
 File: TyreLoad.png Graphic file (type png)
 <use TyreLoad.png>
-Package luatex.def Info: TyreLoad.png  used on input line 1192.
+Package luatex.def Info: TyreLoad.png  used on input line 1196.
 (luatex.def)             Requested size: 355.08984pt x 504.06506pt.
- [69] [70<./TyreLoad.png>] [71] [72]
+ [73] [74<./TyreLoad.png>] [75] [76]
 Capítulo 5.
 
-Underfull \hbox (badness 10000) in paragraph at lines 1238--1238
+Underfull \hbox (badness 10000) in paragraph at lines 1242--1242
 []|\TU/Malacitana-Sans(0)/m/n/10.95 Re-sumen de
  []
 
 
-Underfull \hbox (badness 2980) in paragraph at lines 1239--1239
+Underfull \hbox (badness 2980) in paragraph at lines 1243--1243
 []|\TU/Malacitana-Sans(0)/m/n/10.95 Ban-dera roja en Mó-naco
  []
 
 
-Underfull \hbox (badness 1009) in paragraph at lines 1240--1240
+Underfull \hbox (badness 1009) in paragraph at lines 1244--1244
 []|\TU/Malacitana-Sans(0)/m/n/10.95 Ve-loci-dad máx-ima de Ver-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1242--1242
+Underfull \hbox (badness 10000) in paragraph at lines 1246--1246
 []|\TU/Malacitana-Sans(0)/m/n/10.95 Difer-en-cia Verstappen--
  []
 
-[73
+[77
 
-] [74] [75] [76]
-<elbow_laps.png, id=1184, 568.524pt x 351.2322pt>
+] [78] [79] [80]
+<elbow_laps.png, id=1293, 568.524pt x 351.2322pt>
 File: elbow_laps.png Graphic file (type png)
 <use elbow_laps.png>
-Package luatex.def Info: elbow_laps.png  used on input line 1311.
+Package luatex.def Info: elbow_laps.png  used on input line 1316.
 (luatex.def)             Requested size: 386.96027pt x 239.07054pt.
-<elbow_pilotaje.png, id=1185, 568.524pt x 351.714pt>
+<elbow_pilotaje.png, id=1294, 568.524pt x 351.714pt>
 File: elbow_pilotaje.png Graphic file (type png)
 <use elbow_pilotaje.png>
-Package luatex.def Info: elbow_pilotaje.png  used on input line 1318.
+Package luatex.def Info: elbow_pilotaje.png  used on input line 1323.
 (luatex.def)             Requested size: 386.96027pt x 239.3985pt.
-<elbow_circuitos.png, id=1186, 568.524pt x 351.714pt>
+ [81<./elbow_laps.png>]
+<elbow_circuitos.png, id=1300, 568.524pt x 351.714pt>
 File: elbow_circuitos.png Graphic file (type png)
 <use elbow_circuitos.png>
-Package luatex.def Info: elbow_circuitos.png  used on input line 1325.
+Package luatex.def Info: elbow_circuitos.png  used on input line 1330.
 (luatex.def)             Requested size: 386.96027pt x 239.3985pt.
- [77<./elbow_laps.png><./elbow_pilotaje.png>]
-<cluster_circuitos.png, id=1196, 566.5968pt x 387.849pt>
+ [82<./elbow_pilotaje.png><./elbow_circuitos.png>]
+<cluster_circuitos.png, id=1311, 566.5968pt x 387.849pt>
 File: cluster_circuitos.png Graphic file (type png)
 <use cluster_circuitos.png>
-Package luatex.def Info: cluster_circuitos.png  used on input line 1351.
+Package luatex.def Info: cluster_circuitos.png  used on input line 1363.
 (luatex.def)             Requested size: 386.96027pt x 264.88193pt.
-<cluster_pilotaje.png, id=1197, 568.524pt x 387.849pt>
+ [83]
+<cluster_pilotaje.png, id=1319, 568.524pt x 387.849pt>
 File: cluster_pilotaje.png Graphic file (type png)
 <use cluster_pilotaje.png>
-Package luatex.def Info: cluster_pilotaje.png  used on input line 1358.
+Package luatex.def Info: cluster_pilotaje.png  used on input line 1373.
 (luatex.def)             Requested size: 386.96027pt x 263.99422pt.
- [78<./elbow_circuitos.png>] [79<./cluster_circuitos.png><./cluster_pilotaje.png
->] [80]
-[81
-
-
-
-] [82] [83] [84
+ [84<./cluster_circuitos.png>] [85<./cluster_pilotaje.png>]
+[86
 
 ]
-<template/logos/NEG-logo-umaes.png, id=1279, 1440.38126pt x 276.03125pt>
+Capítulo 6.
+[87] [88]
+warning  (pdf backend): ignoring duplicate destination with the name 'section.6.
+1'
+[89
+
+
+] [90] [91] [92
+
+]
+warning  (pdf backend): ignoring duplicate destination with the name 'section.6.
+1'
+File: grid.png Graphic file (type png)
+<use grid.png>
+Package luatex.def Info: grid.png  used on input line 1471.
+(luatex.def)             Requested size: 455.24411pt x 223.21129pt.
+
+warning  (pdf backend): ignoring duplicate destination with the name 'section.6.
+2'
+[93]
+File: session.png Graphic file (type png)
+<use session.png>
+Package luatex.def Info: session.png  used on input line 1481.
+(luatex.def)             Requested size: 455.24411pt x 216.58353pt.
+
+warning  (pdf backend): ignoring duplicate destination with the name 'section.6.
+3'
+File: hub.png Graphic file (type png)
+<use hub.png>
+Package luatex.def Info: hub.png  used on input line 1492.
+(luatex.def)             Requested size: 455.24411pt x 240.91313pt.
+
+warning  (pdf backend): ignoring duplicate destination with the name 'section.6.
+4'
+[94] [95]
+<panelequipo.png, id=1399, 773.89125pt x 671.50874pt>
+File: panelequipo.png Graphic file (type png)
+<use panelequipo.png>
+Package luatex.def Info: panelequipo.png  used on input line 1520.
+(luatex.def)             Requested size: 455.24411pt x 395.01865pt.
+ [96] [97<./panelequipo.png>]
+warning  (pdf backend): ignoring duplicate destination with the name 'section.6.
+5'
+[98] [99
+
+
+
+] [100] [101] [102
+
+]
+<template/logos/NEG-logo-umaes.png, id=1488, 1440.38126pt x 276.03125pt>
 File: template/logos/NEG-logo-umaes.png Graphic file (type png)
 <use template/logos/NEG-logo-umaes.png>
 Package luatex.def Info: template/logos/NEG-logo-umaes.png  used on input line 
-1378.
+1544.
 (luatex.def)             Requested size: 341.47871pt x 65.44142pt.
- [85
+ [103
 
 <./template/logos/NEG-logo-umaes.png>]
 (./Borrador_memoria.aux)
@@ -2278,16 +2331,16 @@ Package logreq Info: Writing requests to 'Borrador_memoria.run.xml'.
 )
 
 Here is how much of LuaTeX's memory you used:
- 53392 strings out of 475900
- 477543,2373549 words of node,token memory allocated
- 2009 words of node memory still in use:
+ 53586 strings out of 475900
+ 477554,2373549 words of node,token memory allocated
+ 2019 words of node memory still in use:
    31 hlist, 2 vlist, 14 rule, 1 local_par, 4 glue, 5 kern, 1 penalty, 3 glyph, 
-128 attribute, 113 glue_spec, 128 attribute_list, 2 write, 24 pdf_literal, 31 pd
+129 attribute, 113 glue_spec, 129 attribute_list, 2 write, 24 pdf_literal, 32 pd
 f_action, 24 pdf_colorstack nodes
-   avail lists: 1:5,2:5387,3:1451,4:14317,5:10754,6:141,7:12342,8:141,9:26589,10
+   avail lists: 1:9,2:5387,3:1453,4:14317,5:10760,6:141,7:12492,8:141,9:26589,10
 :32,11:1076,12:1
- 74415 multiletter control sequences out of 65536+600000
- 89 fonts using 8385847 bytes
+ 74525 multiletter control sequences out of 65536+600000
+ 90 fonts using 8509215 bytes
  114i,12n,117p,1541b,2048s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <c:/users/hgdar/appdata/local/programs/miktex/fonts/opentype/public/lm/lmmonolt1
 0-bold.otf><c:/users/hgdar/appdata/local/programs/miktex/fonts/opentype/public/l
@@ -2312,9 +2365,9 @@ X/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Users/hgdar/AppData/Local/Programs
 /MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/hgdar/AppData/Local/
 Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy8.pfb><C:/Users/hgdar/AppData
 /Local/Programs/MiKTeX/fonts/type1/public/amsfonts/symbols/msam10.pfb>
-Output written on Borrador_memoria.pdf (87 pages, 9749129 bytes).
+Output written on Borrador_memoria.pdf (105 pages, 10227648 bytes).
 
-PDF statistics: 1661 PDF objects out of 1728 (max. 8388607)
- 432 named destinations out of 1000 (max. 1048576)
- 912 words of extra memory for PDF output out of 10000 (max. 100000000)
+PDF statistics: 1928 PDF objects out of 2073 (max. 8388607)
+ 501 named destinations out of 1000 (max. 1048576)
+ 1056 words of extra memory for PDF output out of 10000 (max. 100000000)
 
