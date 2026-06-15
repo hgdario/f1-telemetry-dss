@@ -16,3 +16,6 @@ Cache/
 *.pdf
 f1_cache/
 docs/Borrador_Memoriaf1_cache/
+
+# Memoria / TFG: se mantiene en local, fuera del repositorio
+docs/
