@@ -17,7 +17,7 @@
 \contentsline {figure}{\numberline {4.6}{\ignorespaces Mapa de velocidad: el trazado del circuito coloreado según la velocidad en cada punto. El mapa de marchas es análogo, codificando la marcha seleccionada.}}{61}{figure.caption.29}%
 \contentsline {figure}{\numberline {4.7}{\ignorespaces Efecto del DRS sobre el flujo de aire}}{62}{figure.caption.30}%
 \contentsline {figure}{\numberline {4.8}{\ignorespaces Vista de Telemetry Trace: evolución de los canales de telemetría (velocidad, acelerador, freno, marcha, RPM y DRS) a lo largo de la vuelta frente a la distancia.}}{63}{figure.caption.31}%
-\contentsline {figure}{\numberline {4.9}{\ignorespaces Los dos clasificadores en acción sobre una vuelta de Daniel Ricciardo (GP de Australia 2024): arriba el tipo de vuelta (\textit {Lift \& Coast}, gestión) y abajo la firma de pilotaje (\textit {Reactivo}), ambos calculados en vivo. Su construcción se detalla en la Sección~4.7.}}{63}{figure.caption.32}%
+\contentsline {figure}{\numberline {4.9}{\ignorespaces Los dos clasificadores en acción sobre una vuelta de Daniel Ricciardo (GP de Australia 2024): arriba el tipo de vuelta (\textit {Lift \& Coast}, gestión) y abajo la firma de pilotaje (\textit {Reactivo}), ambos calculados en vivo. Su construcción se detalla en la Sección~\ref {sec:clasificadores}.}}{63}{figure.caption.32}%
 \contentsline {figure}{\numberline {4.10}{\ignorespaces Simulación animada de la vuelta: un punto recorre el trazado mientras se desplazan los paneles de pedales y se marcan zonas de DRS y tiempos por sector.}}{64}{figure.caption.33}%
 \contentsline {figure}{\numberline {4.11}{\ignorespaces La Vuelta Ideal: el circuito dividido en microsectores, cada uno coloreado con el equipo más rápido en él y filtrado por equipos. El tiempo resultante es la suma de los mejores parciales de toda la parrilla.}}{67}{figure.caption.34}%
 \contentsline {figure}{\numberline {4.12}{\ignorespaces Coche Fantasma (Qualy GP de Mónaco 2023): dos vueltas interpoladas sobre la rejilla común se reproducen como persecución; abajo, la curva del delta acumulado entre ambas.}}{68}{figure.caption.35}%
@@ -28,9 +28,9 @@
 \contentsline {figure}{\numberline {5.2}{\ignorespaces Selección de $k$ para el clasificador de estilo de pilotaje. En $k=4$ el silhouette es de 0,45, a solo 0,01 del máximo, pero con grupos interpretables y sin fragmentar en exceso a los pilotos.}}{82}{figure.caption.50}%
 \contentsline {figure}{\numberline {5.3}{\ignorespaces Selección de $k$ para el clasificador de circuitos. Se adopta $k=5$ por la interpretabilidad de las cinco tipologías resultantes, pese a que un $k$ menor ofrezca un silhouette superior.}}{82}{figure.caption.51}%
 \contentsline {figure}{\numberline {5.4}{\ignorespaces Clústeres de circuitos proyectados sobre sus dos componentes principales (95,8\% de la varianza). Mónaco queda completamente aislado del resto, confirmando su carácter de trazado único.}}{84}{figure.caption.53}%
-\contentsline {figure}{\numberline {5.5}{\ignorespaces Clústeres de estilo de pilotaje proyectados sobre sus dos componentes principales (64,5\% de la varianza), que sustentan la separación de los cuatro perfiles.}}{85}{figure.caption.54}%
+\contentsline {figure}{\numberline {5.5}{\ignorespaces Clústeres de estilo de pilotaje proyectados sobre sus dos componentes principales (64,5\% de la varianza), que sustentan la separación de los cuatro perfiles.}}{84}{figure.caption.53}%
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {6.1}{\ignorespaces Buscador de Gran Premio: mapamundi interactivo del calendario.}}{93}{figure.caption.55}%
-\contentsline {figure}{\numberline {6.2}{\ignorespaces Pantalla de selección de sesión del fin de semana.}}{94}{figure.caption.56}%
-\contentsline {figure}{\numberline {6.3}{\ignorespaces Hub de módulos con la sesión activa, el podio y el panel de métricas.}}{95}{figure.caption.57}%
-\contentsline {figure}{\numberline {6.4}{\ignorespaces Módulo \textit {Panel de Equipo}: comparación lado a lado de los dos pilotos de una escudería (telemetría, ritmo, neumáticos y circuito animado).}}{97}{figure.caption.58}%
+\contentsline {figure}{\numberline {6.1}{\ignorespaces Buscador de Gran Premio: mapamundi interactivo del calendario.}}{91}{figure.caption.54}%
+\contentsline {figure}{\numberline {6.2}{\ignorespaces Pantalla de selección de sesión del fin de semana.}}{92}{figure.caption.55}%
+\contentsline {figure}{\numberline {6.3}{\ignorespaces Hub de módulos con la sesión activa, el podio y el panel de métricas.}}{93}{figure.caption.56}%
+\contentsline {figure}{\numberline {6.4}{\ignorespaces Módulo \textit {Panel de Equipo}: comparación lado a lado de los dos pilotos de una escudería (telemetría, ritmo, neumáticos y circuito animado).}}{95}{figure.caption.57}%

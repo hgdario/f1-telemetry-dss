@@ -9,7 +9,7 @@
 \contentsline {section}{\numberline {1.1}Introducción}{19}{section.1.1}%
 \contentsline {section}{\numberline {1.2}Motivación}{20}{section.1.2}%
 \contentsline {section}{\numberline {1.3}Objetivos}{21}{section.1.3}%
-\contentsline {section}{\numberline {1.4}Estructura de la memoria}{22}{section.1.4}%
+\contentsline {section}{\numberline {1.4}Estructura de la memoria}{23}{section.1.4}%
 \contentsline {section}{\numberline {1.5}Uso de IA}{23}{section.1.5}%
 \contentsline {chapter}{\numberline {2}Marco Teórico y Estado del arte}{25}{chapter.2}%
 \contentsline {section}{\numberline {2.1}Marco Contextual Teórico}{25}{section.2.1}%
@@ -32,7 +32,7 @@
 \contentsline {subsection}{\numberline {2.2.3}Proyectos y Herramientas de la comunidad}{31}{subsection.2.2.3}%
 \contentsline {subsubsection}{\numberline {2.2.3.1}Dashboards basados en FastF1}{31}{subsubsection.2.2.3.1}%
 \contentsline {subsubsection}{\numberline {2.2.3.2}Grafana y el \textit {stack} de monitorización genérico}{32}{subsubsection.2.2.3.2}%
-\contentsline {subsubsection}{\numberline {2.2.3.3}Herramientas BI genéricas: Tableau y Power Bi}{33}{subsubsection.2.2.3.3}%
+\contentsline {subsubsection}{\numberline {2.2.3.3}Herramientas BI genéricas: Tableau y Power BI}{33}{subsubsection.2.2.3.3}%
 \contentsline {subsection}{\numberline {2.2.4}Investigación académica}{33}{subsection.2.2.4}%
 \contentsline {subsubsection}{\numberline {2.2.4.1}Investigación Internacional en estrategia y predicción}{33}{subsubsection.2.2.4.1}%
 \contentsline {subsubsection}{\numberline {2.2.4.2}Trabajos de fin de grado}{34}{subsubsection.2.2.4.2}%
@@ -45,7 +45,7 @@
 \contentsline {subsection}{\numberline {3.1.4}Control de versiones}{38}{subsection.3.1.4}%
 \contentsline {subsection}{\numberline {3.1.5}Planificación temporal}{39}{subsection.3.1.5}%
 \contentsline {section}{\numberline {3.2}Análisis de requisitos}{39}{section.3.2}%
-\contentsline {section}{\numberline {3.3}Tecnologías empleadas}{41}{section.3.3}%
+\contentsline {section}{\numberline {3.3}Tecnologías empleadas}{42}{section.3.3}%
 \contentsline {section}{\numberline {3.4}Diseño del sistema}{42}{section.3.4}%
 \contentsline {subsection}{\numberline {3.4.1}FastF1 sobre otras alternativas}{44}{subsection.3.4.1}%
 \contentsline {subsection}{\numberline {3.4.2}Streamlit para interfaz}{44}{subsection.3.4.2}%
@@ -103,21 +103,21 @@
 \contentsline {subsection}{\numberline {5.3.1}Métricas empleadas}{80}{subsection.5.3.1}%
 \contentsline {subsection}{\numberline {5.3.2}Selección del número de clústeres}{80}{subsection.5.3.2}%
 \contentsline {subsection}{\numberline {5.3.3}Resultados}{83}{subsection.5.3.3}%
-\contentsline {chapter}{\numberline {6}Conclusiones y Trabajos futuros}{87}{chapter.6}%
-\contentsline {section}{\numberline {6.1}Trabajo Futuro}{88}{section.6.1}%
-\contentsline {chapter}{Apéndice~A.\ Manual de Instalación}{89}{uma@appendix.1}%
-\contentsline {section}{\numberline {A.1}Requisitos previos}{89}{section.6.1}%
-\contentsline {section}{\numberline {A.2}Obtención del código fuente}{89}{section.6.2}%
-\contentsline {section}{\numberline {A.3}Instalación en Windows}{89}{section.6.3}%
-\contentsline {section}{\numberline {A.4}Instalación en Linux}{90}{section.6.4}%
-\contentsline {section}{\numberline {A.5}Primera ejecución}{91}{section.6.5}%
-\contentsline {chapter}{Apéndice~B.\ Manual de Usuario}{93}{uma@appendix.2}%
-\contentsline {section}{\numberline {B.1}Buscador de Gran Premio}{93}{section.6.1}%
-\contentsline {section}{\numberline {B.2}Selección de sesión}{94}{section.6.2}%
-\contentsline {section}{\numberline {B.3}Hub de módulos}{94}{section.6.3}%
-\contentsline {section}{\numberline {B.4}Módulos de análisis}{94}{section.6.4}%
-\contentsline {subsection}{\numberline {B.4.1}Información de Sesión}{95}{subsection.6.4.1}%
-\contentsline {subsection}{\numberline {B.4.2}Análisis de Piloto}{95}{subsection.6.4.2}%
-\contentsline {subsection}{\numberline {B.4.3}Comparativas}{96}{subsection.6.4.3}%
-\contentsline {subsection}{\numberline {B.4.4}Dinámica Vehicular}{98}{subsection.6.4.4}%
-\contentsline {section}{\numberline {B.5}Selección de piloto y vuelta}{98}{section.6.5}%
+\contentsline {chapter}{\numberline {6}Conclusiones y Trabajos futuros}{85}{chapter.6}%
+\contentsline {section}{\numberline {6.1}Trabajo Futuro}{86}{section.6.1}%
+\contentsline {chapter}{Apéndice~A.\ Manual de Instalación}{87}{uma@appendix.1}%
+\contentsline {section}{\numberline {A.1}Requisitos previos}{87}{section.6.1}%
+\contentsline {section}{\numberline {A.2}Obtención del código fuente}{87}{section.6.2}%
+\contentsline {section}{\numberline {A.3}Instalación en Windows}{87}{section.6.3}%
+\contentsline {section}{\numberline {A.4}Instalación en Linux}{88}{section.6.4}%
+\contentsline {section}{\numberline {A.5}Primera ejecución}{89}{section.6.5}%
+\contentsline {chapter}{Apéndice~B.\ Manual de Usuario}{91}{uma@appendix.2}%
+\contentsline {section}{\numberline {B.1}Buscador de Gran Premio}{91}{section.6.1}%
+\contentsline {section}{\numberline {B.2}Selección de sesión}{92}{section.6.2}%
+\contentsline {section}{\numberline {B.3}Hub de módulos}{92}{section.6.3}%
+\contentsline {section}{\numberline {B.4}Módulos de análisis}{92}{section.6.4}%
+\contentsline {subsection}{\numberline {B.4.1}Información de Sesión}{93}{subsection.6.4.1}%
+\contentsline {subsection}{\numberline {B.4.2}Análisis de Piloto}{93}{subsection.6.4.2}%
+\contentsline {subsection}{\numberline {B.4.3}Comparativas}{94}{subsection.6.4.3}%
+\contentsline {subsection}{\numberline {B.4.4}Dinámica Vehicular}{96}{subsection.6.4.4}%
+\contentsline {section}{\numberline {B.5}Selección de piloto y vuelta}{96}{section.6.5}%

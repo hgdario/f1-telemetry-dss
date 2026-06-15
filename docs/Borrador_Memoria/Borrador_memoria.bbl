@@ -21,11 +21,11 @@
   \datalist[entry]{nyt/global//global/global/global}
     \entry{aguad2024}{article}{}{}
       \name{author}{2}{}{%
-        {{hash=1115e1f83fb6eff1541fb605157e37c1}{%
+        {{hash=ad2018ff7195ab80e86f024781121916}{%
            family={Aguad},
            familyi={A\bibinitperiod},
-           given={Andrés},
-           giveni={A\bibinitperiod}}}%
+           given={Felipe},
+           giveni={F\bibinitperiod}}}%
         {{hash=0208d13df461b14738afdc4cbfdadb96}{%
            family={Thraves},
            familyi={T\bibinitperiod},
@@ -35,14 +35,14 @@
       \list{publisher}{1}{%
         {Elsevier}%
       }
-      \strng{namehash}{849a0cc2e3cca85c8ade1d4b5f81f48e}
-      \strng{fullhash}{849a0cc2e3cca85c8ade1d4b5f81f48e}
-      \strng{fullhashraw}{849a0cc2e3cca85c8ade1d4b5f81f48e}
-      \strng{bibnamehash}{849a0cc2e3cca85c8ade1d4b5f81f48e}
-      \strng{authorbibnamehash}{849a0cc2e3cca85c8ade1d4b5f81f48e}
-      \strng{authornamehash}{849a0cc2e3cca85c8ade1d4b5f81f48e}
-      \strng{authorfullhash}{849a0cc2e3cca85c8ade1d4b5f81f48e}
-      \strng{authorfullhashraw}{849a0cc2e3cca85c8ade1d4b5f81f48e}
+      \strng{namehash}{169615fc94afd423b51551e9d6abaadc}
+      \strng{fullhash}{169615fc94afd423b51551e9d6abaadc}
+      \strng{fullhashraw}{169615fc94afd423b51551e9d6abaadc}
+      \strng{bibnamehash}{169615fc94afd423b51551e9d6abaadc}
+      \strng{authorbibnamehash}{169615fc94afd423b51551e9d6abaadc}
+      \strng{authornamehash}{169615fc94afd423b51551e9d6abaadc}
+      \strng{authorfullhash}{169615fc94afd423b51551e9d6abaadc}
+      \strng{authorfullhashraw}{169615fc94afd423b51551e9d6abaadc}
       \field{sortinit}{A}
       \field{sortinithash}{2f401846e2029bad6b3ecc16d50031e2}
       \field{labelnamesource}{author}
@@ -55,7 +55,7 @@
       \field{pages}{908\bibrangedash 919}
       \range{pages}{12}
       \verb{doi}
-      \verb 10.1016/j.ejor.2024.06.020
+      \verb 10.1016/j.ejor.2024.07.011
       \endverb
     \endentry
     \entry{awsf1}{misc}{}{}
@@ -120,40 +120,40 @@
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{journaltitle}{Journal of Strategic Information Systems}
-      \field{number}{2}
+      \field{number}{3}
       \field{title}{When decision support systems fail: Insights for strategic information systems from {Formula 1}}
       \field{volume}{27}
       \field{year}{2018}
       \field{pages}{221\bibrangedash 236}
       \range{pages}{16}
       \verb{doi}
-      \verb 10.1016/j.jsis.2016.09.002
+      \verb 10.1016/j.jsis.2018.03.002
       \endverb
     \endentry
     \entry{bekker2009}{article}{}{}
       \name{author}{2}{}{%
-        {{hash=5cb925fb12a46c4fedb36c61e489ad65}{%
+        {{hash=91a392d2b74cf9f2e76625fa45d11616}{%
            family={Bekker},
            familyi={B\bibinitperiod},
-           given={Jocelyn},
+           given={James},
            giveni={J\bibinitperiod}}}%
-        {{hash=3ee2d26a567de95b338144255532de0b}{%
+        {{hash=9ec6a34900f03c390aee1972e5640f20}{%
            family={Lotz},
            familyi={L\bibinitperiod},
-           given={Warren},
+           given={William},
            giveni={W\bibinitperiod}}}%
       }
       \list{publisher}{1}{%
         {Springer}%
       }
-      \strng{namehash}{fe2e9d22c949497e50918f567e8dde7e}
-      \strng{fullhash}{fe2e9d22c949497e50918f567e8dde7e}
-      \strng{fullhashraw}{fe2e9d22c949497e50918f567e8dde7e}
-      \strng{bibnamehash}{fe2e9d22c949497e50918f567e8dde7e}
-      \strng{authorbibnamehash}{fe2e9d22c949497e50918f567e8dde7e}
-      \strng{authornamehash}{fe2e9d22c949497e50918f567e8dde7e}
-      \strng{authorfullhash}{fe2e9d22c949497e50918f567e8dde7e}
-      \strng{authorfullhashraw}{fe2e9d22c949497e50918f567e8dde7e}
+      \strng{namehash}{ac28c08e795a0d3ca64285055dc84676}
+      \strng{fullhash}{ac28c08e795a0d3ca64285055dc84676}
+      \strng{fullhashraw}{ac28c08e795a0d3ca64285055dc84676}
+      \strng{bibnamehash}{ac28c08e795a0d3ca64285055dc84676}
+      \strng{authorbibnamehash}{ac28c08e795a0d3ca64285055dc84676}
+      \strng{authornamehash}{ac28c08e795a0d3ca64285055dc84676}
+      \strng{authorfullhash}{ac28c08e795a0d3ca64285055dc84676}
+      \strng{authorfullhashraw}{ac28c08e795a0d3ca64285055dc84676}
       \field{sortinit}{B}
       \field{sortinithash}{d7095fff47cda75ca2589920aae98399}
       \field{labelnamesource}{author}
@@ -393,6 +393,11 @@
            familyi={H\bibinitperiod},
            given={Alexander},
            giveni={A\bibinitperiod}}}%
+        {{hash=56a85b525b216ef7b94e3b9027826bfd}{%
+           family={Thomaser},
+           familyi={T\bibinitperiod},
+           given={André},
+           giveni={A\bibinitperiod}}}%
         {{hash=6bc0706af145c003b5ba143cf05ab01d}{%
            family={Graf},
            familyi={G\bibinitperiod},
@@ -403,23 +408,18 @@
            familyi={B\bibinitperiod},
            given={Johannes},
            giveni={J\bibinitperiod}}}%
-        {{hash=b6eaf9c0cbe6c46f009c422f4db31a23}{%
-           family={Lienkamp},
-           familyi={L\bibinitperiod},
-           given={Markus},
-           giveni={M\bibinitperiod}}}%
       }
       \list{publisher}{1}{%
         {MDPI}%
       }
       \strng{namehash}{1853e2f78a0fe5c11befae26fedf1bad}
-      \strng{fullhash}{699488720ae23ab60fc03783141f4dd6}
-      \strng{fullhashraw}{699488720ae23ab60fc03783141f4dd6}
+      \strng{fullhash}{7e274cdf30478908d82c9311735add13}
+      \strng{fullhashraw}{7e274cdf30478908d82c9311735add13}
       \strng{bibnamehash}{1853e2f78a0fe5c11befae26fedf1bad}
       \strng{authorbibnamehash}{1853e2f78a0fe5c11befae26fedf1bad}
       \strng{authornamehash}{1853e2f78a0fe5c11befae26fedf1bad}
-      \strng{authorfullhash}{699488720ae23ab60fc03783141f4dd6}
-      \strng{authorfullhashraw}{699488720ae23ab60fc03783141f4dd6}
+      \strng{authorfullhash}{7e274cdf30478908d82c9311735add13}
+      \strng{authorfullhashraw}{7e274cdf30478908d82c9311735add13}
       \field{sortinit}{H}
       \field{sortinithash}{23a3aa7c24e56cfa16945d55545109b5}
       \field{labelnamesource}{author}
@@ -576,10 +576,10 @@
       \field{title}{{ATLAS}: Advanced Telemetry Linked Acquisition System}
       \field{year}{2023}
       \verb{urlraw}
-      \verb https://www.mclaren.com/applied/case-study/atlas-advanced-telemetry-linked-acquisition-system/
+      \verb https://www.motionapplied.com/products/ATLAS
       \endverb
       \verb{url}
-      \verb https://www.mclaren.com/applied/case-study/atlas-advanced-telemetry-linked-acquisition-system/
+      \verb https://www.motionapplied.com/products/ATLAS
       \endverb
     \endentry
     \entry{milliken1995}{book}{}{}
@@ -673,10 +673,10 @@
       \field{title}{{Ergast} Motor Racing Developer API}
       \field{year}{2005}
       \verb{urlraw}
-      \verb https://ergast.com/mrd/
+      \verb https://web.archive.org/web/20230607021710/https://ergast.com/mrd/
       \endverb
       \verb{url}
-      \verb https://ergast.com/mrd/
+      \verb https://web.archive.org/web/20230607021710/https://ergast.com/mrd/
       \endverb
     \endentry
     \entry{fastf1}{software}{}{}
@@ -825,6 +825,12 @@
       \field{year}{2011}
       \field{pages}{2825\bibrangedash 2830}
       \range{pages}{6}
+      \verb{urlraw}
+      \verb https://www.jmlr.org/papers/v12/pedregosa11a.html
+      \endverb
+      \verb{url}
+      \verb https://www.jmlr.org/papers/v12/pedregosa11a.html
+      \endverb
     \endentry
     \entry{plotly}{misc}{}{}
       \name{author}{1}{}{%
@@ -980,20 +986,20 @@
       \true{moreauthor}
       \true{morelabelname}
       \name{author}{1}{}{%
-        {{hash=d60f7660e9e4fed6ca3b2e39322275a2}{%
+        {{hash=ffc699e5850364a65a719322af198a97}{%
            family={Thomas},
            familyi={T\bibinitperiod},
-           given={Joshua},
-           giveni={J\bibinitperiod}}}%
+           given={Devin},
+           giveni={D\bibinitperiod}}}%
       }
-      \strng{namehash}{e2f6572e73646b8acc21bc58fe8484c8}
-      \strng{fullhash}{e2f6572e73646b8acc21bc58fe8484c8}
-      \strng{fullhashraw}{e2f6572e73646b8acc21bc58fe8484c8}
-      \strng{bibnamehash}{e2f6572e73646b8acc21bc58fe8484c8}
-      \strng{authorbibnamehash}{e2f6572e73646b8acc21bc58fe8484c8}
-      \strng{authornamehash}{e2f6572e73646b8acc21bc58fe8484c8}
-      \strng{authorfullhash}{e2f6572e73646b8acc21bc58fe8484c8}
-      \strng{authorfullhashraw}{e2f6572e73646b8acc21bc58fe8484c8}
+      \strng{namehash}{10d9e860ec0940986c25d0384febc972}
+      \strng{fullhash}{10d9e860ec0940986c25d0384febc972}
+      \strng{fullhashraw}{10d9e860ec0940986c25d0384febc972}
+      \strng{bibnamehash}{10d9e860ec0940986c25d0384febc972}
+      \strng{authorbibnamehash}{10d9e860ec0940986c25d0384febc972}
+      \strng{authornamehash}{10d9e860ec0940986c25d0384febc972}
+      \strng{authorfullhash}{10d9e860ec0940986c25d0384febc972}
+      \strng{authorfullhashraw}{10d9e860ec0940986c25d0384febc972}
       \field{sortinit}{T}
       \field{sortinithash}{9af77f0292593c26bde9a56e688eaee9}
       \field{labelnamesource}{author}
@@ -1002,6 +1008,12 @@
       \field{note}{arXiv:2501.04068}
       \field{title}{Explainable Reinforcement Learning for {Formula One} Race Strategy}
       \field{year}{2025}
+      \verb{urlraw}
+      \verb https://arxiv.org/abs/2501.04068
+      \endverb
+      \verb{url}
+      \verb https://arxiv.org/abs/2501.04068
+      \endverb
     \endentry
     \entry{scipy}{article}{}{}
       \true{moreauthor}
@@ -1078,7 +1090,7 @@
       \field{pages}{307\bibrangedash 312}
       \range{pages}{6}
       \verb{doi}
-      \verb 10.1016/j.ifacol.2019.08.083
+      \verb 10.1016/j.ifacol.2019.08.064
       \endverb
     \endentry
   \enddatalist
